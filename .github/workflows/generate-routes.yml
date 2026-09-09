@@ -1,0 +1,29 @@
+name: Generar Paginas Dinamicas de Rutas
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del codigo
+        uses: actions/checkout@v3
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Ejecutar script generador
+        run: node build-rutas.js
+
+      - name: Hacer Commit y Push de los HTMLs generados
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "action@github.com"
+          git add rutas/
+          git commit -m "Auto-generacion de archivos dinámicos para WhatsApp" || exit 0
+          git push
