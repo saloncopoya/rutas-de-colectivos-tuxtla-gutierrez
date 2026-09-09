@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="description" content="Rutas de Colectivos de Tuxtla Gutiérrez y Chiapa de Corzo. Guía interactiva de transporte público y puntos de interés.">
+    
+    <!-- Open Graph & Twitter Metatags -->
+    <meta property="og:title" content="Rutas de Colectivos - Tuxtla Gutiérrez">
+    <meta property="og:description" content="Consulta rutas, mapas interactivos, puntos de interés y conexiones en Tuxtla Gutiérrez y zonas conurbadas.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Rutas de Colectivos TGZ">
+    <meta name="twitter:description" content="Encuentra cómo moverte en colectivo por Tuxtla Gutiérrez con mapa interactivo y buscador de conexiones.">
+
+    <title>Rutas Colectivos Tuxtla Gutiérrez | Movilidad Urbana</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192?text=Colectivos">
+    
+    <!-- Font Awesome 6 & SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Tailwind CSS CDN para diseño ultra-moderno, rápido y responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* Custom scrollbar y ajustes finos de UI */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col pb-20 md:pb-0">
+
+    <!-- Banner de estado PWA / Red -->
+    <div id="statusBanner" class="bg-blue-600 text-white text-xs font-semibold py-1 px-4 flex justify-between items-center transition-all duration-300">
+        <span id="connectionState" class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Modo En Línea
+        </span>
+        <div id="pwaInstallContainer" class="hidden flex items-center gap-2">
+            <span>¡Instala la App para acceso rápido!</span>
+            <button id="installAppBtn" class="bg-white text-blue-700 px-3 py-0.5 rounded-full text-xs font-bold shadow hover:bg-slate-100">
+                Instalar
+            </button>
+        </div>
+    </div>
+
+    <!-- Encabezado Principal -->
+    <header class="glass-panel sticky top-0 z-40 px-4 py-3 border-b border-slate-800 shadow-xl">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                    <i class="fa-solid fa-van-shuttle text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                        Colectivos TGZ
+                    </h1>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Tuxtla Gutiérrez & Conurbados</p>
+                </div>
+            </div>
+
+            <!-- Botones de Acción Sup. -->
+            <div class="flex items-center gap-2">
+                <button onclick="openModal('adminModal')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl text-xs font-semibold border border-slate-700 transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-plus-circle text-blue-400"></i>
+                    <span class="hidden sm:inline">Gestionar Rutas</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegación por pestañas Principal -->
+    <div class="max-w-7xl mx-auto w-full px-4 pt-4">
+        <div class="grid grid-cols-3 gap-1 bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800/80">
+            <button onclick="switchTab('explorer')" id="tab-explorer" class="tab-btn active flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30">
+                <i class="fa-solid fa-compass"></i>
+                <span>Explorador</span>
+            </button>
+            <button onclick="switchTab('planner')" id="tab-planner" class="tab-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-route"></i>
+                <span>Planear Ruta</span>
+            </button>
+            <button onclick="switchTab('map')" id="tab-map" class="tab-btn flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-slate-200">
+                <i class="fa-solid fa-map-location-dot"></i>
+                <span>Visor Mapa</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <main class="max-w-7xl mx-auto w-full px-4 py-4 flex-1">
+        
+        <!-- PESTAÑA 1: EXPLORADOR DE RUTAS Y PUNTOS -->
+        <section id="view-explorer" class="tab-content space-y-4">
+            <!-- Buscador y Filtros -->
+            <div class="glass-panel p-4 rounded-2xl space-y-3">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar por ruta, punto de interés o parada..." 
+                        class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition">
+                </div>
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs" id="categoryChips">
+                    <button onclick="filterCategory('ALL')" class="chip-btn active bg-blue-600 text-white px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap">Todas</button>
+                    <button onclick="filterCategory('URBANA')" class="chip-btn bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap">Urbanas</button>
+                    <button onclick="filterCategory('FORANEA')" class="chip-btn bg-slate-800 text-slate-300 hover:bg-slate-700 px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap">Foráneas / Chiapa</button>
+                </div>
+            </div>
+
+            <!-- Grilla de Rutas Registradas -->
+            <div id="routesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Se puebla dinámicamente -->
+            </div>
+        </section>
+
+        <!-- PESTAÑA 2: PLANIFICADOR PUNTO A -> B Y BUSCADOR DE CONEXIONES -->
+        <section id="view-planner" class="tab-content hidden space-y-4">
+            <div class="glass-panel p-5 rounded-2xl space-y-4">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-location-arrow text-blue-400"></i> Asistente de Viaje y Conexiones
+                    </h2>
+                    <p class="text-xs text-slate-400">Selecciona tu ubicación o punto de origen y tu destino para saber qué colectivos abordar.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-300">Punto de Origen (A)</label>
+                        <select id="originSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-200 focus:border-blue-500 outline-none">
+                            <option value="">-- Seleccionar origen --</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-300">Punto de Destino (B)</label>
+                        <select id="destinationSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-200 focus:border-blue-500 outline-none">
+                            <option value="">-- Seleccionar destino --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="calculateConnection()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/30 text-sm transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-route"></i> Consultar Opciones de Transporte
+                </button>
+            </div>
+
+            <!-- Resultados del cálculo -->
+            <div id="plannerResults" class="space-y-3">
+                <div class="glass-panel p-8 text-center rounded-2xl text-slate-400">
+                    <i class="fa-solid fa-map-signs text-3xl mb-2 text-slate-500"></i>
+                    <p class="text-sm">Selecciona los puntos de origen y destino para calcular tus rutas directas o trasbordos.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- PESTAÑA 3: VISOR GENERAL DE MAPAS DE GOOGLE -->
+        <section id="view-map" class="tab-content hidden space-y-4">
+            <div class="glass-panel p-4 rounded-2xl space-y-3">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div>
+                        <h2 class="text-base font-bold text-white">Mapa de Colectivos Interactivo</h2>
+                        <p class="text-xs text-slate-400">Visualiza el recorrido oficial en Google Maps.</p>
+                    </div>
+                    <select id="mapRouteSelector" onchange="changeActiveMap(this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:border-blue-500 outline-none w-full sm:w-auto">
+                        <!-- Opciones cargadas dinámicamente -->
+                    </select>
+                </div>
+
+                <div class="relative w-full h-[65vh] bg-slate-900 rounded-xl overflow-hidden border border-slate-800 shadow-2xl">
+                    <iframe id="mainMapIframe" src="about:blank" class="w-full h-full border-0" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL DE GESTIÓN Y CARGA DE NUEVAS RUTAS (Panel de Administración) -->
+    <div id="adminModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel w-full max-w-2xl rounded-2xl border border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-5 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                <h3 class="font-bold text-base text-white flex items-center gap-2">
+                    <i class="fa-solid fa-database text-blue-400"></i> Gestor de Base de Datos de Rutas
+                </h3>
+                <button onclick="closeModal('adminModal')" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="addRouteForm" onsubmit="handleRouteSubmit(event)" class="p-5 overflow-y-auto space-y-4 flex-1">
+                <input type="hidden" id="editRouteId" value="">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-300">Nombre de la Ruta *</label>
+                        <input type="text" id="routeName" required placeholder="Ej. Ruta 1, Línea Nandalumi" 
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-100 focus:border-blue-500 outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-300">Categoría *</label>
+                        <select id="routeCategory" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-100 focus:border-blue-500 outline-none">
+                            <option value="URBANA">Urbana (TGZ)</option>
+                            <option value="FORANEA">Foránea / Suburbana</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Enlace / iFrame de Google Maps *</label>
+                    <input type="text" id="routeMapUrl" required placeholder="Paste Embed URL o <iframe src='...'></iframe>" 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-100 focus:border-blue-500 outline-none font-mono text-xs">
+                    <p class="text-[10px] text-slate-400">Acepta la URL directa o el código embed &lt;iframe src="..."&gt;</p>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Paradas Principales (Separadas por comas)</label>
+                    <input type="text" id="routeStops" placeholder="Ej. Parada Nandalumi: 2a Ote y 10a Sur, 8a Ote Sur..." 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-100 focus:border-blue-500 outline-none">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-slate-300">Puntos de Interés (Separados por línea o coma) *</label>
+                    <textarea id="routePois" rows="5" required placeholder="Escribe un punto por línea. Ej:&#10;Mercado de los Ancianos&#10;Diana Cazadora&#10;Plaza Polifórum" 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-100 focus:border-blue-500 outline-none"></textarea>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-800">
+                    <button type="button" onclick="closeModal('adminModal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30">
+                        Guardar Ruta
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Menú Inferior Flotante Móvil -->
+    <nav class="fixed bottom-0 left-0 right-0 glass-panel border-t border-slate-800 py-2 px-6 flex justify-around items-center z-40 md:hidden">
+        <button onclick="switchTab('explorer')" class="mobile-nav-btn flex flex-col items-center gap-1 text-blue-400">
+            <i class="fa-solid fa-compass text-lg"></i>
+            <span class="text-[10px] font-semibold">Explorar</span>
+        </button>
+        <button onclick="switchTab('planner')" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-400">
+            <i class="fa-solid fa-route text-lg"></i>
+            <span class="text-[10px] font-semibold">Planear</span>
+        </button>
+        <button onclick="switchTab('map')" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-400">
+            <i class="fa-solid fa-map-location-dot text-lg"></i>
+            <span class="text-[10px] font-semibold">Mapa</span>
+        </button>
+        <button onclick="openModal('adminModal')" class="mobile-nav-btn flex flex-col items-center gap-1 text-slate-400">
+            <i class="fa-solid fa-plus-circle text-lg text-emerald-400"></i>
+            <span class="text-[10px] font-semibold">Agregar</span>
+        </button>
+    </nav>
+
+    <!-- JS Principal de la Aplicación -->
+    <script>
+        // --- BASE DE DATOS INICIAL CON LA INFORMACIÓN PROPORCIONADA ---
+        const DEFAULT_ROUTES = [
+            {
+                id: "route-nandalumi",
+                name: "Línea Nandalumi (TGZ - Chiapa de Corzo)",
+                category: "FORANEA",
+                mapUrl: "https://www.google.com/maps/d/embed?mid=14GyzP6h6GlBTfddc3BLA6YE-dlBonmM&ehbc=2E312F",
+                stops: [
+                    "Parada línea Nandalumi: 2a Oriente Sur y 10a Sur Oriente"
+                ],
+                pois: [
+                    "Plaza del Mariachi Santa Cecilia",
+                    "Panteón Municipal",
+                    "Mercado de los Ancianos",
+                    "Terminal Autobuses Aexa",
+                    "Colonia Bienestar Social",
+                    "Diana Cazadora Tuxtla",
+                    "Plaza Polifórum / Polyforum",
+                    "ISSTECH - Hospital de Especialidades Vida Mejor",
+                    "Plaza Ámbar Fashion Mall",
+                    "Parque Chiapasiónate",
+                    "Central de Abastos - Tuxtla Gutiérrez",
+                    "Escuela Preparatoria Número 5",
+                    "Escuela Superior de Trabajo Social Jesús Aquino Juan",
+                    "Ribera Cahuaré",
+                    "Ribera Nandambua",
+                    "Plaza de Armas Ángel Albino Corzo",
+                    "Centro Chiapa de Corzo"
+                ]
+            },
+            {
+                id: "route-parachico",
+                name: "Línea Parachico",
+                category: "FORANEA",
+                mapUrl: "https://www.google.com/maps/d/embed?mid=14GyzP6h6GlBTfddc3BLA6YE-dlBonmM&ehbc=2E312F",
+                stops: [
+                    "Parada línea Parachico: 8a Oriente Sur y 1a Sur Oriente"
+                ],
+                pois: [
+                    "Plaza del Mariachi Santa Cecilia",
+                    "Mercado de los Ancianos",
+                    "Central de Abastos - Tuxtla Gutiérrez",
+                    "Ribera Cahuaré",
+                    "Centro Chiapa de Corzo"
+                ]
+            }
+        ];
+
+        // Estado Global de la App
+        let routesData = [];
+        let currentCategoryFilter = 'ALL';
+        let deferredPrompt = null;
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            loadRoutesFromStorage();
+            registerServiceWorker();
+            setupPWAEvents();
+            setupSearchAndFilters();
+            populatePlannerDropdowns();
+            renderRoutesGrid();
+            updateMapSelector();
+        });
+
+        // --- GESTIÓN DE LOCALSTORAGE & DATOS ---
+        function loadRoutesFromStorage() {
+            const saved = localStorage.getItem('tgz_routes_db');
+            if (saved) {
+                try {
+                    routesData = JSON.parse(saved);
+                } catch(e) {
+                    routesData = DEFAULT_ROUTES;
+                }
+            } else {
+                routesData = DEFAULT_ROUTES;
+                saveRoutesToStorage();
+            }
+        }
+
+        function saveRoutesToStorage() {
+            localStorage.setItem('tgz_routes_db', JSON.stringify(routesData));
+        }
+
+        // --- SERVICE WORKER Y PWA FIRST ---
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW registrado correctamente:', reg.scope))
+                    .catch(err => console.warn('Error al registrar SW:', err));
+            }
+
+            window.addEventListener('online', updateNetworkStatus);
+            window.addEventListener('offline', updateNetworkStatus);
+            updateNetworkStatus();
+        }
+
+        function updateNetworkStatus() {
+            const stateEl = document.getElementById('connectionState');
+            if (navigator.onLine) {
+                stateEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Modo En Línea`;
+            } else {
+                stateEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span> Modo Offline (Cache Local)`;
+            }
+        }
+
+        function setupPWAEvents() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                const container = document.getElementById('pwaInstallContainer');
+                if(container) container.classList.remove('hidden');
+            });
+
+            document.getElementById('installAppBtn')?.addEventListener('click', () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            document.getElementById('pwaInstallContainer')?.classList.add('hidden');
+                        }
+                        deferredPrompt = null;
+                    });
+                }
+            });
+        }
+
+        // --- RENDERIZADO DE INTERFAZ ---
+        function renderRoutesGrid() {
+            const grid = document.getElementById('routesGrid');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            const filtered = routesData.filter(route => {
+                const matchCat = (currentCategoryFilter === 'ALL') || (route.category === currentCategoryFilter);
+                const matchSearch = route.name.toLowerCase().includes(searchTerm) ||
+                    route.stops.some(s => s.toLowerCase().includes(searchTerm)) ||
+                    route.pois.some(p => p.toLowerCase().includes(searchTerm));
+                return matchCat && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full glass-panel p-8 text-center rounded-2xl text-slate-400 space-y-2">
+                        <i class="fa-solid fa-circle-exclamation text-3xl text-amber-400"></i>
+                        <p class="text-sm font-semibold">No se encontraron rutas con los criterios de búsqueda.</p>
+                        <p class="text-xs text-slate-500">Prueba agregando una nueva ruta desde el botón 'Gestionar Rutas'.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(route => `
+                <div class="glass-card rounded-2xl p-5 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between space-y-4 shadow-lg">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start gap-2">
+                            <h3 class="font-bold text-base text-white leading-tight">${escapeHtml(route.name)}</h3>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${route.category === 'URBANA' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'}">
+                                ${route.category}
+                            </span>
+                        </div>
+
+                        ${route.stops && route.stops.length ? `
+                            <div class="text-xs text-slate-300 space-y-1 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
+                                <span class="font-bold text-slate-400 block text-[10px] uppercase">Paradas Clave:</span>
+                                ${route.stops.map(s => `<p class="flex items-start gap-1.5"><i class="fa-solid fa-location-dot text-rose-400 mt-0.5 text-[10px]"></i> ${escapeHtml(s)}</p>`).join('')}
+                            </div>
+                        ` : ''}
+
+                        <div class="space-y-1">
+                            <span class="font-bold text-slate-400 block text-[10px] uppercase">Puntos de Interés (${route.pois.length}):</span>
+                            <div class="flex flex-wrap gap-1 max-h-32 overflow-y-auto pr-1">
+                                ${route.pois.map(p => `
+                                    <span class="text-[11px] bg-slate-800/80 text-slate-300 px-2 py-0.5 rounded-lg border border-slate-700/50">
+                                        ${escapeHtml(p)}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                        <button onclick="viewRouteMap('${route.id}')" class="flex-1 bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-map-marked-alt"></i> Ver Mapa
+                        </button>
+                        <button onclick="editRoute('${route.id}')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs border border-slate-700" title="Editar">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button onclick="deleteRoute('${route.id}')" class="p-2 bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white rounded-xl text-xs border border-rose-500/20" title="Eliminar">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- LÓGICA DE PLANIFICACIÓN / CONEXIONES A -> B ---
+        function populatePlannerDropdowns() {
+            const originSel = document.getElementById('originSelect');
+            const destSel = document.getElementById('destinationSelect');
+
+            // Obtener lista única de todos los Puntos de Interés
+            const allPois = new Set();
+            routesData.forEach(r => r.pois.forEach(p => allPois.add(p)));
+
+            const sortedPois = Array.from(allPois).sort();
+
+            const optionsHtml = '<option value="">-- Seleccionar punto --</option>' +
+                sortedPois.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+
+            originSel.innerHTML = optionsHtml;
+            destSel.innerHTML = optionsHtml;
+        }
+
+        function calculateConnection() {
+            const origin = document.getElementById('originSelect').value;
+            const destination = document.getElementById('destinationSelect').value;
+            const container = document.getElementById('plannerResults');
+
+            if (!origin || !destination) {
+                Swal.fire('Atención', 'Por favor selecciona tanto el punto de origen como el destino.', 'warning');
+                return;
+            }
+
+            if (origin === destination) {
+                container.innerHTML = `
+                    <div class="glass-panel p-5 rounded-2xl text-center text-amber-400">
+                        <i class="fa-solid fa-location-dot text-2xl mb-1"></i>
+                        <p class="text-sm font-bold">El punto de origen y destino son el mismo.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 1. Buscar Rutas Directas
+            const directRoutes = routesData.filter(r => r.pois.includes(origin) && r.pois.includes(destination));
+
+            if (directRoutes.length > 0) {
+                container.innerHTML = `
+                    <div class="glass-panel p-5 rounded-2xl border-l-4 border-emerald-500 space-y-3">
+                        <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+                            <i class="fa-solid fa-circle-check text-lg"></i>
+                            <span>¡Ruta Directa Encontrada! (${directRoutes.length})</span>
+                        </div>
+                        <p class="text-xs text-slate-300">Puedes abordar cualquiera de los siguientes colectivos directamente:</p>
+                        <div class="space-y-2">
+                            ${directRoutes.map(r => `
+                                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                                    <div>
+                                        <h4 class="font-bold text-sm text-white">${escapeHtml(r.name)}</h4>
+                                        <p class="text-[11px] text-slate-400">Pasa directamente por <b>${escapeHtml(origin)}</b> y <b>${escapeHtml(destination)}</b></p>
+                                    </div>
+                                    <button onclick="viewRouteMap('${r.id}')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
+                                        Ver Recorrido
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // 2. Buscar Trasbordos (1 escala)
+            const routesWithOrigin = routesData.filter(r => r.pois.includes(origin));
+            const routesWithDest = routesData.filter(r => r.pois.includes(destination));
+
+            let transferOptions = [];
+
+            routesWithOrigin.forEach(r1 => {
+                routesWithDest.forEach(r2 => {
+                    if (r1.id !== r2.id) {
+                        // Encontrar puntos comunes para trasbordo
+                        const commonPois = r1.pois.filter(p => r2.pois.includes(p));
+                        if (commonPois.length > 0) {
+                            transferOptions.push({
+                                route1: r1,
+                                route2: r2,
+                                transferPoints: commonPois
+                            });
+                        }
+                    }
+                });
+            });
+
+            if (transferOptions.length > 0) {
+                container.innerHTML = `
+                    <div class="glass-panel p-5 rounded-2xl border-l-4 border-amber-500 space-y-3">
+                        <div class="flex items-center gap-2 text-amber-400 font-bold text-sm">
+                            <i class="fa-solid fa-right-left text-lg"></i>
+                            <span>Requiere 1 Trasbordo (${transferOptions.length} opciones sugeridas)</span>
+                        </div>
+                        <p class="text-xs text-slate-300">No hay ruta directa única, pero puedes hacer conexión bajando en estos puntos:</p>
+                        <div class="space-y-3">
+                            ${transferOptions.map(t => `
+                                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-2">
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span class="bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded font-bold">Paso 1</span>
+                                        <span class="text-white font-semibold">${escapeHtml(t.route1.name)}</span>
+                                        <span class="text-slate-400">desde ${escapeHtml(origin)}</span>
+                                    </div>
+                                    <div class="text-[11px] bg-slate-800/80 p-2 rounded-lg text-amber-300 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                                        <span><b>Trasbordar en:</b> ${t.transferPoints.map(p => escapeHtml(p)).join(', ')}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span class="bg-purple-600/30 text-purple-300 px-2 py-0.5 rounded font-bold">Paso 2</span>
+                                        <span class="text-white font-semibold">${escapeHtml(t.route2.name)}</span>
+                                        <span class="text-slate-400">hasta ${escapeHtml(destination)}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="glass-panel p-5 rounded-2xl text-center text-rose-400 space-y-2">
+                        <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+                        <p class="text-sm font-bold">No se encontraron rutas ni combinaciones registradas entre estos dos puntos.</p>
+                        <p class="text-xs text-slate-400">Sube más rutas a la base de datos para habilitar nuevas conexiones.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // --- GESTIÓN DE MAPAS Y NAVEGACIÓN ---
+        function updateMapSelector() {
+            const select = document.getElementById('mapRouteSelector');
+            select.innerHTML = routesData.map(r => `
+                <option value="${r.id}">${escapeHtml(r.name)}</option>
+            `).join('');
+
+            if (routesData.length > 0) {
+                changeActiveMap(routesData[0].id);
+            }
+        }
+
+        function changeActiveMap(routeId) {
+            const route = routesData.find(r => r.id === routeId);
+            const iframe = document.getElementById('mainMapIframe');
+            if (route && iframe) {
+                let cleanUrl = sanitizeMapUrl(route.mapUrl);
+                iframe.src = cleanUrl;
+            }
+        }
+
+        function viewRouteMap(routeId) {
+            switchTab('map');
+            const select = document.getElementById('mapRouteSelector');
+            if (select) {
+                select.value = routeId;
+                changeActiveMap(routeId);
+            }
+        }
+
+        function sanitizeMapUrl(raw) {
+            if (!raw) return 'about:blank';
+            // Si el usuario ingresó un tag <iframe> completo, extraer la URL del atributo src
+            if (raw.includes('<iframe')) {
+                const match = raw.match(/src=["']([^"']+)["']/);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+            return raw.trim();
+        }
+
+        // --- ACCIONES CRUD PARA RUTAS ---
+        function handleRouteSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editRouteId').value;
+            const name = document.getElementById('routeName').value.trim();
+            const category = document.getElementById('routeCategory').value;
+            const mapUrl = document.getElementById('routeMapUrl').value.trim();
+            const stopsRaw = document.getElementById('routeStops').value.trim();
+            const poisRaw = document.getElementById('routePois').value.trim();
+
+            const stops = stopsRaw ? stopsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+            const pois = poisRaw ? poisRaw.split(/[\n,]+/).map(p => p.trim()).filter(Boolean) : [];
+
+            if (editId) {
+                // Editar existente
+                const index = routesData.findIndex(r => r.id === editId);
+                if (index !== -1) {
+                    routesData[index] = {
+                        ...routesData[index],
+                        name, category, mapUrl, stops, pois
+                    };
+                }
+            } else {
+                // Crear nueva ruta
+                const newRoute = {
+                    id: 'route-' + Date.now(),
+                    name, category, mapUrl, stops, pois
+                };
+                routesData.push(newRoute);
+            }
+
+            saveRoutesToStorage();
+            renderRoutesGrid();
+            populatePlannerDropdowns();
+            updateMapSelector();
+            closeModal('adminModal');
+
+            Swal.fire({
+                icon: 'success',
+                title: editId ? 'Ruta Actualizada' : 'Ruta Guardada',
+                text: 'Base de datos actualizada con éxito.',
+                timer: 1800,
+                showConfirmButton: false
+            });
+        }
+
+        function editRoute(routeId) {
+            const route = routesData.find(r => r.id === routeId);
+            if (!route) return;
+
+            document.getElementById('editRouteId').value = route.id;
+            document.getElementById('routeName').value = route.name;
+            document.getElementById('routeCategory').value = route.category;
+            document.getElementById('routeMapUrl').value = route.mapUrl;
+            document.getElementById('routeStops').value = route.stops ? route.stops.join(', ') : '';
+            document.getElementById('routePois').value = route.pois ? route.pois.join('\n') : '';
+
+            openModal('adminModal');
+        }
+
+        function deleteRoute(routeId) {
+            Swal.fire({
+                title: '¿Eliminar ruta?',
+                text: 'Esta acción eliminará la ruta de tu base de datos local.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#334155',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    routesData = routesData.filter(r => r.id !== routeId);
+                    saveRoutesToStorage();
+                    renderRoutesGrid();
+                    populatePlannerDropdowns();
+                    updateMapSelector();
+                    Swal.fire('Eliminada', 'La ruta ha sido removida.', 'success');
+                }
+            });
+        }
+
+        // --- FILTROS Y CONTROLES DE UI ---
+        function setupSearchAndFilters() {
+            document.getElementById('searchInput')?.addEventListener('input', debounce(renderRoutesGrid, 200));
+        }
+
+        function filterCategory(cat) {
+            currentCategoryFilter = cat;
+            document.querySelectorAll('.chip-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'active');
+                btn.classList.add('bg-slate-800', 'text-slate-300');
+            });
+            event.target.classList.remove('bg-slate-800', 'text-slate-300');
+            event.target.classList.add('bg-blue-600', 'text-white', 'active');
+            renderRoutesGrid();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'shadow-lg');
+                btn.classList.add('text-slate-400');
+            });
+
+            document.getElementById(`view-${tabId}`)?.classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-lg');
+                activeBtn.classList.remove('text-slate-400');
+            }
+        }
+
+        function openModal(id) {
+            if (id === 'adminModal' && !document.getElementById('editRouteId').value) {
+                document.getElementById('addRouteForm').reset();
+                document.getElementById('editRouteId').value = '';
+            }
+            document.getElementById(id)?.classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id)?.classList.add('hidden');
+            if (id === 'adminModal') {
+                document.getElementById('addRouteForm').reset();
+                document.getElementById('editRouteId').value = '';
+            }
+        }
+
+        // --- HELPER FUNCTIONS ---
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, match => {
+                const escape = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                };
+                return escape[match];
+            });
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+    </script>
+</body>
+</html>
