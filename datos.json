@@ -1,0 +1,18 @@
+{
+  "appName": "Licenciado del Bienestar",
+  "version": "1.0.0",
+  "initialRoutes": [
+    {
+      "id": "route_1",
+      "name": "Ruta 1 - Terán Centro",
+      "category": "URBANA",
+      "mapUrl": "https://www.google.com/maps",
+      "imageUrl": "",
+      "stops": ["Terán", "Parque Central", "Mercado"],
+      "returnStops": ["Mercado", "Terán"],
+      "poisUrban": ["Parque Central", "Hospital General"],
+      "poisForeign": [],
+      "streets": "Av. Central, 1a Poniente"
+    }
+  ]
+}
