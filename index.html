@@ -150,6 +150,20 @@
         }
         html:not(.dark) .media-container .media-placeholder { background: #e2e8f0; color: #94a3b8; }
 
+        /* Imagen de inicio a todo el ancho */
+        .post-media-full {
+            width: 100vw;
+            margin-left: calc(-50vw + 50%);
+            border-radius: 0;
+            max-height: 600px;
+        }
+        .post-media-full img, .post-media-full video {
+            width: 100%;
+            max-height: 600px;
+            object-fit: contain;
+            border-radius: 0;
+        }
+
         /* Visor de imagen a pantalla completa */
         .fullscreen-viewer {
             position: fixed;
@@ -229,6 +243,25 @@
         }
         html:not(.dark) .fullscreen-map .map-footer { background: #ffffff; border-color: #cbd5e1; }
 
+        /* Botón atrás grande del mapa */
+        .map-back-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: #06b6d4;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 16px rgba(6,182,212,0.4);
+        }
+        .map-back-btn:hover { background: #0891b2; transform: scale(1.05); }
+        .map-back-btn:active { transform: scale(0.95); }
+
         /* Chips de filtro marketplace */
         .filter-chip {
             padding: 8px 16px;
@@ -256,18 +289,57 @@
             user-select: none;
         }
 
-        /* Ajustes responsive para 4 columnas en rutas */
+        /* Rutas en 4 columnas siempre en móvil */
+        .routes-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 8px;
+        }
+        @media (min-width: 640px) {
+            .routes-grid { grid-template-columns: repeat(4, 1fr) !important; }
+        }
         @media (min-width: 1024px) {
             .routes-grid { grid-template-columns: repeat(4, 1fr) !important; }
         }
-        @media (min-width: 640px) and (max-width: 1023px) {
-            .routes-grid { grid-template-columns: repeat(3, 1fr) !important; }
+
+        /* Ajustes para tarjetas de ruta en 4 columnas */
+        .route-square-card {
+            aspect-ratio: 1 / 1;
+            padding: 8px;
+            border-radius: 14px;
         }
-        @media (min-width: 480px) and (max-width: 639px) {
-            .routes-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        .route-square-card .route-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
         }
-        @media (max-width: 479px) {
-            .routes-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        .route-square-card h3 {
+            font-size: 0.65rem;
+            line-height: 1.1;
+        }
+        .route-square-card .route-cat {
+            font-size: 0.55rem;
+            padding: 2px 6px;
+        }
+        .route-square-card .route-share {
+            font-size: 0.55rem;
+            padding: 3px 6px;
+        }
+
+        @media (min-width: 640px) {
+            .route-square-card { padding: 12px; border-radius: 18px; }
+            .route-square-card .route-icon { width: 48px; height: 48px; font-size: 1.4rem; }
+            .route-square-card h3 { font-size: 0.8rem; }
+            .route-square-card .route-cat { font-size: 0.65rem; padding: 3px 8px; }
+            .route-square-card .route-share { font-size: 0.65rem; padding: 4px 8px; }
+        }
+
+        /* Botones admin contextuales */
+        .admin-action-btn {
+            display: none;
+        }
+        .admin-action-btn.visible {
+            display: flex;
         }
     </style>
 </head>
@@ -283,7 +355,9 @@
     <div id="fullscreenMap" class="fullscreen-map">
         <div class="map-header">
             <div class="flex items-center gap-3">
-                <button onclick="closeFullscreenMap()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm"><i class="fa-solid fa-arrow-left"></i></button>
+                <button onclick="closeFullscreenMap()" class="map-back-btn" title="Volver">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
                 <div>
                     <h3 id="mapRouteTitle" class="text-sm font-black text-white">Nombre de Ruta</h3>
                     <p id="mapRouteCategory" class="text-[10px] text-cyan-400 font-bold uppercase">Categoría</p>
@@ -302,27 +376,8 @@
         </div>
     </div>
 
-    <!-- BARRA SUPERIOR (compacta) -->
-    <div id="statusBanner" class="bg-slate-900 border-b border-slate-800 text-xs py-1.5 px-3 flex flex-wrap justify-between items-center text-slate-400 z-30 gap-1">
-        <span id="connectionState" class="flex items-center gap-2 text-[10px] font-mono">
-            <span id="netStatusDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span id="netStatusText">OFFLINE</span>
-        </span>
-        <div class="flex items-center gap-1.5 flex-wrap">
-            <button id="btnInstallPwa" onclick="installPWA()" class="hidden p-1.5 px-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-[10px] font-bold border border-cyan-500 flex items-center gap-1 shadow-lg">
-                <i class="fa-solid fa-download"></i> Instalar
-            </button>
-            <button onclick="toggleTheme()" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg text-xs" title="Cambiar Tema">
-                <i class="fa-solid fa-moon" id="themeIcon"></i>
-            </button>
-            <button onclick="toggleAdminSession()" id="adminAuthBtn" class="text-[10px] text-cyan-400 font-bold flex items-center gap-1 border border-cyan-500/30 px-2.5 py-1 rounded-lg bg-cyan-950/40">
-                <i class="fa-solid fa-shield-halved"></i> <span id="adminBtnText">Admin</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- ENCABEZADO SIMPLE (no flotante) -->
-    <header class="bg-slate-900/90 border-b border-slate-800 px-3 py-2">
+    <!-- ENCABEZADO SIMPLIFICADO -->
+    <header class="bg-slate-900/90 border-b border-slate-800 px-3 py-2 sticky top-0 z-30">
         <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
                 <div class="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0">
@@ -336,11 +391,14 @@
                 </div>
             </div>
             <div class="flex items-center gap-1.5">
-                <button id="btnCreatePost" onclick="openCreatePost()" class="hidden bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5">
-                    <i class="fa-solid fa-pen-to-square"></i> <span class="hidden sm:inline">Publicar</span>
+                <button id="btnInstallPwa" onclick="installPWA()" class="hidden p-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-bold border border-cyan-500 flex items-center gap-1" title="Instalar App">
+                    <i class="fa-solid fa-download"></i>
                 </button>
-                <button onclick="syncDataWithFirebase()" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 p-2 rounded-lg text-xs border border-slate-700" title="Sincronizar">
-                    <i class="fa-solid fa-rotate"></i>
+                <button onclick="toggleTheme()" class="p-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg text-sm" title="Cambiar Tema">
+                    <i class="fa-solid fa-moon" id="themeIcon"></i>
+                </button>
+                <button onclick="toggleAdminSession()" id="adminAuthBtn" class="text-[10px] text-cyan-400 font-bold flex items-center gap-1 border border-cyan-500/30 px-2.5 py-2 rounded-lg bg-cyan-950/40">
+                    <i class="fa-solid fa-shield-halved"></i> <span id="adminBtnText">Admin</span>
                 </button>
             </div>
         </div>
@@ -349,13 +407,13 @@
     <!-- NAVEGACIÓN PRINCIPAL -->
     <div class="max-w-7xl mx-auto w-full px-3 pt-2">
         <div class="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-bold">
-            <button onclick="switchTab('inicio')" id="top-tab-inicio" class="top-tab py-2 rounded-lg flex items-center justify-center gap-1.5 bg-cyan-600 text-white">
+            <button onclick="navigateTo('inicio')" id="top-tab-inicio" class="top-tab py-2 rounded-lg flex items-center justify-center gap-1.5 bg-cyan-600 text-white">
                 <i class="fa-solid fa-house text-sm"></i> Inicio
             </button>
-            <button onclick="switchTab('rutas')" id="top-tab-rutas" class="top-tab py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
+            <button onclick="navigateTo('rutas')" id="top-tab-rutas" class="top-tab py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
                 <i class="fa-solid fa-route text-sm"></i> Rutas
             </button>
-            <button onclick="switchTab('marketplace')" id="top-tab-marketplace" class="top-tab py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
+            <button onclick="navigateTo('marketplace')" id="top-tab-marketplace" class="top-tab py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
                 <i class="fa-solid fa-store text-sm"></i> Market
             </button>
         </div>
@@ -366,11 +424,20 @@
 
         <!-- VISTA INICIO: PUBLICACIONES -->
         <section id="view-inicio" class="tab-content space-y-4">
+            <!-- Botón admin: Crear publicación -->
+            <button id="btnCreatePost" onclick="openCreatePost()" class="admin-action-btn visible bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-3 rounded-2xl text-sm font-bold w-full items-center justify-center gap-2 shadow-lg">
+                <i class="fa-solid fa-pen-to-square"></i> Crear Publicación
+            </button>
             <div class="space-y-4" id="postsContainer"></div>
         </section>
 
         <!-- VISTA RUTAS -->
         <section id="view-rutas" class="tab-content hidden space-y-4">
+            <!-- Botón admin: Registrar ruta -->
+            <button id="btnCreateRoute" onclick="openAdminWizard()" class="admin-action-btn bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-2xl text-sm font-bold w-full items-center justify-center gap-2 shadow-lg">
+                <i class="fa-solid fa-plus"></i> Registrar Nueva Ruta
+            </button>
+
             <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-4">
                 <!-- Filtros -->
                 <div class="flex flex-wrap items-center gap-2 text-sm">
@@ -405,18 +472,20 @@
             </div>
 
             <!-- Resultados -->
-            <div id="explorerResultsContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 routes-grid"></div>
+            <div id="explorerResultsContainer" class="routes-grid"></div>
             <div id="plannerResults" class="space-y-3"></div>
         </section>
 
         <!-- VISTA MARKETPLACE -->
         <section id="view-marketplace" class="tab-content hidden space-y-4">
+            <!-- Botón admin: Agregar venta -->
+            <button id="btnCreateListing" onclick="openCreateListing()" class="admin-action-btn bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-2xl text-sm font-bold w-full items-center justify-center gap-2 shadow-lg">
+                <i class="fa-solid fa-plus"></i> Agregar Venta
+            </button>
+
             <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <h2 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-store text-cyan-400"></i> Marketplace</h2>
-                    <button id="btnCreateListing" onclick="openCreateListing()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-plus"></i> Publicar Venta
-                    </button>
                 </div>
                 <div class="mt-2">
                     <input type="text" id="marketSearch" oninput="renderMarketplace()" placeholder="Buscar en marketplace..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
@@ -438,15 +507,15 @@
 
     <!-- BARRA INFERIOR FLOTANTE -->
     <nav id="bottomNav" class="fixed bottom-0 left-0 w-full bg-slate-900 border-t border-slate-800 py-2 px-2 flex items-center justify-around z-40">
-        <button onclick="switchTab('inicio')" id="nav-inicio" class="bottom-nav-btn tab-active flex flex-col items-center gap-0.5 text-slate-400 px-2 py-1">
+        <button onclick="navigateTo('inicio')" id="nav-inicio" class="bottom-nav-btn tab-active flex flex-col items-center gap-0.5 text-slate-400 px-2 py-1">
             <i class="fa-solid fa-house text-xl"></i>
             <span class="text-[10px] font-bold">Inicio</span>
         </button>
-        <button onclick="switchTab('rutas')" id="nav-rutas" class="bottom-nav-btn flex flex-col items-center gap-0.5 text-slate-400 px-2 py-1">
+        <button onclick="navigateTo('rutas')" id="nav-rutas" class="bottom-nav-btn flex flex-col items-center gap-0.5 text-slate-400 px-2 py-1">
             <i class="fa-solid fa-route text-xl"></i>
             <span class="text-[10px] font-bold">Rutas</span>
         </button>
-        <button onclick="switchTab('marketplace')" id="nav-marketplace" class="bottom-nav-btn flex flex-col items-center gap-0.5 text-slate-400 px-2 py-1">
+        <button onclick="navigateTo('marketplace')" id="nav-marketplace" class="bottom-nav-btn flex flex-col items-center gap-0.5 text-slate-400 px-2 py-1">
             <i class="fa-solid fa-store text-xl"></i>
             <span class="text-[10px] font-bold">Market</span>
         </button>
@@ -460,7 +529,7 @@
         <div class="bg-slate-900 w-full max-w-2xl max-h-[90vh] rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
             <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex justify-between items-center shrink-0">
                 <h3 id="postModalTitle" class="font-bold text-sm text-white">Nueva Publicación</h3>
-                <button onclick="closeModal('postModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeModalWithHistory('postModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-4 overflow-y-auto flex-1">
                 <form id="postForm" onsubmit="handlePostSubmit(event)">
@@ -487,7 +556,7 @@
         <div class="bg-slate-900 w-full max-w-2xl max-h-[90vh] rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
             <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex justify-between items-center shrink-0">
                 <h3 class="font-bold text-sm text-white"><i class="fa-solid fa-tag"></i> Nueva Publicación</h3>
-                <button onclick="closeModal('marketplaceModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeModalWithHistory('marketplaceModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="p-4 overflow-y-auto flex-1">
                 <form id="marketplaceForm" onsubmit="handleMarketplaceSubmit(event)">
@@ -519,7 +588,7 @@
     <div id="adminWizardModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex flex-col hidden">
         <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0">
             <div class="flex items-center gap-2"><i class="fa-solid fa-shield-halved text-cyan-400 text-lg"></i><h3 id="wizardTitle" class="font-bold text-sm text-white">Registrar / Editar Ruta</h3></div>
-            <button onclick="closeModal('adminWizardModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold"><i class="fa-solid fa-xmark"></i> Salir</button>
+            <button onclick="closeModalWithHistory('adminWizardModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold"><i class="fa-solid fa-xmark"></i> Salir</button>
         </div>
         <div class="bg-slate-950 border-b border-slate-800 px-4 py-2 shrink-0">
             <div class="max-w-3xl mx-auto flex items-center justify-between text-xs font-bold">
@@ -550,19 +619,19 @@
             </div>
             <div id="wizard-step-3" class="wizard-step hidden space-y-4">
                 <div class="border-b border-slate-800 pb-2"><h4 class="text-sm font-bold text-cyan-400 uppercase">Paso 3: Paradas y POIs</h4></div>
-                <input type="text" id="routeStops" list="globalPointsDatalist" placeholder="Paradas (separadas por coma)" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500">
-                <input type="text" id="routeReturnStops" list="globalPointsDatalist" placeholder="Retornos (separados por coma)" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500">
-                <textarea id="routePoisUrban" rows="2" placeholder="POIs Urbanos" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500"></textarea>
-                <textarea id="routePoisForeign" rows="2" placeholder="POIs Foráneos" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500"></textarea>
+                <textarea id="routeStops" rows="3" list="globalPointsDatalist" placeholder="Paradas (separadas por coma o salto de línea)" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500"></textarea>
+                <textarea id="routeReturnStops" rows="3" list="globalPointsDatalist" placeholder="Retornos (separados por coma o salto de línea)" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500"></textarea>
+                <textarea id="routePoisUrban" rows="2" placeholder="POIs Urbanos (separados por coma o salto de línea)" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500"></textarea>
+                <textarea id="routePoisForeign" rows="2" placeholder="POIs Foráneos (separados por coma o salto de línea)" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500"></textarea>
             </div>
             <div id="wizard-step-4" class="wizard-step hidden space-y-4">
                 <div class="border-b border-slate-800 pb-2"><h4 class="text-sm font-bold text-cyan-400 uppercase">Paso 4: Calles</h4></div>
-                <textarea id="routeStreets" rows="4" placeholder="Calles por donde pasa *" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500 font-mono"></textarea>
+                <textarea id="routeStreets" rows="4" placeholder="Calles por donde pasa (separadas por coma o salto de línea) *" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500 font-mono"></textarea>
             </div>
             <div class="pt-4 border-t border-slate-800 flex justify-between items-center mt-6 shrink-0">
                 <button type="button" id="btnWizardPrev" onclick="navigateWizard(-1)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-sm opacity-50 cursor-not-allowed" disabled><i class="fa-solid fa-arrow-left"></i> Anterior</button>
                 <div class="flex gap-2">
-                    <button type="button" onclick="closeModal('adminWizardModal')" class="px-4 py-2 bg-slate-800 text-slate-400 rounded-xl font-bold text-sm">Cancelar</button>
+                    <button type="button" onclick="closeModalWithHistory('adminWizardModal')" class="px-4 py-2 bg-slate-800 text-slate-400 rounded-xl font-bold text-sm">Cancelar</button>
                     <button type="button" id="btnWizardNext" onclick="navigateWizard(1)" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold text-sm">Siguiente <i class="fa-solid fa-arrow-right"></i></button>
                     <button type="submit" id="btnWizardSubmit" class="hidden px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm"><i class="fa-solid fa-check"></i> Guardar</button>
                 </div>
@@ -575,7 +644,7 @@
         <div class="handle" id="commentsHandle"></div>
         <div class="flex justify-between items-center mb-4">
             <h4 class="font-bold text-sm text-white"><i class="fa-regular fa-comment"></i> Comentarios</h4>
-            <button onclick="closeComments()" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm"><i class="fa-solid fa-xmark"></i></button>
+            <button onclick="closeCommentsWithHistory()" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="commentsList" class="overflow-y-auto max-h-[40vh] space-y-3"></div>
         <div class="mt-4 border-t border-slate-800 pt-3">
@@ -588,7 +657,7 @@
     </div>
 
     <!-- Overlay para cerrar comentarios al tocar fuera -->
-    <div id="commentsBackdrop" class="fixed inset-0 z-50 hidden" onclick="closeComments()"></div>
+    <div id="commentsBackdrop" class="fixed inset-0 z-50 hidden" onclick="closeCommentsWithHistory()"></div>
 
     <script>
         // ===== CONFIGURACIÓN =====
@@ -693,6 +762,120 @@
         let isOnline = navigator.onLine;
         let currentRouteForMap = null;
 
+        // ===== HISTORIAL DE NAVEGACIÓN =====
+        let historyStack = [];
+        let currentTab = 'inicio';
+        let isNavigatingBack = false;
+
+        function pushHistory(state) {
+            if (isNavigatingBack) return;
+            historyStack.push(state);
+            const url = buildUrl(state);
+            history.pushState(state, '', url);
+        }
+
+        function replaceHistory(state) {
+            const url = buildUrl(state);
+            history.replaceState(state, '', url);
+        }
+
+        function buildUrl(state) {
+            const base = window.location.pathname;
+            const params = new URLSearchParams();
+            if (state.tab) params.set('tab', state.tab);
+            if (state.postId) params.set('post', state.postId);
+            if (state.routeId) params.set('ruta', state.routeId);
+            if (state.routeName) params.set('ruta', state.routeName);
+            if (state.listingId) params.set('market', state.listingId);
+            const qs = params.toString();
+            return base + (qs ? '?' + qs : '');
+        }
+
+        function navigateTo(tab, extraState = {}) {
+            if (currentTab === tab && !extraState.force) {
+                // Si ya estamos en la pestaña, solo actualizamos sin push
+            }
+            const state = { tab, ...extraState };
+            currentTab = tab;
+            pushHistory(state);
+            applyState(state);
+        }
+
+        function applyState(state) {
+            // Cambiar pestaña visualmente
+            const contents = document.getElementsByClassName('tab-content');
+            for (let c of contents) c.classList.add('hidden');
+            const targetView = document.getElementById(`view-${state.tab}`);
+            if (targetView) targetView.classList.remove('hidden');
+
+            const topTabs = document.getElementsByClassName('top-tab');
+            for (let t of topTabs) t.className = "top-tab py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-center gap-1.5";
+            const topTab = document.getElementById(`top-tab-${state.tab}`);
+            if (topTab) topTab.className = "top-tab py-2 rounded-lg flex items-center justify-center gap-1.5 bg-cyan-600 text-white";
+
+            const navBtns = document.getElementsByClassName('bottom-nav-btn');
+            for (let n of navBtns) n.classList.remove('tab-active');
+            const navBtn = document.getElementById(`nav-${state.tab}`);
+            if (navBtn) navBtn.classList.add('tab-active');
+
+            // Actualizar botones admin contextuales
+            updateAdminButtons();
+
+            if (state.tab === 'inicio') renderPosts();
+            if (state.tab === 'marketplace') renderMarketplace();
+            if (state.tab === 'rutas') renderExplorerView();
+
+            // Manejar post destacado (sin popup)
+            if (state.postId) {
+                setTimeout(() => {
+                    const el = document.querySelector(`[data-post-id="${state.postId}"]`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.classList.add('post-highlight');
+                        setTimeout(() => el.classList.remove('post-highlight'), 5000);
+                    }
+                }, 300);
+            }
+
+            // Manejar ruta destacada -> abrir mapa
+            if (state.routeName) {
+                setTimeout(() => {
+                    const route = routesData.find(r => r.name === state.routeName || r.id === state.routeName);
+                    if (route) {
+                        openRouteModal(route.id, false); // false = no push history
+                    }
+                }, 300);
+            }
+
+            // Manejar listing destacado
+            if (state.listingId) {
+                setTimeout(() => {
+                    const listing = listingsData.find(l => l.id === state.listingId);
+                    if (listing) {
+                        const searchInput = document.getElementById('marketSearch');
+                        if (searchInput) searchInput.value = listing.title || '';
+                        renderMarketplace();
+                        const el = document.querySelector(`[data-listing-id="${state.listingId}"]`);
+                        if (el) {
+                            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            el.classList.add('post-highlight');
+                            setTimeout(() => el.classList.remove('post-highlight'), 5000);
+                        }
+                    }
+                }, 300);
+            }
+        }
+
+        function updateAdminButtons() {
+            const postBtn = document.getElementById('btnCreatePost');
+            const routeBtn = document.getElementById('btnCreateRoute');
+            const listingBtn = document.getElementById('btnCreateListing');
+
+            if (postBtn) postBtn.classList.toggle('visible', isAdminLoggedIn && currentTab === 'inicio');
+            if (routeBtn) routeBtn.classList.toggle('visible', isAdminLoggedIn && currentTab === 'rutas');
+            if (listingBtn) listingBtn.classList.toggle('visible', isAdminLoggedIn && currentTab === 'marketplace');
+        }
+
         // ===== PWA =====
         window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('btnInstallPwa').classList.remove('hidden'); });
         function installPWA() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { document.getElementById('btnInstallPwa').classList.add('hidden'); }); } }
@@ -716,8 +899,8 @@
             if (!str) return '';
             return str.toLowerCase()
                 .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '') // quitar tildes
-                .replace(/[''`´]/g, '') // quitar apóstrofes y comillas
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[''`´]/g, '')
                 .replace(/\s+/g, ' ')
                 .trim();
         }
@@ -731,7 +914,6 @@
         async function loadAllData() {
             await openIndexedDB();
             
-            // Intentar cargar desde IndexedDB primero
             const idbRoutes = await idbGetAll('routes');
             const idbPosts = await idbGetAll('posts');
             const idbListings = await idbGetAll('listings');
@@ -757,12 +939,10 @@
         }
 
         async function saveAllData() {
-            // Guardar en IndexedDB
             await idbPutAll('routes', routesData);
             await idbPutAll('posts', postsData);
             await idbPutAll('listings', listingsData);
             
-            // Mantener localStorage como respaldo
             localStorage.setItem('tgz_routes_pro_cache', JSON.stringify(routesData));
             localStorage.setItem('tgz_posts_cache', JSON.stringify(postsData));
             localStorage.setItem('tgz_listings_cache', JSON.stringify(listingsData));
@@ -779,17 +959,12 @@
         function syncDataWithFirebase() {
             if (navigator.onLine) {
                 Promise.all([routesRef.set(routesData), postsRef.set(postsData), marketplaceRef.set(listingsData)])
-                    .then(() => { /* sin popup */ })
                     .catch(err => Swal.fire('Error', err.message, 'error'));
             }
         }
 
         function updateNetworkState(isOnlineVal, text) {
             isOnline = isOnlineVal;
-            const dot = document.getElementById('netStatusDot');
-            const txt = document.getElementById('netStatusText');
-            if (isOnlineVal) { dot.className = "w-2 h-2 rounded-full bg-emerald-400"; txt.innerText = text || "EN LÍNEA"; }
-            else { dot.className = "w-2 h-2 rounded-full bg-amber-400"; txt.innerText = text || "MODO OFFLINE"; }
         }
 
         // ===== CLOUDINARY UPLOAD =====
@@ -846,6 +1021,14 @@
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
 
+        // Cerrar modal con historial (para el botón atrás)
+        function closeModalWithHistory(id) {
+            closeModal(id);
+            if (historyStack.length > 1) {
+                historyStack.pop();
+            }
+        }
+
         function updateAllDatalists() {
             const global = new Set();
             routesData.forEach(r => {
@@ -853,29 +1036,10 @@
                 (r.returnStops || []).forEach(p => global.add(p));
                 (r.poisUrban || []).forEach(p => global.add(p));
                 (r.poisForeign || []).forEach(p => global.add(p));
-                if (r.streets) r.streets.split(',').map(s => s.trim()).filter(Boolean).forEach(st => global.add(st));
+                if (r.streets) r.streets.split(/[,\n]+/).map(s => s.trim()).filter(Boolean).forEach(st => global.add(st));
             });
             const dl = document.getElementById('globalPointsDatalist');
             if (dl) dl.innerHTML = Array.from(global).sort().map(i => `<option value="${escapeHtml(i)}"></option>`).join('');
-        }
-
-        // ===== NAVEGACIÓN =====
-        function switchTab(tabId) {
-            const contents = document.getElementsByClassName('tab-content');
-            for (let c of contents) c.classList.add('hidden');
-            document.getElementById(`view-${tabId}`).classList.remove('hidden');
-
-            const topTabs = document.getElementsByClassName('top-tab');
-            for (let t of topTabs) t.className = "top-tab py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-center gap-1.5";
-            document.getElementById(`top-tab-${tabId}`).className = "top-tab py-2 rounded-lg flex items-center justify-center gap-1.5 bg-cyan-600 text-white";
-
-            const navBtns = document.getElementsByClassName('bottom-nav-btn');
-            for (let n of navBtns) n.classList.remove('tab-active');
-            document.getElementById(`nav-${tabId}`).classList.add('tab-active');
-
-            if (tabId === 'inicio') renderPosts();
-            if (tabId === 'marketplace') renderMarketplace();
-            if (tabId === 'rutas') renderExplorerView();
         }
 
         // ===== ADMIN =====
@@ -892,8 +1056,7 @@
         }
         function updateAdminUI() {
             document.getElementById('adminBtnText').innerText = isAdminLoggedIn ? 'Salir Admin' : 'Admin';
-            document.getElementById('btnCreatePost').classList.toggle('hidden', !isAdminLoggedIn);
-            document.getElementById('btnCreateListing').classList.toggle('hidden', !isAdminLoggedIn);
+            updateAdminButtons();
             renderAll();
         }
 
@@ -909,6 +1072,7 @@
             }
             viewer.classList.add('active');
             document.body.style.overflow = 'hidden';
+            pushHistory({ modal: 'fullscreenViewer' });
         }
 
         function closeFullscreenViewer(e) {
@@ -945,7 +1109,7 @@
             const likes = post.likes || 0;
             const liked = post.likedBy ? post.likedBy.includes('user') : false;
             const comments = post.comments || [];
-            const mediaHtml = renderMedia(post.mediaUrl || post.imageUrl);
+            const mediaHtml = renderMediaFullWidth(post.mediaUrl || post.imageUrl);
             return `
                 <div class="post-card fade-in ${highlighted ? 'post-highlight' : ''}" data-post-id="${post.id}">
                     <div class="flex items-center justify-between">
@@ -969,6 +1133,15 @@
             `;
         }
 
+        function renderMediaFullWidth(url) {
+            if (!url) return '';
+            const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video');
+            if (isVideo) {
+                return `<div class="post-media-full media-container mt-2" onclick="openFullscreenViewer('${url}')"><video src="${url}" class="w-full max-h-[600px] object-contain" onerror="this.style.display='none'"></video></div>`;
+            }
+            return `<div class="post-media-full media-container mt-2" onclick="openFullscreenViewer('${url}')"><img src="${url}" alt="Imagen" class="w-full max-h-[600px] object-contain" onerror="this.style.display='none'"></div>`;
+        }
+
         function renderMedia(url) {
             if (!url) return '';
             const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video');
@@ -984,6 +1157,7 @@
             document.getElementById('postMediaUrl').value = '';
             document.getElementById('postModalTitle').textContent = 'Nueva Publicación';
             openModal('postModal');
+            pushHistory({ modal: 'postModal' });
         }
 
         function handlePostSubmit(e) {
@@ -1029,11 +1203,19 @@
             renderComments(postId);
             document.getElementById('commentsOverlay').classList.add('open');
             document.getElementById('commentsBackdrop').classList.remove('hidden');
+            pushHistory({ modal: 'comments', postId });
         }
 
         function closeComments() {
             document.getElementById('commentsOverlay').classList.remove('open');
             document.getElementById('commentsBackdrop').classList.add('hidden');
+        }
+
+        function closeCommentsWithHistory() {
+            closeComments();
+            if (historyStack.length > 1) {
+                historyStack.pop();
+            }
         }
 
         function renderComments(postId) {
@@ -1127,7 +1309,9 @@
             document.getElementById('plannerOrigin').value = '';
             document.getElementById('plannerDestination').value = '';
             document.getElementById('plannerResults').innerHTML = '';
+            setViewMode('ROUTES');
             renderExplorerView();
+            navigateTo('rutas');
         }
 
         function setViewMode(mode) {
@@ -1176,17 +1360,17 @@
 
         function renderSquareRouteCard(r) {
             return `
-                <div onclick="openRouteModal('${r.id}')" class="group bg-slate-900 hover:bg-cyan-950/30 border border-slate-800 hover:border-cyan-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all aspect-square relative shadow-lg">
+                <div onclick="openRouteModal('${r.id}')" class="route-square-card group bg-slate-900 hover:bg-cyan-950/30 border border-slate-800 hover:border-cyan-500 rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer transition-all relative shadow-lg">
                     ${isAdminLoggedIn ? `
-                        <div class="absolute top-2 right-2 flex gap-1 z-10" onclick="event.stopPropagation()">
-                            <button onclick="editRoute('${r.id}')" class="p-2 bg-slate-800 text-cyan-400 rounded-xl hover:bg-slate-700 text-xs"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="deleteRoute('${r.id}')" class="p-2 bg-slate-800 text-rose-400 rounded-xl hover:bg-slate-700 text-xs"><i class="fa-solid fa-trash"></i></button>
+                        <div class="absolute top-1 right-1 flex gap-0.5 z-10" onclick="event.stopPropagation()">
+                            <button onclick="editRoute('${r.id}')" class="p-1 bg-slate-800 text-cyan-400 rounded-lg hover:bg-slate-700 text-[10px]"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteRoute('${r.id}')" class="p-1 bg-slate-800 text-rose-400 rounded-lg hover:bg-slate-700 text-[10px]"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     ` : ''}
-                    <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-black transition-all flex items-center justify-center text-cyan-400 text-2xl mb-2"><i class="fa-solid fa-bus"></i></div>
-                    <h3 class="font-black text-sm text-white group-hover:text-cyan-300 transition-colors line-clamp-2 uppercase">${escapeHtml(r.name)}</h3>
-                    <span class="mt-2 text-[10px] font-bold px-3 py-1 rounded border ${r.category === 'URBANA' ? 'bg-cyan-950 text-cyan-400 border-cyan-800' : 'bg-purple-950 text-purple-400 border-purple-800'}">${r.category}</span>
-                    <button onclick="event.stopPropagation();shareRouteById('${r.id}')" class="mt-2 text-[10px] bg-slate-800 hover:bg-slate-700 text-cyan-400 px-3 py-1.5 rounded-xl"><i class="fa-solid fa-share-nodes"></i> Compartir</button>
+                    <div class="route-icon rounded-2xl bg-cyan-500/10 border border-cyan-500/30 group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-black transition-all flex items-center justify-center text-cyan-400 mb-1"><i class="fa-solid fa-bus"></i></div>
+                    <h3 class="font-black text-white group-hover:text-cyan-300 transition-colors line-clamp-2 uppercase">${escapeHtml(r.name)}</h3>
+                    <span class="route-cat mt-1 font-bold rounded border ${r.category === 'URBANA' ? 'bg-cyan-950 text-cyan-400 border-cyan-800' : 'bg-purple-950 text-purple-400 border-purple-800'}">${r.category}</span>
+                    <button onclick="event.stopPropagation();shareRouteById('${r.id}')" class="route-share mt-1 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg"><i class="fa-solid fa-share-nodes"></i></button>
                 </div>
             `;
         }
@@ -1220,13 +1404,14 @@
 
         function selectPoint(pointName) {
             document.getElementById('plannerOrigin').value = pointName;
-            onSearchChange();
+            setViewMode('ROUTES');
+            renderExplorerView();
             const dest = document.getElementById('plannerDestination').value.trim();
             if (dest) calculateMultiRoute();
         }
 
         // ===== MAPA A PANTALLA COMPLETA =====
-        function openRouteModal(routeId) {
+        function openRouteModal(routeId, pushHistoryFlag = true) {
             const route = routesData.find(r => r.id === routeId);
             if (!route) return;
             currentRouteForMap = route;
@@ -1254,6 +1439,9 @@
 
             document.getElementById('fullscreenMap').classList.add('active');
             document.body.style.overflow = 'hidden';
+            if (pushHistoryFlag) {
+                pushHistory({ modal: 'map', routeId: route.id, tab: currentTab });
+            }
         }
 
         function closeFullscreenMap() {
@@ -1306,7 +1494,7 @@
 
             const getAllRoutePoints = (r) => {
                 return [...(r.stops || []), ...(r.returnStops || []), ...(r.poisUrban || []), ...(r.poisForeign || []),
-                    ...(r.streets ? r.streets.split(',').map(s => s.trim()) : [])].map(p => normalizeText(p));
+                    ...(r.streets ? r.streets.split(/[,\n]+/).map(s => s.trim()) : [])].map(p => normalizeText(p));
             };
 
             const directRoutes = routesData.filter(r => {
@@ -1383,6 +1571,7 @@
             currentWizardStep = 1;
             updateWizardStepUI();
             openModal('adminWizardModal');
+            pushHistory({ modal: 'adminWizardModal' });
         }
 
         function navigateWizard(delta) {
@@ -1410,7 +1599,9 @@
         function handleRouteSubmit(e) {
             e.preventDefault();
             const editId = document.getElementById('editRouteId').value;
-            const parseAndClean = (str) => { return (str || '').split(',').map(s => s.trim()).filter(Boolean); };
+            const parseAndClean = (str) => {
+                return (str || '').split(/[,\n]+/).map(s => s.trim()).filter(Boolean);
+            };
             const routeObj = {
                 id: editId || 'route_' + Date.now(),
                 name: document.getElementById('routeName').value.trim(),
@@ -1448,6 +1639,7 @@
             currentWizardStep = 1;
             updateWizardStepUI();
             openModal('adminWizardModal');
+            pushHistory({ modal: 'adminWizardModal' });
         }
 
         function deleteRoute(id) {
@@ -1492,7 +1684,7 @@
                 return;
             }
             container.innerHTML = filtered.map(l => `
-                <div class="marketplace-card ${l.id === highlightListingId ? 'post-highlight' : ''}">
+                <div class="marketplace-card ${l.id === highlightListingId ? 'post-highlight' : ''}" data-listing-id="${l.id}">
                     ${l.mediaUrl ? `<div class="media-container" onclick="openFullscreenViewer('${l.mediaUrl}')">${renderMedia(l.mediaUrl)}</div>` : `<div class="w-full h-48 bg-slate-800 flex items-center justify-center text-slate-600"><i class="fa-solid fa-image text-4xl"></i></div>`}
                     <div class="p-4 flex-1 flex flex-col">
                         <h3 class="font-bold text-sm text-white">${escapeHtml(l.title)}</h3>
@@ -1518,6 +1710,7 @@
             document.getElementById('listingDescription').value = '';
             document.getElementById('listingMediaUrl').value = '';
             openModal('marketplaceModal');
+            pushHistory({ modal: 'marketplaceModal' });
         }
 
         function handleMarketplaceSubmit(e) {
@@ -1564,42 +1757,72 @@
             }
         }
 
-        // ===== DETECCIÓN DE URL =====
-        function handleUrlParams() {
+        // ===== DETECCIÓN DE URL INICIAL =====
+        function handleInitialUrl() {
             const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab') || 'inicio';
             const postId = params.get('post');
             const ruta = params.get('ruta');
             const market = params.get('market');
 
-            if (postId) {
-                switchTab('inicio');
-                setTimeout(() => {
-                    const post = postsData.find(p => p.id === postId);
-                    if (post) {
-                        document.getElementById('postsContainer').scrollIntoView({ behavior: 'smooth' });
-                        Swal.fire({ title: 'Publicación destacada', text: post.content?.substring(0, 100) + '...', icon: 'info', timer: 3000 });
-                    }
-                }, 500);
-            }
-            if (ruta) {
-                switchTab('rutas');
-                setTimeout(() => {
-                    document.getElementById('plannerOrigin').value = ruta;
-                    renderExplorerView();
-                }, 500);
-            }
-            if (market) {
-                switchTab('marketplace');
-                setTimeout(() => {
-                    const listing = listingsData.find(l => l.id === market);
-                    if (listing) {
-                        document.getElementById('marketSearch').value = listing.title || '';
-                        renderMarketplace();
-                        Swal.fire({ title: 'Producto destacado', text: listing.title, icon: 'info', timer: 3000 });
-                    }
-                }, 500);
-            }
+            // Construir estado inicial
+            const initialState = { tab };
+            if (postId) initialState.postId = postId;
+            if (ruta) initialState.routeName = ruta;
+            if (market) initialState.listingId = market;
+
+            // Reemplazar historial con el estado inicial
+            replaceHistory(initialState);
+            historyStack = [initialState];
+            currentTab = tab;
+
+            applyState(initialState);
         }
+
+        // ===== MANEJO DEL BOTÓN ATRÁS =====
+        window.addEventListener('popstate', (event) => {
+            isNavigatingBack = true;
+
+            const state = event.state;
+
+            // Si no hay estado, volver a inicio
+            if (!state) {
+                const homeState = { tab: 'inicio' };
+                replaceHistory(homeState);
+                historyStack = [homeState];
+                currentTab = 'inicio';
+                applyState(homeState);
+                isNavigatingBack = false;
+                return;
+            }
+
+            // Cerrar modales/visores abiertos según el estado
+            if (state.modal) {
+                // Cerrar el modal correspondiente
+                if (state.modal === 'fullscreenViewer') closeFullscreenViewer();
+                if (state.modal === 'map') closeFullscreenMap();
+                if (state.modal === 'comments') closeComments();
+                if (state.modal === 'postModal') closeModal('postModal');
+                if (state.modal === 'marketplaceModal') closeModal('marketplaceModal');
+                if (state.modal === 'adminWizardModal') closeModal('adminWizardModal');
+
+                // Actualizar historial y volver al estado anterior (la pestaña actual)
+                historyStack.pop();
+                const prevState = historyStack[historyStack.length - 1] || { tab: currentTab };
+                replaceHistory(prevState);
+                applyState(prevState);
+            } else {
+                // Navegación normal entre pestañas
+                historyStack = historyStack.filter((s, i) => i < historyStack.length - 1);
+                if (historyStack.length === 0) {
+                    historyStack.push({ tab: 'inicio' });
+                }
+                currentTab = state.tab || 'inicio';
+                applyState(state);
+            }
+
+            isNavigatingBack = false;
+        });
 
         // ===== DRAG PARA COMENTARIOS =====
         function initCommentsDrag() {
@@ -1637,7 +1860,6 @@
                 currentY = 0;
             });
 
-            // Para mouse
             handle.addEventListener('mousedown', (e) => {
                 startY = e.clientY;
                 isDragging = true;
@@ -1672,15 +1894,14 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllData();
             initFirebaseSync();
-            switchTab('inicio');
-            handleUrlParams();
+            handleInitialUrl();
             initCommentsDrag();
-            window.addEventListener('popstate', handleUrlParams);
             window.addEventListener('online', () => { updateNetworkState(true, 'EN LÍNEA'); renderAll(); });
             window.addEventListener('offline', () => { updateNetworkState(false, 'MODO OFFLINE'); renderAll(); });
         });
 
         // Exponer funciones globales
+        window.navigateTo = navigateTo;
         window.shareRoute = shareRoute;
         window.shareRouteById = shareRouteById;
         window.sharePost = sharePost;
@@ -1691,8 +1912,10 @@
         window.closeFullscreenMap = closeFullscreenMap;
         window.clearSearchFields = clearSearchFields;
         window.setMarketFilter = setMarketFilter;
+        window.closeModalWithHistory = closeModalWithHistory;
+        window.closeCommentsWithHistory = closeCommentsWithHistory;
 
-        console.log('🚍 Colectivos TGZ Pro - Sistema Integral v3.0 con IndexedDB');
+        console.log('🚍 Colectivos TGZ Pro - Sistema Integral v4.0 con historial y URLs personalizadas');
     </script>
 </body>
 </html>
