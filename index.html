@@ -289,17 +289,20 @@
             user-select: none;
         }
 
-        /* Rutas en 4 columnas siempre en móvil */
+              /* Rutas en 3 columnas en todas las resoluciones */
         .routes-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr) !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
             gap: 8px;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
         }
         @media (min-width: 640px) {
-            .routes-grid { grid-template-columns: repeat(4, 1fr) !important; }
+            .routes-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
         }
         @media (min-width: 1024px) {
-            .routes-grid { grid-template-columns: repeat(4, 1fr) !important; }
+            .routes-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
         }
 
         /* Ajustes para tarjetas de ruta en 4 columnas */
@@ -314,8 +317,10 @@
             font-size: 1rem;
         }
         .route-square-card h3 {
-            font-size: 0.65rem;
+            font-size: 0.9rem;
             line-height: 1.1;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
         .route-square-card .route-cat {
             font-size: 0.55rem;
