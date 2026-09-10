@@ -5,11 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#1e40af">
   <link rel="manifest" href="/manifest.json">
-  <title>Rutas Tuxtla Gutiérrez - App Profesional</title>
+  <title>Rutas Tuxtla Gutiérrez</title>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 
   <style>
     :root {
@@ -19,14 +18,15 @@
       --secondary: #64748b;
       --success: #16a34a;
       --danger: #dc2626;
-      --warning: #ca8a04;
+      --warning: #f59e0b;
       --bg: #f8fafc;
       --card: #ffffff;
       --border: #e2e8f0;
       --text: #1e293b;
       --text-muted: #64748b;
       --shadow: 0 4px 12px rgba(0,0,0,0.1);
-      --shadow-lg: 0 10px 40px rgba(0,0,0,0.15);
+      --shadow-lg: 0 10px 40px rgba(0,0,0,0.2);
+      --sheet-height: 55vh;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -37,44 +37,46 @@
       background: var(--bg);
       color: var(--text);
       overflow: hidden;
+      overscroll-behavior: none;
     }
 
-    #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+    #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; position: relative; }
 
     /* Header */
     .header {
       background: var(--primary);
       color: white;
-      padding: 10px 16px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      z-index: 1000;
+      z-index: 500;
+      flex-shrink: 0;
     }
 
-    .header h1 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .header h1 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
     .header-status { display: flex; align-items: center; gap: 6px; font-size: 11px; }
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
     .status-dot.offline { background: var(--danger); }
 
     /* Mapa */
-    #map-container { flex: 1; position: relative; min-height: 150px; }
+    #map-container { flex: 1; position: relative; min-height: 0; }
     #map { height: 100%; width: 100%; }
 
-    /* Controles flotantes superiores */
-    .top-controls {
+    /* Controles flotantes */
+    .map-controls {
       position: absolute;
       top: 10px;
       left: 10px;
       right: 10px;
-      z-index: 1000;
+      z-index: 400;
       display: flex;
       gap: 8px;
       pointer-events: none;
     }
 
-    .top-controls > * { pointer-events: auto; }
+    .map-controls > * { pointer-events: auto; }
 
     .search-box {
       flex: 1;
@@ -83,9 +85,10 @@
       border-radius: 12px;
       box-shadow: var(--shadow);
       overflow: hidden;
+      max-width: 500px;
     }
 
-    .search-box input { flex: 1; border: none; padding: 12px 14px; font-size: 14px; outline: none; }
+    .search-box input { flex: 1; border: none; padding: 12px 14px; font-size: 14px; outline: none; min-width: 0; }
     .search-box button { background: none; border: none; padding: 12px; cursor: pointer; color: var(--secondary); }
 
     .btn-circle {
@@ -99,193 +102,273 @@
       cursor: pointer;
       box-shadow: var(--shadow);
       font-size: 20px;
-      transition: all 0.2s;
+      transition: transform 0.2s;
+      flex-shrink: 0;
     }
 
     .btn-circle:active { transform: scale(0.95); }
     .btn-add { background: var(--primary); color: white; }
-    .btn-layers { background: white; color: var(--primary); }
+    .btn-menu { background: white; color: var(--primary); }
 
-    /* Modo edición overlay */
-    .edit-mode-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 999;
-      pointer-events: none;
-    }
-
-    .edit-mode-overlay.active { pointer-events: auto; }
-
+    /* Toolbar de herramientas activas */
     .edit-toolbar {
       position: absolute;
-      top: 70px;
+      top: 66px;
       left: 10px;
       right: 10px;
       background: white;
       border-radius: 12px;
-      padding: 12px;
-      box-shadow: var(--shadow-lg);
+      padding: 8px;
+      box-shadow: var(--shadow);
       display: none;
       flex-wrap: wrap;
-      gap: 8px;
-      z-index: 1001;
+      gap: 6px;
+      z-index: 400;
     }
 
     .edit-toolbar.active { display: flex; }
 
     .tool-btn {
-      padding: 8px 12px;
+      padding: 7px 10px;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: white;
-      font-size: 12px;
+      font-size: 11px;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 4px;
-      transition: all 0.2s;
+      transition: all 0.15s;
+      white-space: nowrap;
     }
 
-    .tool-btn:active { background: var(--bg); }
+    .tool-btn:active { transform: scale(0.96); }
     .tool-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
     .tool-btn.danger { background: #fee2e2; color: var(--danger); border-color: #fecaca; }
 
-    /* Panel inferior */
+    /* Bottom Panel colapsable */
     .bottom-panel {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
       background: var(--card);
-      border-radius: 20px 20px 0 0;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-      max-height: 50vh;
+      border-radius: 18px 18px 0 0;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+      max-height: 55vh;
       display: flex;
       flex-direction: column;
-      transition: max-height 0.3s ease;
-      z-index: 999;
+      transition: transform 0.3s ease, max-height 0.3s ease;
+      z-index: 500;
+      transform: translateY(calc(100% - 48px));
     }
 
-    .bottom-panel.collapsed { max-height: 50px; }
+    .bottom-panel.open { transform: translateY(0); }
 
     .panel-handle-area {
-      padding: 8px 0;
-      cursor: pointer;
+      padding: 6px 0 8px;
+      cursor: grab;
       display: flex;
       justify-content: center;
+      flex-shrink: 0;
     }
 
-    .panel-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; }
+    .panel-handle-area:active { cursor: grabbing; }
+
+    .panel-handle {
+      width: 40px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+    }
 
     .panel-tabs {
       display: flex;
       border-bottom: 1px solid var(--border);
-      padding: 0 16px;
+      padding: 0 12px;
+      overflow-x: auto;
+      flex-shrink: 0;
+      scrollbar-width: none;
     }
 
+    .panel-tabs::-webkit-scrollbar { display: none; }
+
     .panel-tab {
-      padding: 12px 16px;
-      font-size: 13px;
+      padding: 10px 14px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--text-muted);
       cursor: pointer;
       border-bottom: 2px solid transparent;
       transition: all 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .panel-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-    .panel-content { flex: 1; overflow-y: auto; padding: 12px 16px; -webkit-overflow-scrolling: touch; }
-    .panel-content.hidden { display: none; }
-
-    /* Tarjetas de ruta */
-    .route-card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 10px;
-      cursor: pointer;
-      transition: all 0.2s;
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      -webkit-overflow-scrolling: touch;
+      display: none;
     }
 
-    .route-card:active { transform: scale(0.98); }
-    .route-card.selected { border-color: var(--primary); background: #eff6ff; }
+    .panel-content.active { display: block; }
 
-    .route-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-    .route-card h3 { font-size: 14px; font-weight: 600; }
-    .route-badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; }
-    .badge-ida { background: #dbeafe; color: #1e40af; }
-    .badge-vuelta { background: #fef3c7; color: #92400e; }
-    .badge-circular { background: #dcfce7; color: #166534; }
-
-    .route-meta { display: flex; gap: 12px; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; }
-    .route-actions { display: flex; gap: 6px; }
-
-    .btn-sm {
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 500;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .btn-view { background: var(--primary); color: white; }
-    .btn-edit { background: var(--border); color: var(--text); }
-    .btn-delete { background: #fee2e2; color: var(--danger); }
-
-    /* Modal */
-    .modal {
+    /* Bottom Sheet Modal (Nueva Ruta) - ARRASTRABLE */
+    .sheet-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 2000;
+      background: rgba(0,0,0,0.3);
+      z-index: 1500;
       display: none;
-      align-items: flex-end;
-      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
     }
 
-    .modal.active { display: flex; }
+    .sheet-overlay.active { display: block; opacity: 1; pointer-events: auto; }
 
-    .modal-content {
+    .bottom-sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
       background: white;
-      width: 100%;
-      max-width: 600px;
-      max-height: 92vh;
       border-radius: 20px 20px 0 0;
-      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      max-height: 90vh;
+      height: 75vh;
       display: flex;
       flex-direction: column;
-      animation: slideUp 0.3s ease;
+      z-index: 1600;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), height 0.3s ease;
+      will-change: transform;
+      touch-action: none;
     }
 
-    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .bottom-sheet.active { transform: translateY(0); }
+    .bottom-sheet.dragging { transition: none; }
+    .bottom-sheet.collapsed { height: 48px; }
+    .bottom-sheet.collapsed .sheet-body,
+    .bottom-sheet.collapsed .sheet-footer { display: none; }
+    .bottom-sheet.collapsed .sheet-header h2 { font-size: 13px; }
 
-    .modal-header {
-      padding: 16px 20px;
+    .sheet-header {
+      padding: 8px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       border-bottom: 1px solid var(--border);
+      cursor: grab;
+      flex-shrink: 0;
+      user-select: none;
+      background: white;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .sheet-header:active { cursor: grabbing; }
+
+    .sheet-drag-handle {
+      width: 40px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 8px;
+    }
+
+    .sheet-title-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-shrink: 0;
+      width: 100%;
     }
 
-    .modal-header h2 { font-size: 17px; }
-    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--secondary); }
-    .modal-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
-    .modal-footer {
-      padding: 12px 20px;
+    .sheet-header h2 { font-size: 16px; font-weight: 600; }
+
+    .sheet-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--secondary);
+      font-size: 18px;
+      transition: background 0.15s;
+    }
+
+    .icon-btn:active { background: var(--bg); }
+
+    .sheet-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .sheet-footer {
+      padding: 10px 16px;
       border-top: 1px solid var(--border);
       display: flex;
-      gap: 10px;
+      gap: 8px;
       flex-shrink: 0;
+      background: white;
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
     }
 
-    /* Formularios */
-    .form-group { margin-bottom: 14px; }
+    /* Acordeón de secciones */
+    .section {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .section-header {
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      background: var(--bg);
+      font-size: 13px;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .section-header:active { background: #e2e8f0; }
+
+    .section-arrow {
+      transition: transform 0.2s;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .section.open .section-arrow { transform: rotate(180deg); }
+
+    .section-body {
+      display: none;
+      padding: 12px 14px;
+    }
+
+    .section.open .section-body { display: block; }
+
+    /* Forms */
+    .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--text); }
 
     .form-group input,
@@ -298,6 +381,7 @@
       font-size: 14px;
       outline: none;
       transition: border-color 0.2s;
+      font-family: inherit;
     }
 
     .form-group input:focus,
@@ -306,13 +390,33 @@
 
     .form-group textarea { resize: vertical; min-height: 60px; }
 
-    .form-row { display: flex; gap: 10px; }
-    .form-row > * { flex: 1; }
+    .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .form-row > .form-group { flex: 1; min-width: 120px; }
+
+    /* Color picker personalizado */
+    .color-picker-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .color-chip {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: transform 0.15s;
+    }
+
+    .color-chip:active { transform: scale(0.9); }
+    .color-chip.active { border-color: var(--text); }
 
     /* Botones */
     .btn {
-      padding: 11px 18px;
-      border-radius: 10px;
+      padding: 10px 16px;
+      border-radius: 8px;
       font-size: 13px;
       font-weight: 600;
       border: none;
@@ -321,7 +425,8 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      transition: all 0.2s;
+      transition: all 0.15s;
+      font-family: inherit;
     }
 
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -330,69 +435,101 @@
     .btn-secondary { background: var(--border); color: var(--text); }
     .btn-danger { background: var(--danger); color: white; }
     .btn-success { background: var(--success); color: white; }
+    .btn-warning { background: var(--warning); color: white; }
     .btn-block { width: 100%; flex: none; }
+    .btn-sm { padding: 6px 10px; font-size: 11px; border-radius: 6px; }
 
-    /* Subida de imagen */
-    .image-upload {
-      border: 2px dashed var(--border);
-      border-radius: 10px;
-      padding: 20px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
+    /* Lista de calles detectadas */
+    .streets-list {
+      max-height: 200px;
+      overflow-y: auto;
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 8px;
     }
 
-    .image-upload:active { border-color: var(--primary); background: #eff6ff; }
-    .image-preview { max-width: 100%; max-height: 120px; border-radius: 8px; margin-top: 10px; }
-
-    /* Indicador de grabación */
-    .recording-bar {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--danger);
-      color: white;
-      padding: 14px 20px;
-      border-radius: 30px;
-      display: none;
+    .street-item {
+      display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 13px;
-      font-weight: 600;
-      z-index: 1500;
-      box-shadow: 0 4px 20px rgba(220,38,38,0.4);
+      gap: 8px;
+      padding: 8px;
+      background: white;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 12px;
     }
 
-    .recording-bar.active { display: flex; }
+    .street-item:last-child { margin-bottom: 0; }
 
-    .pulse { width: 10px; height: 10px; background: white; border-radius: 50%; animation: pulse 1s infinite; }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.8); }
+    .street-number {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
     }
 
-    /* POI List */
+    .street-info { flex: 1; min-width: 0; }
+    .street-info h4 { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .street-info p { font-size: 10px; color: var(--text-muted); }
+
+    .street-actions { display: flex; gap: 4px; }
+
+    /* Route cards */
+    .route-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .route-card:active { transform: scale(0.99); }
+    .route-card.selected { border-color: var(--primary); background: #eff6ff; }
+
+    .route-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 8px; }
+    .route-card h3 { font-size: 14px; font-weight: 600; flex: 1; }
+    .route-badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; flex-shrink: 0; }
+    .badge-ida { background: #dbeafe; color: #1e40af; }
+    .badge-vuelta { background: #fef3c7; color: #92400e; }
+    .badge-circular { background: #dcfce7; color: #166534; }
+
+    .route-meta { display: flex; gap: 10px; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; flex-wrap: wrap; }
+    .route-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .btn-view { background: var(--primary); color: white; }
+    .btn-edit { background: var(--border); color: var(--text); }
+    .btn-delete { background: #fee2e2; color: var(--danger); }
+
+    /* POI list */
     .poi-item {
       display: flex;
       align-items: center;
       gap: 10px;
       padding: 10px;
-      background: var(--bg);
+      background: white;
+      border: 1px solid var(--border);
       border-radius: 8px;
-      margin-bottom: 8px;
-      font-size: 13px;
+      margin-bottom: 6px;
+      font-size: 12px;
     }
 
     .poi-icon {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 14px;
       flex-shrink: 0;
     }
 
@@ -403,10 +540,89 @@
     .poi-icon.custom { background: #e0e7ff; }
 
     .poi-info { flex: 1; min-width: 0; }
-    .poi-info h4 { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .poi-info p { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .poi-info h4 { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .poi-info p { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* Transfer points */
+    /* Detección en curso */
+    .detecting-bar {
+      background: linear-gradient(90deg, #dbeafe, #eff6ff);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: var(--primary);
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .detecting-bar.active { display: flex; }
+
+    .mini-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid #93c5fd;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Búsqueda A→B→C */
+    .search-step {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      background: var(--bg);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .search-step-letter {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+      font-size: 14px;
+    }
+
+    .search-step-a { background: var(--success); }
+    .search-step-b { background: var(--danger); }
+    .search-step-c { background: var(--warning); }
+
+    .search-step-info { flex: 1; min-width: 0; }
+    .search-step-info h4 { font-size: 12px; font-weight: 600; }
+    .search-step-info p { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Range slider */
+    .range-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background: var(--bg);
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .range-row input[type="range"] { flex: 1; accent-color: var(--primary); }
+
+    .range-value {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      min-width: 50px;
+      text-align: right;
+    }
+
+    /* Transfer card */
     .transfer-card {
       background: #fef3c7;
       border: 1px solid #fcd34d;
@@ -415,36 +631,23 @@
       margin-bottom: 10px;
     }
 
-    .transfer-card h4 { font-size: 13px; color: #92400e; margin-bottom: 6px; }
-    .transfer-card p { font-size: 12px; color: #78350f; }
-
-    /* Radio selector */
-    .radius-selector {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px;
-      background: var(--bg);
-      border-radius: 10px;
-      margin-bottom: 12px;
-    }
-
-    .radius-selector input[type="range"] { flex: 1; }
+    .transfer-card h4 { font-size: 13px; color: #92400e; margin-bottom: 4px; }
+    .transfer-card p { font-size: 11px; color: #78350f; margin-bottom: 8px; }
 
     /* Empty state */
-    .empty-state { text-align: center; padding: 30px 20px; color: var(--text-muted); }
-    .empty-state svg { width: 50px; height: 50px; margin-bottom: 12px; opacity: 0.4; }
-    .empty-state p { font-size: 13px; }
+    .empty-state { text-align: center; padding: 30px 16px; color: var(--text-muted); }
+    .empty-state svg { width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.4; }
+    .empty-state p { font-size: 12px; }
+    .empty-state .small { font-size: 11px; margin-top: 4px; }
 
     /* Loading */
-    .loading { display: flex; align-items: center; justify-content: center; padding: 30px; gap: 10px; color: var(--text-muted); }
+    .loading { display: flex; align-items: center; justify-content: center; padding: 30px; gap: 10px; color: var(--text-muted); font-size: 13px; }
     .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Toast */
     .toast {
       position: fixed;
-      bottom: 100px;
+      bottom: 80px;
       left: 50%;
       transform: translateX(-50%) translateY(20px);
       background: var(--text);
@@ -458,24 +661,122 @@
       pointer-events: none;
       max-width: 90%;
       text-align: center;
+      box-shadow: var(--shadow-lg);
     }
 
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* Responsive */
-    @media (min-width: 768px) {
-      .bottom-panel { max-height: 40vh; }
-      .modal { align-items: center; }
-      .modal-content { border-radius: 20px; max-height: 85vh; }
+    /* Recording bar */
+    .recording-bar {
+      position: fixed;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--danger);
+      color: white;
+      padding: 12px 18px;
+      border-radius: 30px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 1700;
+      box-shadow: 0 4px 20px rgba(220,38,38,0.4);
+      max-width: 90%;
     }
+
+    .recording-bar.active { display: flex; }
+    .pulse { width: 10px; height: 10px; background: white; border-radius: 50%; animation: pulse 1s infinite; flex-shrink: 0; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* Image upload */
+    .image-upload {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .image-upload:active { border-color: var(--primary); background: #eff6ff; }
+    .image-preview { max-width: 100%; max-height: 120px; border-radius: 8px; margin-top: 8px; }
+
+    /* Desktop sidebar mode */
+    @media (min-width: 900px) {
+      #app {
+        flex-direction: row;
+      }
+
+      .header {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+      }
+
+      #map-container {
+        flex: 1;
+        margin-top: 0;
+      }
+
+      .bottom-panel {
+        position: relative;
+        max-height: none;
+        height: 100%;
+        width: 400px;
+        border-radius: 0;
+        transform: none;
+        box-shadow: -2px 0 12px rgba(0,0,0,0.08);
+        padding-top: 56px;
+        order: -1;
+      }
+
+      .panel-handle-area { display: none; }
+
+      .bottom-sheet {
+        left: auto;
+        right: 20px;
+        bottom: 20px;
+        width: 420px;
+        height: auto;
+        max-height: 80vh;
+        border-radius: 16px;
+      }
+
+      .bottom-sheet.collapsed { height: 48px; }
+      .bottom-sheet:not(.active) { transform: translateY(120%); }
+
+      .toast { bottom: 30px; }
+      .recording-bar { bottom: 30px; }
+    }
+
+    /* Leaflet customizations */
+    .leaflet-control-attribution { font-size: 9px; }
+    .leaflet-popup-content { font-size: 13px; margin: 8px 12px; }
+
+    .route-marker, .poi-marker, .search-marker, .transfer-marker {
+      background: none;
+      border: none;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
   </style>
 </head>
 <body>
   <div id="app">
-    <!-- Header -->
     <header class="header">
       <h1>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
           <circle cx="12" cy="9" r="2.5"/>
         </svg>
@@ -487,12 +788,10 @@
       </div>
     </header>
 
-    <!-- Mapa -->
     <div id="map-container">
       <div id="map"></div>
 
-      <!-- Controles superiores -->
-      <div class="top-controls">
+      <div class="map-controls">
         <div class="search-box">
           <input type="text" id="search-input" placeholder="Buscar rutas, calles, negocios...">
           <button id="search-btn" aria-label="Buscar">
@@ -502,125 +801,252 @@
           </button>
         </div>
         <button class="btn-circle btn-add" id="btn-add-route" aria-label="Agregar ruta">+</button>
-        <button class="btn-circle btn-layers" id="btn-layers" aria-label="Capas">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
-          </svg>
-        </button>
       </div>
 
-      <!-- Toolbar de edición -->
       <div class="edit-toolbar" id="edit-toolbar">
-        <button class="tool-btn active" id="tool-draw" data-tool="draw">✏️ Dibujar</button>
-        <button class="tool-btn" id="tool-gps" data-tool="gps">📍 GPS</button>
-        <button class="tool-btn" id="tool-poi" data-tool="poi">🏪 Punto</button>
-        <button class="tool-btn" id="tool-undo" data-tool="undo">↩️ Deshacer</button>
-        <button class="tool-btn danger" id="tool-clear" data-tool="clear">🗑️ Limpiar</button>
+        <button class="tool-btn active" data-tool="draw">✏️ Dibujar</button>
+        <button class="tool-btn" data-tool="gps">📍 GPS</button>
+        <button class="tool-btn" data-tool="poi">🏪 Punto</button>
+        <button class="tool-btn" data-tool="undo">↩️ Deshacer</button>
+        <button class="tool-btn danger" data-tool="clear">🗑️ Limpiar</button>
+        <button class="tool-btn" data-tool="detect">🔍 Detectar Calles</button>
       </div>
     </div>
 
-    <!-- Panel inferior -->
+    <!-- Panel inferior general -->
     <div class="bottom-panel" id="bottom-panel">
       <div class="panel-handle-area" id="panel-toggle">
         <div class="panel-handle"></div>
       </div>
       <div class="panel-tabs">
-        <div class="panel-tab active" data-tab="routes">Rutas</div>
-        <div class="panel-tab" data-tab="search">Buscar Viaje</div>
-        <div class="panel-tab" data-tab="pois">Puntos de Interés</div>
+        <div class="panel-tab active" data-tab="routes">🚌 Rutas</div>
+        <div class="panel-tab" data-tab="trip">🗺️ Buscar Viaje</div>
+        <div class="panel-tab" data-tab="pois">🏪 Puntos</div>
+        <div class="panel-tab" data-tab="stats">📊 Info</div>
       </div>
-      <div class="panel-content" id="tab-routes">
-        <div class="loading">
-          <div class="spinner"></div>
-          <span>Cargando rutas...</span>
-        </div>
+      <div class="panel-content active" id="tab-routes">
+        <div class="loading"><div class="spinner"></div><span>Cargando...</span></div>
       </div>
-      <div class="panel-content hidden" id="tab-search">
-        <div class="form-group">
-          <label>Punto de partida</label>
-          <input type="text" id="search-origin" placeholder="Tu ubicación o dirección">
-        </div>
-        <div class="form-group">
-          <label>Destino</label>
-          <input type="text" id="search-destination" placeholder="A dónde vas">
-        </div>
-        <div class="radius-selector">
-          <span style="font-size:12px;">Radio:</span>
-          <input type="range" id="search-radius" min="100" max="2000" value="500" step="100">
-          <span id="radius-value" style="font-size:12px;font-weight:600;">500m</span>
-        </div>
-        <button class="btn btn-primary btn-block" id="btn-search-trip">
-          🔍 Buscar Rutas
-        </button>
-        <div id="search-results" style="margin-top:16px;"></div>
+      <div class="panel-content" id="tab-trip">
+        <div id="trip-search-content"></div>
       </div>
-      <div class="panel-content hidden" id="tab-pois">
+      <div class="panel-content" id="tab-pois">
         <div id="pois-list"></div>
+      </div>
+      <div class="panel-content" id="tab-stats">
+        <div id="stats-content"></div>
       </div>
     </div>
   </div>
 
-  <!-- Barra de grabación -->
-  <div class="recording-bar" id="recording-bar">
-    <span class="pulse"></span>
-    <span id="recording-text">Grabando... 0 puntos</span>
-    <button class="btn btn-sm btn-danger" id="btn-stop-recording">Detener</button>
-  </div>
-
-  <!-- Modal de ruta -->
-  <div class="modal" id="route-modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="modal-title">Nueva Ruta</h2>
-        <button class="modal-close" id="modal-close">&times;</button>
+  <!-- Bottom Sheet: Nueva/Editar Ruta -->
+  <div class="bottom-sheet" id="route-sheet">
+    <div class="sheet-header" id="sheet-drag-handle">
+      <div class="sheet-drag-handle"></div>
+      <div class="sheet-title-row">
+        <h2 id="sheet-title">Nueva Ruta</h2>
+        <div class="sheet-actions">
+          <button class="icon-btn" id="sheet-collapse" title="Minimizar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <button class="icon-btn" id="sheet-close" title="Cerrar">×</button>
+        </div>
       </div>
-      <div class="modal-body">
-        <form id="route-form">
-          <input type="hidden" id="route-id">
+    </div>
 
-          <div class="form-group">
-            <label for="route-name">Nombre de la ruta *</label>
-            <input type="text" id="route-name" required placeholder="Ej: Ruta 15 - Centro Sur">
+    <div class="sheet-body">
+      <form id="route-form">
+        <input type="hidden" id="route-id">
+
+        <!-- Sección: Información básica -->
+        <div class="section open" data-section="basic">
+          <div class="section-header">
+            <span>📋 Información Básica</span>
+            <span class="section-arrow">▼</span>
           </div>
-
-          <div class="form-group">
-            <label for="route-desc">Descripción</label>
-            <textarea id="route-desc" placeholder="Describe el recorrido, horarios, frecuencia..."></textarea>
-          </div>
-
-          <div class="form-row">
+          <div class="section-body">
             <div class="form-group">
-              <label for="route-type">Tipo</label>
-              <select id="route-type">
-                <option value="ida">Ida</option>
-                <option value="vuelta">Vuelta</option>
-                <option value="circular">Circular</option>
-              </select>
+              <label for="route-name">Nombre de la ruta *</label>
+              <input type="text" id="route-name" required placeholder="Ej: Ruta 15 - Centro Sur">
             </div>
+
             <div class="form-group">
-              <label for="route-color">Color</label>
-              <input type="color" id="route-color" value="#1e40af" style="height:40px;cursor:pointer;">
+              <label for="route-desc">Descripción</label>
+              <textarea id="route-desc" placeholder="Describe el recorrido, frecuencia, etc."></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="route-type">Tipo</label>
+                <select id="route-type">
+                  <option value="ida">Ida</option>
+                  <option value="vuelta">Vuelta</option>
+                  <option value="circular">Circular</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="route-company">Empresa / Línea</label>
+                <input type="text" id="route-company" placeholder="Ej: Autotransportes">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Color de la ruta</label>
+              <div class="color-picker-row" id="color-picker">
+                <div class="color-chip active" data-color="#1e40af" style="background:#1e40af;"></div>
+                <div class="color-chip" data-color="#16a34a" style="background:#16a34a;"></div>
+                <div class="color-chip" data-color="#dc2626" style="background:#dc2626;"></div>
+                <div class="color-chip" data-color="#ca8a04" style="background:#ca8a04;"></div>
+                <div class="color-chip" data-color="#9333ea" style="background:#9333ea;"></div>
+                <div class="color-chip" data-color="#0891b2" style="background:#0891b2;"></div>
+                <div class="color-chip" data-color="#db2777" style="background:#db2777;"></div>
+                <div class="color-chip" data-color="#ea580c" style="background:#ea580c;"></div>
+              </div>
+              <input type="hidden" id="route-color" value="#1e40af">
             </div>
           </div>
+        </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="route-fare">Tarifa</label>
-              <input type="text" id="route-fare" placeholder="$12.00">
+        <!-- Sección: Detalles operativos -->
+        <div class="section" data-section="operational">
+          <div class="section-header">
+            <span>⚙️ Detalles Operativos</span>
+            <span class="section-arrow">▼</span>
+          </div>
+          <div class="section-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="route-fare">Tarifa</label>
+                <input type="text" id="route-fare" placeholder="$12.00">
+              </div>
+              <div class="form-group">
+                <label for="route-frequency">Frecuencia</label>
+                <input type="text" id="route-frequency" placeholder="Cada 10 min">
+              </div>
             </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="route-schedule">Horario inicio</label>
+                <input type="time" id="route-schedule" value="05:00">
+              </div>
+              <div class="form-group">
+                <label for="route-schedule-end">Horario fin</label>
+                <input type="time" id="route-schedule-end" value="22:00">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="route-days">Días de operación</label>
+                <select id="route-days">
+                  <option value="todos">Todos los días</option>
+                  <option value="lun-vie">Lunes a Viernes</option>
+                  <option value="lun-sab">Lunes a Sábado</option>
+                  <option value="finde">Solo fines de semana</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="route-accessible">Accesibilidad</label>
+                <select id="route-accessible">
+                  <option value="no">No accesible</option>
+                  <option value="si">Accesible</option>
+                  <option value="parcial">Parcialmente</option>
+                </select>
+              </div>
+            </div>
+
             <div class="form-group">
-              <label for="route-schedule">Horario</label>
-              <input type="text" id="route-schedule" placeholder="5:00 - 22:00">
+              <label for="route-notes">Notas adicionales</label>
+              <textarea id="route-notes" placeholder="Información extra..." style="min-height:50px;"></textarea>
             </div>
           </div>
+        </div>
 
-          <div class="form-group">
-            <label for="route-notes">Notas adicionales</label>
-            <textarea id="route-notes" placeholder="Información adicional sobre la ruta..." style="min-height:50px;"></textarea>
+        <!-- Sección: Puntos de la ruta -->
+        <div class="section" data-section="points">
+          <div class="section-header">
+            <span>📍 Puntos de la Ruta (<span id="points-count">0</span>)</span>
+            <span class="section-arrow">▼</span>
           </div>
+          <div class="section-body">
+            <div style="padding:10px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--text-muted);margin-bottom:10px;">
+              ✏️ Usa las herramientas del mapa para agregar puntos:<br>
+              • <b>Dibujar</b>: clic en el mapa<br>
+              • <b>GPS</b>: graba tu recorrido real<br>
+              • <b>Punto</b>: agrega POIs manualmente
+            </div>
 
-          <div class="form-group">
-            <label>Imagen de referencia</label>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+              <button type="button" class="btn btn-success btn-sm" id="btn-start-tracking" style="flex:1;">
+                📍 Grabar GPS
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-points">
+                🗑️ Limpiar
+              </button>
+            </div>
+
+            <div id="points-list"></div>
+          </div>
+        </div>
+
+        <!-- Sección: Calles detectadas -->
+        <div class="section" data-section="streets">
+          <div class="section-header">
+            <span>🛣️ Calles Detectadas (<span id="streets-count">0</span>)</span>
+            <span class="section-arrow">▼</span>
+          </div>
+          <div class="section-body">
+            <div class="detecting-bar" id="detecting-bar">
+              <div class="mini-spinner"></div>
+              <span id="detecting-text">Detectando calles y lugares...</span>
+            </div>
+
+            <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-primary btn-sm" id="btn-detect-streets">
+                🔍 Detectar Ahora
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-reverse-order" title="Invertir orden">
+                🔄 Invertir
+              </button>
+            </div>
+
+            <div class="streets-list" id="streets-list">
+              <p style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px;">
+                Traza la ruta primero, luego toca "Detectar Ahora"
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección: Puntos de interés -->
+        <div class="section" data-section="pois">
+          <div class="section-header">
+            <span>🏪 Puntos de Interés (<span id="pois-count">0</span>)</span>
+            <span class="section-arrow">▼</span>
+          </div>
+          <div class="section-body">
+            <div style="display:flex; gap:6px; margin-bottom:10px;">
+              <button type="button" class="btn btn-primary btn-sm" id="btn-add-custom-poi">
+                + Agregar punto
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-detect-businesses">
+                🔍 Detectar negocios
+              </button>
+            </div>
+            <div id="pois-list-edit"></div>
+          </div>
+        </div>
+
+        <!-- Sección: Imagen -->
+        <div class="section" data-section="image">
+          <div class="section-header">
+            <span>📷 Imagen de Referencia</span>
+            <span class="section-arrow">▼</span>
+          </div>
+          <div class="section-body">
             <div class="image-upload" id="image-upload-area">
               <input type="file" id="route-image" accept="image/*" hidden>
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.5;margin-bottom:6px;">
@@ -630,39 +1056,31 @@
               <img id="image-preview" class="image-preview" style="display:none;">
             </div>
           </div>
-
-          <div class="form-group">
-            <label>Puntos de la ruta (<span id="points-count">0</span>)</label>
-            <div id="points-info" style="padding:10px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--text-muted);">
-              Haz clic en "Dibujar" y luego en el mapa para trazar la ruta.
-              También puedes usar "GPS" para grabar tu recorrido en tiempo real.
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>Puntos de interés detectados</label>
-            <div id="detected-pois"></div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="btn-cancel">Cancelar</button>
-        <button class="btn btn-primary" id="btn-save">Guardar Ruta</button>
-      </div>
+        </div>
+      </form>
     </div>
+
+    <div class="sheet-footer">
+      <button class="btn btn-secondary" id="btn-cancel" style="flex:1;">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save" style="flex:2;">💾 Guardar Ruta</button>
+    </div>
+  </div>
+
+  <!-- Barra de grabación -->
+  <div class="recording-bar" id="recording-bar">
+    <span class="pulse"></span>
+    <span id="recording-text">Grabando... 0 pts</span>
+    <button class="btn btn-sm" id="btn-stop-recording" style="background:white;color:var(--danger);">Detener</button>
   </div>
 
   <div class="toast" id="toast"></div>
 
-  <!-- Scripts -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/idb@8/build/umd.js"></script>
 
   <script type="module">
-    // =====================================================
-    // CONFIGURACIÓN
-    // =====================================================
+    // ==================== CONFIG ====================
     const FIREBASE_DB_URL = 'https://galloslivebadge-default-rtdb.firebaseio.com';
     const CLOUDINARY_CONFIG = {
       cloud_name: 'dxjgyqcby',
@@ -672,9 +1090,7 @@
     const DEFAULT_ZOOM = 13;
     const NOMINATIM_URL = 'https://nominatim.openstreetmap.org';
 
-    // =====================================================
-    // ESTADO GLOBAL
-    // =====================================================
+    // ==================== ESTADO ====================
     const state = {
       map: null,
       routes: [],
@@ -684,31 +1100,74 @@
       isEditing: false,
       isTracking: false,
       trackedPoints: [],
+      detectedStreets: [],
       detectedPois: [],
       watchId: null,
       routeLayers: {},
       poiLayers: [],
       editingLayer: null,
+      editingMarkers: [],
       db: null,
       isOnline: navigator.onLine,
       filterText: '',
       activeTool: 'draw',
-      searchOrigin: null,
-      searchDestination: null,
-      searchRadius: 500
+      searchPoints: [],
+      searchRadius: 500,
+      searchMarkers: [],
+      searchRouteLayers: []
     };
 
-    // =====================================================
-    // UTILIDADES
-    // =====================================================
-    const $ = (sel) => document.querySelector(sel);
-    const $$ = (sel) => document.querySelectorAll(sel);
+    // ==================== HELPERS ====================
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => document.querySelectorAll(s);
 
-    function showToast(message, duration = 3000) {
-      const toast = $('#toast');
-      toast.textContent = message;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), duration);
+    function showToast(msg, dur = 2500) {
+      const t = $('#toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), dur);
+    }
+
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) ** 2 +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function pointToSegmentDistance(p, a, b) {
+      const atob = { lat: b.lat - a.lat, lng: b.lng - a.lng };
+      const atop = { lat: p.lat - a.lat, lng: p.lng - a.lng };
+      const len = atob.lat ** 2 + atob.lng ** 2;
+      let t = len === 0 ? 0 : (atop.lat * atob.lat + atop.lng * atob.lng) / len;
+      t = Math.max(0, Math.min(1, t));
+      const closest = { lat: a.lat + t * atob.lat, lng: a.lng + t * atob.lng };
+      return calculateDistance(p.lat, p.lng, closest.lat, closest.lng);
+    }
+
+    function pointToLineDistance(point, line) {
+      if (!line || line.length < 2) return Infinity;
+      let minDist = Infinity;
+      for (let i = 0; i < line.length - 1; i++) {
+        const d = pointToSegmentDistance(point, line[i], line[i+1]);
+        if (d < minDist) minDist = d;
+      }
+      return minDist;
     }
 
     function updateConnectionStatus() {
@@ -724,145 +1183,135 @@
       }
     }
 
-    function generateId() {
-      return Date.now().toString(36) + Math.random().toString(36).substr(2);
-    }
+    // ==================== NOMINATIM ====================
+    const geocodeCache = new Map();
 
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-      const R = 6371000;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    }
-
-    function pointToLineDistance(point, line) {
-      let minDist = Infinity;
-      for (let i = 0; i < line.length - 1; i++) {
-        const dist = pointToSegmentDistance(point, line[i], line[i+1]);
-        if (dist < minDist) minDist = dist;
-      }
-      return minDist;
-    }
-
-    function pointToSegmentDistance(p, a, b) {
-      const atob = { lat: b.lat - a.lat, lng: b.lng - a.lng };
-      const atop = { lat: p.lat - a.lat, lng: p.lng - a.lng };
-      const len = atob.lat * atob.lat + atob.lng * atob.lng;
-      let t = len === 0 ? 0 : (atop.lat * atob.lat + atop.lng * atob.lng) / len;
-      t = Math.max(0, Math.min(1, t));
-      const closest = { lat: a.lat + t * atob.lat, lng: a.lng + t * atob.lng };
-      return calculateDistance(p.lat, p.lng, closest.lat, closest.lng);
-    }
-
-    // =====================================================
-    // NOMINATIM - Geocodificación
-    // =====================================================
     async function reverseGeocode(lat, lng) {
+      const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+      if (geocodeCache.has(key)) return geocodeCache.get(key);
+
       try {
-        const response = await fetch(
+        const res = await fetch(
           `${NOMINATIM_URL}/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=es`,
           { headers: { 'User-Agent': 'RutasTuxtlaApp/1.0' } }
         );
-        if (!response.ok) throw new Error('Error geocoding');
-        const data = await response.json();
-        return {
+        if (!res.ok) throw new Error('geocode error');
+        const data = await res.json();
+        const result = {
           displayName: data.display_name || '',
           address: data.address || {},
           type: data.type || '',
           class: data.class || ''
         };
-      } catch (error) {
-        console.error('Reverse geocode error:', error);
+        geocodeCache.set(key, result);
+        return result;
+      } catch (e) {
         return null;
       }
     }
 
-    async function searchPlaces(query, lat, lng) {
+    async function searchPlaces(query) {
       try {
-        let url = `${NOMINATIM_URL}/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=10&accept-language=es`;
-        if (lat && lng) {
-          url += `&viewbox=${lng-0.1},${lat+0.1},${lng+0.1},${lat-0.1}&bounded=0`;
-        }
-        const response = await fetch(url, {
-          headers: { 'User-Agent': 'RutasTuxtlaApp/1.0' }
-        });
-        if (!response.ok) throw new Error('Error search');
-        return await response.json();
-      } catch (error) {
-        console.error('Search error:', error);
+        const res = await fetch(
+          `${NOMINATIM_URL}/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=8&accept-language=es&countrycodes=mx`,
+          { headers: { 'User-Agent': 'RutasTuxtlaApp/1.0' } }
+        );
+        if (!res.ok) throw new Error('search error');
+        return await res.json();
+      } catch (e) {
         return [];
       }
     }
 
-    async function detectPoisAlongRoute(points) {
-      const pois = [];
-      const processedLocations = new Set();
+    // ==================== DETECCIÓN DE CALLES Y POIs ====================
+    async function detectStreetsAlongRoute(points, onProgress) {
+      if (!points || points.length < 2) return [];
 
-      for (let i = 0; i < points.length; i += 5) {
-        const point = points[i];
-        const key = `${point.lat.toFixed(4)},${point.lng.toFixed(4)}`;
+      // Muestrear puntos a lo largo de la ruta (máximo 12 puntos)
+      const sampleCount = Math.min(12, points.length);
+      const step = Math.max(1, Math.floor(points.length / sampleCount));
+      const samples = [];
+      for (let i = 0; i < points.length; i += step) {
+        samples.push(points[i]);
+      }
+      if (samples[samples.length - 1] !== points[points.length - 1]) {
+        samples.push(points[points.length - 1]);
+      }
 
-        if (processedLocations.has(key)) continue;
-        processedLocations.add(key);
+      const streets = [];
+      const seenRoads = new Set();
 
+      for (let i = 0; i < samples.length; i++) {
+        if (onProgress) onProgress(i + 1, samples.length);
+        const p = samples[i];
         try {
-          const result = await reverseGeocode(point.lat, point.lng);
+          const result = await reverseGeocode(p.lat, p.lng);
           if (result && result.address) {
-            const addr = result.address;
-            let poiType = 'street';
-            let name = '';
-            let icon = '🛣️';
+            const road = result.address.road ||
+                        result.address.pedestrian ||
+                        result.address.footway ||
+                        result.address.path ||
+                        result.address.neighbourhood ||
+                        result.address.suburb ||
+                        'Vía sin nombre';
 
-            if (addr.amenity || addr.shop || addr.restaurant || addr.cafe || addr.bank) {
-              poiType = 'business';
-              name = addr.amenity || addr.shop || addr.restaurant || addr.cafe || addr.bank || 'Negocio';
-              icon = '🏪';
-            } else if (addr.road) {
-              poiType = 'street';
-              name = addr.road;
-              icon = '🛣️';
-            } else if (addr.suburb || addr.neighbourhood) {
-              poiType = 'colonia';
-              name = addr.suburb || addr.neighbourhood;
-              icon = '🏘️';
-            } else if (addr.city || addr.town) {
-              name = addr.city || addr.town;
-              icon = '🏙️';
-            }
-
-            if (name) {
-              pois.push({
+            if (!seenRoads.has(road)) {
+              seenRoads.add(road);
+              streets.push({
                 id: generateId(),
-                lat: point.lat,
-                lng: point.lng,
-                nombre: name,
-                descripcion: result.displayName,
-                tipo: poiType,
-                icono: icon,
+                nombre: road,
+                lat: p.lat,
+                lng: p.lng,
+                colonia: result.address.suburb || result.address.neighbourhood || '',
+                ciudad: result.address.city || result.address.town || 'Tuxtla Gutiérrez',
+                orden: streets.length + 1,
                 direccion: result.displayName
               });
             }
           }
-
-          await new Promise(r => setTimeout(r, 1100));
-        } catch (error) {
-          console.error('POI detection error:', error);
-        }
+        } catch (e) { /* ignore */ }
+        // Respetar rate limit Nominatim
+        await new Promise(r => setTimeout(r, 1100));
       }
 
-      return pois;
+      return streets;
     }
 
-    // =====================================================
-    // INDEXEDDB
-    // =====================================================
+    async function detectBusinessesAlongRoute(points, onProgress) {
+      const businesses = [];
+      const sampleCount = Math.min(8, points.length);
+      const step = Math.max(1, Math.floor(points.length / sampleCount));
+
+      for (let i = 0; i < points.length; i += step) {
+        const p = points[i];
+        try {
+          const result = await reverseGeocode(p.lat, p.lng);
+          if (result && result.address) {
+            const addr = result.address;
+            const amenity = addr.amenity || addr.shop || addr.tourism || addr.leisure;
+            if (amenity) {
+              businesses.push({
+                id: generateId(),
+                lat: p.lat,
+                lng: p.lng,
+                nombre: amenity,
+                tipo: 'business',
+                icono: '🏪',
+                descripcion: result.displayName
+              });
+            }
+          }
+        } catch (e) { /* ignore */ }
+        await new Promise(r => setTimeout(r, 1100));
+      }
+
+      return businesses;
+    }
+
+    // ==================== INDEXEDDB ====================
     async function initDB() {
       state.db = await idb.openDB('rutas-tuxtla-db', 2, {
-        upgrade(db, oldVersion) {
+        upgrade(db) {
           if (!db.objectStoreNames.contains('rutas')) {
             db.createObjectStore('rutas', { keyPath: 'id' });
           }
@@ -874,184 +1323,155 @@
           }
         }
       });
-      console.log('IndexedDB inicializada');
     }
 
-    async function saveRouteToLocal(route) {
-      if (!state.db) await initDB();
-      await state.db.put('rutas', route);
-    }
-
-    async function getRoutesFromLocal() {
-      if (!state.db) await initDB();
-      return await state.db.getAll('rutas');
-    }
-
-    async function deleteRouteFromLocal(id) {
-      if (!state.db) await initDB();
-      await state.db.delete('rutas', id);
-    }
-
-    async function savePoisToLocal(pois) {
-      if (!state.db) await initDB();
-      for (const poi of pois) {
+    const localDB = {
+      async saveRoute(route) {
+        if (!state.db) await initDB();
+        await state.db.put('rutas', route);
+      },
+      async getRoutes() {
+        if (!state.db) await initDB();
+        return await state.db.getAll('rutas');
+      },
+      async deleteRoute(id) {
+        if (!state.db) await initDB();
+        await state.db.delete('rutas', id);
+      },
+      async savePoi(poi) {
+        if (!state.db) await initDB();
         await state.db.put('pois', poi);
+      },
+      async getPois() {
+        if (!state.db) await initDB();
+        return await state.db.getAll('pois');
       }
-    }
+    };
 
-    async function getPoisFromLocal() {
-      if (!state.db) await initDB();
-      return await state.db.getAll('pois');
-    }
-
-    // =====================================================
-    // FIREBASE
-    // =====================================================
+    // ==================== FIREBASE ====================
     async function syncRouteToFirebase(route) {
       const url = `${FIREBASE_DB_URL}/rutas/${route.id}.json`;
-      const response = await fetch(url, {
+      const res = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...route, updatedAt: Date.now() })
       });
-      if (!response.ok) throw new Error('Error Firebase');
-      return response.json();
+      if (!res.ok) throw new Error('sync error');
+      return res.json();
     }
 
     async function deleteRouteFromFirebase(id) {
       const url = `${FIREBASE_DB_URL}/rutas/${id}.json`;
-      const response = await fetch(url, { method: 'DELETE' });
-      if (!response.ok) throw new Error('Error Firebase');
+      const res = await fetch(url, { method: 'DELETE' });
+      if (!res.ok) throw new Error('delete error');
     }
 
     async function loadRoutesFromFirebase() {
       try {
-        const response = await fetch(`${FIREBASE_DB_URL}/rutas.json`);
-        if (!response.ok) throw new Error('Error Firebase');
-        const data = await response.json();
+        const res = await fetch(`${FIREBASE_DB_URL}/rutas.json`);
+        if (!res.ok) throw new Error('load error');
+        const data = await res.json();
         if (!data) return [];
-        return Object.entries(data).map(([id, route]) => ({ ...route, id }));
-      } catch (error) {
-        console.error('Load Firebase error:', error);
+        return Object.entries(data).map(([id, r]) => ({ ...r, id }));
+      } catch (e) {
         return [];
       }
     }
 
-    // =====================================================
-    // CLOUDINARY
-    // =====================================================
+    // ==================== CLOUDINARY ====================
     async function uploadImage(file) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', CLOUDINARY_CONFIG.upload_preset);
-
-      const response = await fetch(
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('upload_preset', CLOUDINARY_CONFIG.upload_preset);
+      const res = await fetch(
         `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloud_name}/image/upload`,
-        { method: 'POST', body: formData }
+        { method: 'POST', body: fd }
       );
-
-      if (!response.ok) throw new Error('Error Cloudinary');
-      const data = await response.json();
+      if (!res.ok) throw new Error('upload error');
+      const data = await res.json();
       return data.secure_url;
     }
 
-    // =====================================================
-    // MAPA
-    // =====================================================
+    // ==================== MAPA ====================
     function initMap() {
       state.map = L.map('map', {
         center: TUXTLA_CENTER,
         zoom: DEFAULT_ZOOM,
         zoomControl: false,
-        attributionControl: false
+        attributionControl: false,
+        preferCanvas: true
       });
 
       L.control.zoom({ position: 'bottomright' }).addTo(state.map);
 
-      // Capas base
       const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap'
       }).addTo(state.map);
 
-      const osmHOT = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      const hot = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap HOT'
       });
 
-      // Control de capas
-      const baseMaps = {
-        "OpenStreetMap": osm,
-        "OpenStreetMap HOT": osmHOT
-      };
+      L.control.layers(
+        { 'OpenStreetMap': osm, 'OSM HOT': hot },
+        null,
+        { position: 'bottomright' }
+      ).addTo(state.map);
 
-      L.control.layers(baseMaps, null, { position: 'bottomright' }).addTo(state.map);
-
-      // Geocoder
       L.Control.geocoder({
         defaultMarkGeocode: false,
         placeholder: 'Buscar dirección...',
         errorMessage: 'No encontrado'
       })
-        .on('markgeocode', function(e) {
+        .on('markgeocode', (e) => {
           state.map.fitBounds(e.geocode.bbox);
         })
         .addTo(state.map);
 
-      // Click en mapa
       state.map.on('click', handleMapClick);
-
-      console.log('Mapa inicializado');
     }
 
     function handleMapClick(e) {
-      if (!state.isEditing) return;
-
       const { lat, lng } = e.latlng;
 
-      if (state.activeTool === 'draw') {
-        addTrackedPoint({ lat, lng, tipo: 'manual' });
-      } else if (state.activeTool === 'poi') {
-        addPoiAtLocation(lat, lng);
-      } else if (state.activeTool === 'search') {
-        // Para búsqueda de viaje
-        if (!state.searchOrigin) {
-          state.searchOrigin = { lat, lng };
-          L.marker([lat, lng], { icon: createSearchIcon('A', '#16a34a') })
-            .addTo(state.map)
-            .bindPopup('Punto de partida');
-          showToast('Punto de partida seleccionado');
-        } else if (!state.searchDestination) {
-          state.searchDestination = { lat, lng };
-          L.marker([lat, lng], { icon: createSearchIcon('B', '#dc2626') })
-            .addTo(state.map)
-            .bindPopup('Destino');
-          showToast('Destino seleccionado');
+      // Modo edición de ruta
+      if (state.isEditing) {
+        if (state.activeTool === 'draw') {
+          addTrackedPoint({ lat, lng, tipo: 'manual' });
+        } else if (state.activeTool === 'poi') {
+          addPoiAtLocation(lat, lng);
         }
+        return;
+      }
+
+      // Modo búsqueda de viaje
+      const tripTab = $('#tab-trip');
+      if (tripTab && tripTab.classList.contains('active') && state.searchPoints.length < 3) {
+        addSearchPoint(lat, lng);
       }
     }
 
-    function createSearchIcon(label, color) {
+    function createLetterIcon(letter, color) {
       return L.divIcon({
         className: 'search-marker',
-        html: `<div style="background:${color};color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">${label}</div>`,
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
+        html: `<div style="background:${color};color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">${letter}</div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
       });
     }
 
-    // =====================================================
-    // RUTAS - Renderizado
-    // =====================================================
+    // ==================== RENDERIZADO DE RUTAS ====================
     function renderRoutesList() {
       const container = $('#tab-routes');
       const filtered = state.routes.filter(r => {
         if (!state.filterText) return true;
-        const search = state.filterText.toLowerCase();
-        return (
-          (r.nombre && r.nombre.toLowerCase().includes(search)) ||
-          (r.descripcion && r.descripcion.toLowerCase().includes(search))
-        );
+        const s = state.filterText.toLowerCase();
+        return (r.nombre?.toLowerCase().includes(s)) ||
+               (r.descripcion?.toLowerCase().includes(s)) ||
+               (r.empresa?.toLowerCase().includes(s)) ||
+               (r.streets?.some(st => st.nombre?.toLowerCase().includes(s)));
       });
 
       if (filtered.length === 0) {
@@ -1061,9 +1481,8 @@
               <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
             </svg>
             <p>${state.filterText ? 'No se encontraron rutas' : 'No hay rutas registradas'}</p>
-            <p style="font-size:11px;margin-top:6px;">Toca + para agregar una nueva ruta</p>
-          </div>
-        `;
+            <p class="small">Toca + para agregar una nueva ruta</p>
+          </div>`;
         return;
       }
 
@@ -1073,16 +1492,17 @@
             <h3>${escapeHtml(route.nombre || 'Sin nombre')}</h3>
             <span class="route-badge badge-${route.tipo || 'ida'}">${route.tipo || 'ida'}</span>
           </div>
-          ${route.descripcion ? `<p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">${escapeHtml(route.descripcion)}</p>` : ''}
+          ${route.descripcion ? `<p style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">${escapeHtml(route.descripcion)}</p>` : ''}
           <div class="route-meta">
-            <span>📍 ${route.puntos?.length || 0} puntos</span>
-            ${route.pois?.length ? `<span>🏪 ${route.pois.length} POIs</span>` : ''}
+            <span>📍 ${route.puntos?.length || 0} pts</span>
+            ${route.streets?.length ? `<span>🛣️ ${route.streets.length} calles</span>` : ''}
+            ${route.pois?.length ? `<span>🏪 ${route.pois.length}</span>` : ''}
             ${route.tarifa ? `<span>💰 ${route.tarifa}</span>` : ''}
           </div>
           <div class="route-actions">
-            <button class="btn-sm btn-view" onclick="viewRoute('${route.id}')">👁️ Ver</button>
-            <button class="btn-sm btn-edit" onclick="editRoute('${route.id}')">✏️ Editar</button>
-            <button class="btn-sm btn-delete" onclick="deleteRoute('${route.id}')">🗑️</button>
+            <button class="btn-sm btn-view" onclick="event.stopPropagation();window.viewRoute('${route.id}')">👁️ Ver</button>
+            <button class="btn-sm btn-edit" onclick="event.stopPropagation();window.editRoute('${route.id}')">✏️ Editar</button>
+            <button class="btn-sm btn-delete" onclick="event.stopPropagation();window.deleteRoute('${route.id}')">🗑️</button>
           </div>
         </div>
       `).join('');
@@ -1095,13 +1515,8 @@
       });
     }
 
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
     function renderRoutesOnMap() {
+      // Limpiar
       Object.values(state.routeLayers).forEach(layer => {
         if (layer.polyline) state.map.removeLayer(layer.polyline);
         if (layer.markers) layer.markers.forEach(m => state.map.removeLayer(m));
@@ -1115,318 +1530,195 @@
         const color = route.color || '#1e40af';
 
         const polyline = L.polyline(coords, {
-          color,
-          weight: 4,
-          opacity: 0.8,
-          lineJoin: 'round'
+          color, weight: 4, opacity: 0.75, lineJoin: 'round'
         }).addTo(state.map);
 
-        const markers = [
-          L.marker(coords[0], {
-            icon: L.divIcon({
-              className: 'route-marker',
-              html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
-              iconSize: [14, 14],
-              iconAnchor: [7, 7]
-            })
-          }).bindPopup(`<b>${route.nombre}</b><br>Inicio`),
-          L.marker(coords[coords.length - 1], {
-            icon: L.divIcon({
-              className: 'route-marker',
-              html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
-              iconSize: [14, 14],
-              iconAnchor: [7, 7]
-            })
-          }).bindPopup(`<b>${route.nombre}</b><br>Fin`)
-        ];
+        const markers = [];
+        const startIcon = L.divIcon({
+          className: 'route-marker',
+          html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [14, 14], iconAnchor: [7, 7]
+        });
+        markers.push(L.marker(coords[0], { icon: startIcon }).bindPopup(`<b>${escapeHtml(route.nombre)}</b><br>Inicio`).addTo(state.map));
+        markers.push(L.marker(coords[coords.length - 1], { icon: startIcon }).bindPopup(`<b>${escapeHtml(route.nombre)}</b><br>Fin`).addTo(state.map));
 
-        markers.forEach(m => m.addTo(state.map));
-
-        // Renderizar POIs de la ruta
-        if (route.pois && route.pois.length > 0) {
+        // POIs de la ruta
+        if (route.pois?.length) {
           route.pois.forEach(poi => {
-            const poiMarker = L.marker([poi.lat, poi.lng], {
+            const m = L.marker([poi.lat, poi.lng], {
               icon: L.divIcon({
                 className: 'poi-marker',
-                html: `<div style="background:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,0.2);border:2px solid ${color};">${poi.icono || '📍'}</div>`,
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
+                html: `<div style="background:white;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 2px 4px rgba(0,0,0,0.2);border:2px solid ${color};">${poi.icono || '📍'}</div>`,
+                iconSize: [22, 22], iconAnchor: [11, 11]
               })
-            }).bindPopup(`<b>${poi.nombre}</b><br>${poi.descripcion || ''}`);
-            poiMarker.addTo(state.map);
-            markers.push(poiMarker);
+            }).bindPopup(`<b>${escapeHtml(poi.nombre)}</b><br>${escapeHtml(poi.descripcion || '')}`).addTo(state.map);
+            markers.push(m);
           });
         }
 
-        state.routeLayers[route.id] = { polyline, markers };
+        state.routeLayers[route.id] = { polyline, markers, color };
       });
     }
 
     function selectRoute(id) {
       const route = state.routes.find(r => r.id === id);
       if (!route) return;
-
       state.currentRoute = route;
       renderRoutesList();
 
-      Object.entries(state.routeLayers).forEach(([routeId, layer]) => {
+      Object.entries(state.routeLayers).forEach(([rid, layer]) => {
         if (layer.polyline) {
           layer.polyline.setStyle({
-            weight: routeId === id ? 6 : 4,
-            opacity: routeId === id ? 1 : 0.6
+            weight: rid === id ? 6 : 4,
+            opacity: rid === id ? 1 : 0.6
           });
         }
       });
 
       if (state.routeLayers[id]) {
-        const bounds = state.routeLayers[id].polyline.getBounds();
-        state.map.fitBounds(bounds, { padding: [50, 50] });
+        state.map.fitBounds(state.routeLayers[id].polyline.getBounds(), { padding: [50, 50] });
       }
+      renderRouteDetail(route);
     }
 
-    // =====================================================
-    // BÚSQUEDA DE VIAJE
-    // =====================================================
-    async function searchTrip() {
-      const originInput = $('#search-origin').value.trim();
-      const destInput = $('#search-destination').value.trim();
-      const radius = state.searchRadius;
+    function renderRouteDetail(route) {
+      // Se podría agregar una vista de detalle aquí
+    }
 
-      let origin = state.searchOrigin;
-      let destination = state.searchDestination;
+    // ==================== BOTTOM SHEET ====================
+    const sheet = {
+      el: null,
+      overlay: null,
+      startY: 0,
+      currentY: 0,
+      isDragging: false,
+      baseHeight: 0,
 
-      // Si no hay puntos seleccionados en mapa, buscar por texto
-      if (!origin && originInput) {
-        const results = await searchPlaces(originInput, TUXTLA_CENTER[0], TUXTLA_CENTER[1]);
-        if (results.length > 0) {
-          origin = { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
+      init() {
+        this.el = $('#route-sheet');
+        this.overlay = null; // Sin overlay para que el mapa sea accesible
+
+        const header = $('#sheet-drag-handle');
+        const collapseBtn = $('#sheet-collapse');
+
+        // Arrastre desde el header
+        header.addEventListener('touchstart', (e) => this.onDragStart(e.touches[0].clientY), { passive: true });
+        header.addEventListener('touchmove', (e) => this.onDragMove(e.touches[0].clientY), { passive: false });
+        header.addEventListener('touchend', () => this.onDragEnd());
+
+        header.addEventListener('mousedown', (e) => {
+          if (e.target.closest('button')) return;
+          this.onDragStart(e.clientY);
+          const onMove = (ev) => this.onDragMove(ev.clientY);
+          const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            this.onDragEnd();
+          };
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+
+        // Botón colapsar/expandir
+        collapseBtn.addEventListener('click', () => {
+          this.el.classList.toggle('collapsed');
+        });
+      },
+
+      onDragStart(y) {
+        this.isDragging = true;
+        this.startY = y;
+        this.baseHeight = this.el.offsetHeight;
+        this.el.classList.add('dragging');
+      },
+
+      onDragMove(y) {
+        if (!this.isDragging) return;
+        const delta = y - this.startY;
+
+        if (delta > 0) {
+          // Arrastrando hacia abajo
+          const newHeight = Math.max(48, this.baseHeight - delta);
+          this.el.style.height = newHeight + 'px';
+        } else {
+          // Arrastrando hacia arriba
+          const newHeight = Math.min(window.innerHeight * 0.9, this.baseHeight + Math.abs(delta));
+          this.el.style.height = newHeight + 'px';
         }
-      }
+      },
 
-      if (!destination && destInput) {
-        const results = await searchPlaces(destInput, TUXTLA_CENTER[0], TUXTLA_CENTER[1]);
-        if (results.length > 0) {
-          destination = { lat: parseFloat(results[0].lat), lng: parseFloat(results[0].lon) };
+      onDragEnd() {
+        if (!this.isDragging) return;
+        this.isDragging = false;
+        this.el.classList.remove('dragging');
+
+        const h = this.el.offsetHeight;
+        // Snap: colapsado (< 100px) o expandido
+        if (h < 100) {
+          this.el.style.height = '48px';
+          this.el.classList.add('collapsed');
+        } else {
+          this.el.classList.remove('collapsed');
+          this.el.style.height = '';
         }
+      },
+
+      open() {
+        this.el.classList.remove('collapsed');
+        this.el.classList.add('active');
+        this.el.style.height = '';
+      },
+
+      close() {
+        this.el.classList.remove('active');
+        this.el.classList.remove('collapsed');
+        this.el.style.height = '';
       }
-
-      if (!origin || !destination) {
-        showToast('Selecciona origen y destino');
-        return;
-      }
-
-      // Buscar rutas que pasan cerca de ambos puntos
-      const routesFromOrigin = findRoutesNearPoint(origin, radius);
-      const routesFromDestination = findRoutesNearPoint(destination, radius);
-
-      // Rutas directas (pasan por ambos)
-      const directRoutes = routesFromOrigin.filter(r =>
-        routesFromDestination.some(r2 => r2.id === r.id)
-      );
-
-      // Rutas con transbordo
-      const transferRoutes = [];
-      routesFromOrigin.forEach(originRoute => {
-        routesFromDestination.forEach(destRoute => {
-          if (originRoute.id === destRoute.id) return;
-
-          // Buscar punto de transbordo
-          const transferPoint = findTransferPoint(originRoute, destRoute);
-          if (transferPoint) {
-            transferRoutes.push({
-              route1: originRoute,
-              route2: destRoute,
-              transferPoint
-            });
-          }
-        });
-      });
-
-      renderSearchResults(directRoutes, transferRoutes, origin, destination);
-    }
-
-    function findRoutesNearPoint(point, radius) {
-      return state.routes.filter(route => {
-        if (!route.puntos || route.puntos.length < 2) return false;
-        const dist = pointToLineDistance(point, route.puntos);
-        return dist <= radius;
-      });
-    }
-
-    function findTransferPoint(route1, route2) {
-      if (!route1.puntos || !route2.puntos) return null;
-
-      let minDist = Infinity;
-      let transferPoint = null;
-
-      route1.puntos.forEach(p1 => {
-        route2.puntos.forEach(p2 => {
-          const dist = calculateDistance(p1.lat, p1.lng, p2.lat, p2.lng);
-          if (dist < minDist && dist < 300) {
-            minDist = dist;
-            transferPoint = {
-              lat: (p1.lat + p2.lat) / 2,
-              lng: (p1.lng + p2.lng) / 2,
-              distance: dist
-            };
-          }
-        });
-      });
-
-      return transferPoint;
-    }
-
-    function renderSearchResults(directRoutes, transferRoutes, origin, destination) {
-      const container = $('#search-results');
-
-      let html = '';
-
-      // Limpiar capas anteriores de búsqueda
-      state.map.eachLayer(layer => {
-        if (layer.options && layer.options.isSearchLayer) {
-          state.map.removeLayer(layer);
-        }
-      });
-
-      if (directRoutes.length > 0) {
-        html += '<h3 style="font-size:14px;margin-bottom:10px;">✅ Rutas Directas</h3>';
-        directRoutes.forEach(route => {
-          html += `
-            <div class="route-card" onclick="viewRoute('${route.id}')">
-              <div class="route-card-header">
-                <h3>${route.nombre}</h3>
-                <span class="route-badge badge-${route.tipo}">${route.tipo}</span>
-              </div>
-              <div class="route-meta">
-                <span>📍 ${route.puntos.length} puntos</span>
-                ${route.tarifa ? `<span>💰 ${route.tarifa}</span>` : ''}
-              </div>
-            </div>
-          `;
-
-          // Dibujar ruta en mapa
-          const coords = route.puntos.map(p => [p.lat, p.lng]);
-          L.polyline(coords, {
-            color: '#16a34a',
-            weight: 5,
-            opacity: 0.8,
-            isSearchLayer: true
-          }).addTo(state.map);
-        });
-      }
-
-      if (transferRoutes.length > 0) {
-        html += '<h3 style="font-size:14px;margin:16px 0 10px;">🔄 Rutas con Transbordo</h3>';
-        transferRoutes.slice(0, 5).forEach(({ route1, route2, transferPoint }) => {
-          html += `
-            <div class="transfer-card">
-              <h4>${route1.nombre} → ${route2.nombre}</h4>
-              <p>Transbordo a ${Math.round(transferPoint.distance)}m del punto</p>
-              <button class="btn-sm btn-view" style="margin-top:8px;" onclick="showTransfer('${route1.id}', '${route2.id}', ${transferPoint.lat}, ${transferPoint.lng})">
-                Ver en mapa
-              </button>
-            </div>
-          `;
-        });
-      }
-
-      if (directRoutes.length === 0 && transferRoutes.length === 0) {
-        html = `
-          <div class="empty-state">
-            <p>No se encontraron rutas para este viaje</p>
-            <p style="font-size:11px;margin-top:6px;">Intenta aumentar el radio de búsqueda</p>
-          </div>
-        `;
-      }
-
-      container.innerHTML = html;
-
-      // Marcar origen y destino
-      L.marker([origin.lat, origin.lng], {
-        icon: createSearchIcon('A', '#16a34a'),
-        isSearchLayer: true
-      }).addTo(state.map);
-
-      L.marker([destination.lat, destination.lng], {
-        icon: createSearchIcon('B', '#dc2626'),
-        isSearchLayer: true
-      }).addTo(state.map);
-
-      // Ajustar vista
-      const bounds = L.latLngBounds([
-        [origin.lat, origin.lng],
-        [destination.lat, destination.lng]
-      ]);
-      state.map.fitBounds(bounds, { padding: [50, 50] });
-    }
-
-    window.showTransfer = function(route1Id, route2Id, lat, lng) {
-      const route1 = state.routes.find(r => r.id === route1Id);
-      const route2 = state.routes.find(r => r.id === route2Id);
-
-      if (route1 && route1.puntos) {
-        const coords = route1.puntos.map(p => [p.lat, p.lng]);
-        L.polyline(coords, { color: '#16a34a', weight: 5, isSearchLayer: true }).addTo(state.map);
-      }
-
-      if (route2 && route2.puntos) {
-        const coords = route2.puntos.map(p => [p.lat, p.lng]);
-        L.polyline(coords, { color: '#dc2626', weight: 5, isSearchLayer: true }).addTo(state.map);
-      }
-
-      L.marker([lat, lng], {
-        icon: L.divIcon({
-          className: 'transfer-marker',
-          html: '<div style="background:#f59e0b;color:white;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">🔄</div>',
-          iconSize: [36, 36],
-          iconAnchor: [18, 18]
-        }),
-        isSearchLayer: true
-      }).addTo(state.map).bindPopup('Punto de transbordo');
-
-      state.map.setView([lat, lng], 16);
     };
 
-    // =====================================================
-    // EDICIÓN DE RUTAS
-    // =====================================================
+    // ==================== EDICIÓN DE RUTA ====================
     function startEditing(routeId = null) {
       state.isEditing = true;
       state.editingRouteId = routeId;
       state.trackedPoints = [];
+      state.detectedStreets = [];
       state.detectedPois = [];
 
       $('#edit-toolbar').classList.add('active');
-      $('#bottom-panel').classList.add('collapsed');
+      $('#bottom-panel').style.display = 'none';
 
       if (routeId) {
         const route = state.routes.find(r => r.id === routeId);
         if (route) {
           state.trackedPoints = [...(route.puntos || [])];
+          state.detectedStreets = [...(route.streets || [])];
           state.detectedPois = [...(route.pois || [])];
-          renderEditingTrack();
         }
       }
 
+      renderEditingTrack();
       updatePointsUI();
-      showToast('Modo edición activo. Haz clic en el mapa para agregar puntos.');
+      renderStreetsList();
+      renderPoisEditList();
     }
 
     function stopEditing() {
       state.isEditing = false;
       state.editingRouteId = null;
       state.trackedPoints = [];
+      state.detectedStreets = [];
       state.detectedPois = [];
 
       $('#edit-toolbar').classList.remove('active');
-      $('#bottom-panel').classList.remove('collapsed');
+      $('#bottom-panel').style.display = '';
 
       if (state.editingLayer) {
         state.map.removeLayer(state.editingLayer);
         state.editingLayer = null;
       }
-
-      state.poiLayers.forEach(layer => state.map.removeLayer(layer));
+      state.editingMarkers.forEach(m => state.map.removeLayer(m));
+      state.editingMarkers = [];
+      state.poiLayers.forEach(m => state.map.removeLayer(m));
       state.poiLayers = [];
 
       if (state.isTracking) stopTracking();
@@ -1438,22 +1730,131 @@
       renderEditingTrack();
     }
 
+    function renderEditingTrack() {
+      // Limpiar capa anterior
+      if (state.editingLayer) {
+        state.map.removeLayer(state.editingLayer);
+        state.editingLayer = null;
+      }
+      state.editingMarkers.forEach(m => state.map.removeLayer(m));
+      state.editingMarkers = [];
+
+      if (state.trackedPoints.length < 2) return;
+
+      const coords = state.trackedPoints.map(p => [p.lat, p.lng]);
+      state.editingLayer = L.polyline(coords, {
+        color: $('#route-color').value || '#1e40af',
+        weight: 5,
+        opacity: 0.9,
+        dashArray: state.isTracking ? '8, 8' : null
+      }).addTo(state.map);
+
+      // Marcadores para puntos manuales
+      state.trackedPoints.forEach((p, i) => {
+        if (p.tipo === 'manual') {
+          const marker = L.circleMarker([p.lat, p.lng], {
+            radius: 7,
+            fillColor: '#dc2626',
+            color: 'white',
+            weight: 2,
+            fillOpacity: 1
+          }).addTo(state.map);
+
+          marker.bindPopup(`Punto ${i + 1}${p.nombre ? ': ' + p.nombre : ''}`);
+          state.editingMarkers.push(marker);
+        }
+      });
+    }
+
+    function updatePointsUI() {
+      const c = state.trackedPoints.length;
+      const el = $('#points-count');
+      if (el) el.textContent = c;
+      const rt = $('#recording-text');
+      if (rt) rt.textContent = `Grabando... ${c} pts`;
+    }
+
+    function renderStreetsList() {
+      const container = $('#streets-list');
+      const count = $('#streets-count');
+      if (count) count.textContent = state.detectedStreets.length;
+
+      if (state.detectedStreets.length === 0) {
+        container.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px;">Traza la ruta primero, luego toca "Detectar Ahora"</p>';
+        return;
+      }
+
+      container.innerHTML = state.detectedStreets.map((s, i) => `
+        <div class="street-item">
+          <div class="street-number">${i + 1}</div>
+          <div class="street-info">
+            <h4>${escapeHtml(s.nombre)}</h4>
+            ${s.colonia ? `<p>Col. ${escapeHtml(s.colonia)}</p>` : ''}
+          </div>
+          <div class="street-actions">
+            <button class="btn-sm btn-secondary" onclick="window.editStreet('${s.id}')" title="Editar">✏️</button>
+            <button class="btn-sm btn-delete" onclick="window.removeStreet('${s.id}')" title="Eliminar">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.editStreet = function(id) {
+      const street = state.detectedStreets.find(s => s.id === id);
+      if (!street) return;
+      const newName = prompt('Nombre de la calle:', street.nombre);
+      if (newName !== null) {
+        street.nombre = newName;
+        renderStreetsList();
+      }
+    };
+
+    window.removeStreet = function(id) {
+      state.detectedStreets = state.detectedStreets.filter(s => s.id !== id);
+      renderStreetsList();
+    };
+
+    function renderPoisEditList() {
+      const container = $('#pois-list-edit');
+      const count = $('#pois-count');
+      if (count) count.textContent = state.detectedPois.length;
+
+      if (state.detectedPois.length === 0) {
+        container.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:15px;">No hay puntos de interés</p>';
+        return;
+      }
+
+      container.innerHTML = state.detectedPois.map(poi => `
+        <div class="poi-item">
+          <div class="poi-icon ${poi.tipo || 'custom'}">${poi.icono || '📍'}</div>
+          <div class="poi-info">
+            <h4>${escapeHtml(poi.nombre)}</h4>
+            <p>${escapeHtml(poi.descripcion || '')}</p>
+          </div>
+          <button class="btn-sm btn-delete" onclick="window.removePoi('${poi.id}')">✕</button>
+        </div>
+      `).join('');
+    }
+
+    window.removePoi = function(id) {
+      state.detectedPois = state.detectedPois.filter(p => p.id !== id);
+      renderPoisEditList();
+    };
+
     function addPoiAtLocation(lat, lng) {
       const poi = {
         id: generateId(),
-        lat,
-        lng,
+        lat, lng,
         nombre: 'Nuevo punto',
         descripcion: '',
         tipo: 'custom',
         icono: '📍'
       };
-
       state.detectedPois.push(poi);
-      renderDetectedPois();
-      renderPoiOnMap(poi);
+      renderPoisEditList();
+      renderPoiMarker(poi);
 
-      // Intentar obtener información automáticamente
+      // Enriquecer con Nominatim
       reverseGeocode(lat, lng).then(result => {
         if (result && result.displayName) {
           poi.descripcion = result.displayName;
@@ -1469,18 +1870,17 @@
               poi.icono = '🛣️';
             }
           }
-          renderDetectedPois();
+          renderPoisEditList();
         }
       });
     }
 
-    function renderPoiOnMap(poi) {
+    function renderPoiMarker(poi) {
       const marker = L.marker([poi.lat, poi.lng], {
         icon: L.divIcon({
           className: 'editing-poi',
-          html: `<div style="background:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid #1e40af;">${poi.icono}</div>`,
-          iconSize: [28, 28],
-          iconAnchor: [14, 14]
+          html: `<div style="background:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid #1e40af;">${poi.icono || '📍'}</div>`,
+          iconSize: [28, 28], iconAnchor: [14, 14]
         }),
         draggable: true
       }).addTo(state.map);
@@ -1493,87 +1893,16 @@
 
       marker.on('click', () => {
         const newName = prompt('Nombre del punto:', poi.nombre);
-        if (newName) {
+        if (newName !== null) {
           poi.nombre = newName;
-          renderDetectedPois();
+          renderPoisEditList();
         }
       });
 
       state.poiLayers.push(marker);
     }
 
-    function renderEditingTrack() {
-      if (state.editingLayer) {
-        state.map.removeLayer(state.editingLayer);
-      }
-
-      if (state.trackedPoints.length < 2) return;
-
-      const coords = state.trackedPoints.map(p => [p.lat, p.lng]);
-      state.editingLayer = L.polyline(coords, {
-        color: '#16a34a',
-        weight: 5,
-        opacity: 0.9,
-        dashArray: state.isTracking ? '10, 10' : null
-      }).addTo(state.map);
-
-      // Marcadores para puntos manuales
-      state.trackedPoints.forEach((p, i) => {
-        if (p.tipo === 'manual') {
-          const marker = L.circleMarker([p.lat, p.lng], {
-            radius: 6,
-            fillColor: '#dc2626',
-            color: 'white',
-            weight: 2,
-            fillOpacity: 1
-          }).addTo(state.map);
-
-          marker.bindPopup(`Punto ${i + 1}`);
-          marker.on('click', () => {
-            if (confirm('¿Eliminar este punto?')) {
-              state.trackedPoints.splice(i, 1);
-              renderEditingTrack();
-              updatePointsUI();
-            }
-          });
-        }
-      });
-    }
-
-    function renderDetectedPois() {
-      const container = $('#detected-pois');
-
-      if (state.detectedPois.length === 0) {
-        container.innerHTML = '<p style="font-size:12px;color:var(--text-muted);">No hay puntos de interés detectados</p>';
-        return;
-      }
-
-      container.innerHTML = state.detectedPois.map(poi => `
-        <div class="poi-item" data-id="${poi.id}">
-          <div class="poi-icon ${poi.tipo}">${poi.icono}</div>
-          <div class="poi-info">
-            <h4>${escapeHtml(poi.nombre)}</h4>
-            <p>${escapeHtml(poi.descripcion || 'Sin descripción')}</p>
-          </div>
-          <button class="btn-sm btn-delete" onclick="removePoi('${poi.id}')">✕</button>
-        </div>
-      `).join('');
-    }
-
-    window.removePoi = function(id) {
-      state.detectedPois = state.detectedPois.filter(p => p.id !== id);
-      renderDetectedPois();
-    };
-
-    function updatePointsUI() {
-      const count = state.trackedPoints.length;
-      $('#points-count').textContent = count;
-      $('#recording-text').textContent = `Grabando... ${count} puntos`;
-    }
-
-    // =====================================================
-    // GRABACIÓN GPS
-    // =====================================================
+    // ==================== GRABACIÓN GPS ====================
     function startTracking() {
       if (!navigator.geolocation) {
         showToast('Geolocalización no soportada');
@@ -1584,23 +1913,22 @@
       $('#recording-bar').classList.add('active');
 
       state.watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude, accuracy } = position.coords;
+        (pos) => {
+          const { latitude, longitude, accuracy } = pos.coords;
           addTrackedPoint({
             lat: latitude,
             lng: longitude,
             accuracy,
             tipo: 'gps',
-            timestamp: position.timestamp
+            timestamp: pos.timestamp
           });
           state.map.setView([latitude, longitude], 16);
         },
-        (error) => {
-          console.error('GPS Error:', error);
-          showToast('Error GPS: ' + error.message);
+        (err) => {
+          showToast('Error GPS: ' + err.message);
           stopTracking();
         },
-        { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+        { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
       );
 
       showToast('Grabando recorrido...');
@@ -1608,110 +1936,277 @@
 
     function stopTracking() {
       state.isTracking = false;
-
       if (state.watchId) {
         navigator.geolocation.clearWatch(state.watchId);
         state.watchId = null;
       }
-
       $('#recording-bar').classList.remove('active');
-      showToast(`Recorrido detenido: ${state.trackedPoints.length} puntos`);
+      showToast(`Detenido: ${state.trackedPoints.length} puntos`);
+    }
 
-      // Detectar POIs automáticamente
-      if (state.trackedPoints.length > 5) {
-        detectPoisAlongRoute(state.trackedPoints).then(pois => {
-          state.detectedPois = [...state.detectedPois, ...pois];
-          renderDetectedPois();
-          pois.forEach(poi => renderPoiOnMap(poi));
-          showToast(`Detectados ${pois.length} puntos de interés`);
+    // ==================== BÚSQUEDA DE VIAJE (A→B→C) ====================
+    function renderTripSearch() {
+      const container = $('#trip-search-content');
+
+      container.innerHTML = `
+        <div style="margin-bottom:14px;">
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
+            🗺️ Toca el mapa para marcar hasta 3 puntos (A, B, C). Se buscarán rutas que pasen cerca de cada punto.
+          </p>
+        </div>
+
+        <div id="search-points-list"></div>
+
+        <div style="display:flex;gap:6px;margin-bottom:12px;">
+          <button class="btn btn-secondary btn-sm" id="btn-add-search-point" style="flex:1;">📍 Agregar punto en mi ubicación</button>
+          <button class="btn btn-secondary btn-sm" id="btn-clear-search-points">🗑️ Limpiar</button>
+        </div>
+
+        <div class="range-row">
+          <span style="font-size:12px;font-weight:600;">Radio:</span>
+          <input type="range" id="search-radius" min="100" max="2000" value="${state.searchRadius}" step="50">
+          <span class="range-value" id="radius-value">${state.searchRadius}m</span>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="btn-search-trip" style="margin-bottom:14px;">
+          🔍 Buscar Rutas
+        </button>
+
+        <div id="search-results"></div>
+      `;
+
+      renderSearchPointsList();
+
+      $('#search-radius').addEventListener('input', (e) => {
+        state.searchRadius = parseInt(e.target.value);
+        $('#radius-value').textContent = `${state.searchRadius}m`;
+      });
+
+      $('#btn-add-search-point').addEventListener('click', () => {
+        if (state.searchPoints.length >= 3) {
+          showToast('Máximo 3 puntos');
+          return;
+        }
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(pos => {
+          addSearchPoint(pos.coords.latitude, pos.coords.longitude);
+        }, () => showToast('No se pudo obtener ubicación'));
+      });
+
+      $('#btn-clear-search-points').addEventListener('click', clearSearchPoints);
+      $('#btn-search-trip').addEventListener('click', performTripSearch);
+    }
+
+    function addSearchPoint(lat, lng) {
+      if (state.searchPoints.length >= 3) {
+        showToast('Máximo 3 puntos (A, B, C)');
+        return;
+      }
+      const letter = String.fromCharCode(65 + state.searchPoints.length); // A, B, C
+      const colors = { A: '#16a34a', B: '#dc2626', C: '#f59e0b' };
+      const color = colors[letter] || '#1e40af';
+
+      const point = { lat, lng, letter, color };
+      state.searchPoints.push(point);
+
+      const marker = L.marker([lat, lng], {
+        icon: createLetterIcon(letter, color)
+      }).addTo(state.map);
+      state.searchMarkers.push(marker);
+
+      renderSearchPointsList();
+      showToast(`Punto ${letter} marcado`);
+    }
+
+    function renderSearchPointsList() {
+      const container = $('#search-points-list');
+      if (!container) return;
+
+      if (state.searchPoints.length === 0) {
+        container.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:12px;background:var(--bg);border-radius:8px;margin-bottom:10px;">Sin puntos marcados</p>';
+        return;
+      }
+
+      container.innerHTML = state.searchPoints.map((p, i) => `
+        <div class="search-step">
+          <div class="search-step-letter search-step-${p.letter.toLowerCase()}">${p.letter}</div>
+          <div class="search-step-info">
+            <h4>Punto ${p.letter}</h4>
+            <p>${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</p>
+          </div>
+          <button class="btn-sm btn-delete" onclick="window.removeSearchPoint(${i})">✕</button>
+        </div>
+      `).join('');
+    }
+
+    window.removeSearchPoint = function(index) {
+      state.searchPoints.splice(index, 1);
+      if (state.searchMarkers[index]) {
+        state.map.removeLayer(state.searchMarkers[index]);
+        state.searchMarkers.splice(index, 1);
+      }
+      // Re-etiquetar
+      state.searchMarkers.forEach((m, i) => {
+        const letter = String.fromCharCode(65 + i);
+        const colors = { A: '#16a34a', B: '#dc2626', C: '#f59e0b' };
+        const color = colors[letter] || '#1e40af';
+        m.setIcon(createLetterIcon(letter, color));
+      });
+      state.searchPoints.forEach((p, i) => {
+        p.letter = String.fromCharCode(65 + i);
+        const colors = { A: '#16a34a', B: '#dc2626', C: '#f59e0b' };
+        p.color = colors[p.letter] || '#1e40af';
+      });
+      renderSearchPointsList();
+    };
+
+    function clearSearchPoints() {
+      state.searchPoints = [];
+      state.searchMarkers.forEach(m => state.map.removeLayer(m));
+      state.searchMarkers = [];
+      state.searchRouteLayers.forEach(l => state.map.removeLayer(l));
+      state.searchRouteLayers = [];
+      renderSearchPointsList();
+      const results = $('#search-results');
+      if (results) results.innerHTML = '';
+    }
+
+    async function performTripSearch() {
+      if (state.searchPoints.length < 2) {
+        showToast('Marca al menos 2 puntos');
+        return;
+      }
+
+      // Limpiar capas de rutas anteriores
+      state.searchRouteLayers.forEach(l => state.map.removeLayer(l));
+      state.searchRouteLayers = [];
+
+      const radius = state.searchRadius;
+      const resultsEl = $('#search-results');
+      resultsEl.innerHTML = '<div class="loading"><div class="spinner"></div><span>Buscando rutas...</span></div>';
+
+      // Encontrar rutas cercanas a cada punto
+      const routesPerPoint = state.searchPoints.map(p => ({
+        point: p,
+        routes: findRoutesNearPoint(p, radius)
+      }));
+
+      // Rutas que pasan por TODOS los puntos
+      const routesThroughAll = state.routes.filter(route => {
+        if (!route.puntos || route.puntos.length < 2) return false;
+        return routesPerPoint.every(rp => rp.routes.some(r => r.id === route.id));
+      });
+
+      // Rutas que pasan por al menos 2 puntos (transbordos)
+      const routesThrough2 = state.routes.filter(route => {
+        if (!route.puntos || route.puntos.length < 2) return false;
+        const count = routesPerPoint.filter(rp => rp.routes.some(r => r.id === route.id)).length;
+        return count >= 2;
+      });
+
+      // Rutas por punto individual
+      const singleRoutes = routesPerPoint.map(rp => ({
+        point: rp.point,
+        routes: rp.routes.filter(r => !routesThrough2.includes(r))
+      }));
+
+      let html = '';
+
+      if (routesThroughAll.length > 0) {
+        html += '<h3 style="font-size:13px;margin-bottom:10px;color:var(--success);">✅ Rutas que pasan por todos los puntos</h3>';
+        routesThroughAll.forEach(route => {
+          html += renderRouteResultCard(route, 'success');
+          drawSearchRoute(route, '#16a34a');
         });
       }
-    }
 
-    // =====================================================
-    // MODAL
-    // =====================================================
-    function openModal(routeId = null) {
-      state.editingRouteId = routeId;
-
-      const modal = $('#route-modal');
-      const form = $('#route-form');
-
-      form.reset();
-      $('#image-preview').style.display = 'none';
-      $('#route-color').value = '#1e40af';
-
-      if (routeId) {
-        $('#modal-title').textContent = 'Editar Ruta';
-        const route = state.routes.find(r => r.id === routeId);
-        if (route) {
-          $('#route-id').value = route.id;
-          $('#route-name').value = route.nombre || '';
-          $('#route-desc').value = route.descripcion || '';
-          $('#route-type').value = route.tipo || 'ida';
-          $('#route-color').value = route.color || '#1e40af';
-          $('#route-fare').value = route.tarifa || '';
-          $('#route-schedule').value = route.horario || '';
-          $('#route-notes').value = route.notas || '';
-          state.trackedPoints = [...(route.puntos || [])];
-          state.detectedPois = [...(route.pois || [])];
-
-          if (route.imagen) {
-            $('#image-preview').src = route.imagen;
-            $('#image-preview').style.display = 'block';
-          }
-        }
-      } else {
-        $('#modal-title').textContent = 'Nueva Ruta';
-        $('#route-id').value = '';
-        state.trackedPoints = [];
-        state.detectedPois = [];
+      if (routesThrough2.length > 0) {
+        html += '<h3 style="font-size:13px;margin:14px 0 10px;color:var(--warning);">🔄 Rutas que conectan varios puntos (posible transbordo)</h3>';
+        routesThrough2.filter(r => !routesThroughAll.includes(r)).forEach(route => {
+          html += renderRouteResultCard(route, 'warning');
+          drawSearchRoute(route, '#f59e0b');
+        });
       }
 
-      updatePointsUI();
-      renderDetectedPois();
-      modal.classList.add('active');
+      const hasSingles = singleRoutes.some(s => s.routes.length > 0);
+      if (hasSingles) {
+        html += '<h3 style="font-size:13px;margin:14px 0 10px;color:var(--primary);">📍 Rutas cercanas a cada punto</h3>';
+        singleRoutes.forEach(sr => {
+          if (sr.routes.length === 0) return;
+          html += `<p style="font-size:12px;font-weight:600;margin:8px 0 6px;">Punto ${sr.point.letter}:</p>`;
+          sr.routes.forEach(route => {
+            html += renderRouteResultCard(route, 'primary');
+            drawSearchRoute(route, '#1e40af');
+          });
+        });
+      }
 
-      // Iniciar modo edición
-      startEditing(routeId);
+      if (!html) {
+        html = `
+          <div class="empty-state">
+            <p>No se encontraron rutas cerca</p>
+            <p class="small">Intenta aumentar el radio</p>
+          </div>`;
+      }
+
+      resultsEl.innerHTML = html;
     }
 
-    function closeModal() {
-      $('#route-modal').classList.remove('active');
-      stopEditing();
+    function renderRouteResultCard(route, type) {
+      const border = type === 'success' ? 'var(--success)' : type === 'warning' ? 'var(--warning)' : 'var(--primary)';
+      return `
+        <div class="route-card" style="border-left:4px solid ${border};" onclick="window.viewRoute('${route.id}')">
+          <div class="route-card-header">
+            <h3>${escapeHtml(route.nombre)}</h3>
+            <span class="route-badge badge-${route.tipo || 'ida'}">${route.tipo || 'ida'}</span>
+          </div>
+          <div class="route-meta">
+            <span>🛣️ ${route.streets?.length || 0} calles</span>
+            ${route.tarifa ? `<span>💰 ${route.tarifa}</span>` : ''}
+          </div>
+        </div>
+      `;
     }
 
-    // =====================================================
-    // GUARDAR RUTA
-    // =====================================================
+    function drawSearchRoute(route, color) {
+      if (!route.puntos || route.puntos.length < 2) return;
+      const coords = route.puntos.map(p => [p.lat, p.lng]);
+      const line = L.polyline(coords, {
+        color, weight: 5, opacity: 0.7, dashArray: '10, 5'
+      }).addTo(state.map);
+      state.searchRouteLayers.push(line);
+    }
+
+    function findRoutesNearPoint(point, radius) {
+      return state.routes.filter(route => {
+        if (!route.puntos || route.puntos.length < 2) return false;
+        return pointToLineDistance(point, route.puntos) <= radius;
+      });
+    }
+
+    // ==================== GUARDAR RUTA ====================
     async function saveRoute() {
       const name = $('#route-name').value.trim();
-
       if (!name) {
-        showToast('Ingresa un nombre para la ruta');
+        showToast('Ingresa un nombre');
         return;
       }
-
       if (state.trackedPoints.length < 2) {
-        showToast('Necesitas al menos 2 puntos en la ruta');
+        showToast('Necesitas al menos 2 puntos');
         return;
       }
 
-      const saveBtn = $('#btn-save');
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Guardando...';
+      const btn = $('#btn-save');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
 
       try {
         const routeId = $('#route-id').value || generateId();
-        const imageFile = $('#route-image').files[0];
-
+        const imgFile = $('#route-image').files[0];
         let imageUrl = null;
-        if (imageFile) {
-          try {
-            imageUrl = await uploadImage(imageFile);
-          } catch (error) {
-            console.error('Image upload error:', error);
-          }
+
+        if (imgFile) {
+          try { imageUrl = await uploadImage(imgFile); } catch (e) { console.error(e); }
         } else if ($('#image-preview').src && $('#image-preview').style.display !== 'none') {
           imageUrl = $('#image-preview').src;
         }
@@ -1721,171 +2216,137 @@
           nombre: name,
           descripcion: $('#route-desc').value.trim(),
           tipo: $('#route-type').value,
+          empresa: $('#route-company').value.trim(),
           color: $('#route-color').value,
           tarifa: $('#route-fare').value.trim(),
-          horario: $('#route-schedule').value.trim(),
+          frecuencia: $('#route-frequency').value.trim(),
+          horario: `${$('#route-schedule').value} - ${$('#route-schedule-end').value}`,
+          dias: $('#route-days').value,
+          accesible: $('#route-accessible').value,
           notas: $('#route-notes').value.trim(),
           imagen: imageUrl,
           puntos: state.trackedPoints,
+          streets: state.detectedStreets,
           pois: state.detectedPois,
           createdAt: state.editingRouteId ? undefined : Date.now(),
           updatedAt: Date.now()
         };
 
-        await saveRouteToLocal(route);
+        await localDB.saveRoute(route);
 
         if (state.isOnline) {
           try {
             await syncRouteToFirebase(route);
             showToast('Ruta guardada y sincronizada');
-          } catch (error) {
-            showToast('Guardado local (pendiente sincronizar)');
+          } catch (e) {
+            showToast('Guardado local (pendiente sync)');
           }
         } else {
           showToast('Ruta guardada offline');
         }
 
-        const existingIndex = state.routes.findIndex(r => r.id === routeId);
-        if (existingIndex >= 0) {
-          state.routes[existingIndex] = { ...state.routes[existingIndex], ...route };
-        } else {
-          state.routes.push(route);
-        }
+        const idx = state.routes.findIndex(r => r.id === routeId);
+        if (idx >= 0) state.routes[idx] = route;
+        else state.routes.push(route);
 
         renderRoutesList();
         renderRoutesOnMap();
-        closeModal();
+        closeSheet();
 
-      } catch (error) {
-        console.error('Save error:', error);
+      } catch (e) {
+        console.error(e);
         showToast('Error al guardar');
       } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Guardar Ruta';
+        btn.disabled = false;
+        btn.textContent = '💾 Guardar Ruta';
       }
     }
 
-    // =====================================================
-    // ELIMINAR RUTA
-    // =====================================================
-    async function deleteRoute(id) {
-      const route = state.routes.find(r => r.id === id);
-      if (!route) return;
+    // ==================== MODAL / SHEET ====================
+    function openSheet(routeId = null) {
+      state.editingRouteId = routeId;
+      $('#route-form').reset();
+      $('#image-preview').style.display = 'none';
+      $('#route-color').value = '#1e40af';
+      $$('.color-chip').forEach(c => c.classList.toggle('active', c.dataset.color === '#1e40af'));
 
-      if (!confirm(`¿Eliminar la ruta "${route.nombre}"?`)) return;
-
-      try {
-        await deleteRouteFromLocal(id);
-
-        if (state.isOnline) {
-          try {
-            await deleteRouteFromFirebase(id);
-          } catch (error) {
-            console.error('Firebase delete error:', error);
+      if (routeId) {
+        $('#sheet-title').textContent = 'Editar Ruta';
+        const r = state.routes.find(x => x.id === routeId);
+        if (r) {
+          $('#route-id').value = r.id;
+          $('#route-name').value = r.nombre || '';
+          $('#route-desc').value = r.descripcion || '';
+          $('#route-type').value = r.tipo || 'ida';
+          $('#route-company').value = r.empresa || '';
+          $('#route-color').value = r.color || '#1e40af';
+          $('#route-fare').value = r.tarifa || '';
+          $('#route-frequency').value = r.frecuencia || '';
+          $('#route-days').value = r.dias || 'todos';
+          $('#route-accessible').value = r.accesible || 'no';
+          $('#route-notes').value = r.notas || '';
+          if (r.imagen) {
+            $('#image-preview').src = r.imagen;
+            $('#image-preview').style.display = 'block';
           }
+          $$('.color-chip').forEach(c => c.classList.toggle('active', c.dataset.color === (r.color || '#1e40af')));
         }
-
-        state.routes = state.routes.filter(r => r.id !== id);
-
-        if (state.routeLayers[id]) {
-          if (state.routeLayers[id].polyline) {
-            state.map.removeLayer(state.routeLayers[id].polyline);
-          }
-          if (state.routeLayers[id].markers) {
-            state.routeLayers[id].markers.forEach(m => state.map.removeLayer(m));
-          }
-          delete state.routeLayers[id];
-        }
-
-        renderRoutesList();
-        showToast('Ruta eliminada');
-
-      } catch (error) {
-        console.error('Delete error:', error);
-        showToast('Error al eliminar');
+      } else {
+        $('#sheet-title').textContent = 'Nueva Ruta';
+        $('#route-id').value = '';
       }
+
+      sheet.open();
+      startEditing(routeId);
     }
 
-    // =====================================================
-    // EVENT LISTENERS
-    // =====================================================
+    function closeSheet() {
+      sheet.close();
+      stopEditing();
+    }
+
+    // ==================== EVENT LISTENERS ====================
     function setupEventListeners() {
-      // Búsqueda de rutas
+      // Búsqueda rutas
+      $('#search-input').addEventListener('input', (e) => {
+        state.filterText = e.target.value.trim();
+        renderRoutesList();
+      });
       $('#search-btn').addEventListener('click', () => {
         state.filterText = $('#search-input').value.trim();
         renderRoutesList();
       });
 
-      $('#search-input').addEventListener('input', (e) => {
-        state.filterText = e.target.value.trim();
-        renderRoutesList();
-      });
+      // Abrir sheet
+      $('#btn-add-route').addEventListener('click', () => openSheet());
 
-      // Agregar ruta
-      $('#btn-add-route').addEventListener('click', () => openModal());
-
-      // Cerrar modal
-      $('#modal-close').addEventListener('click', closeModal);
-      $('#btn-cancel').addEventListener('click', closeModal);
+      // Cerrar sheet
+      $('#sheet-close').addEventListener('click', closeSheet);
+      $('#btn-cancel').addEventListener('click', closeSheet);
 
       // Guardar
       $('#btn-save').addEventListener('click', saveRoute);
 
-      // Grabar GPS
-      $('#btn-start-tracking').addEventListener('click', () => {
-        if (state.isTracking) stopTracking();
-        else startTracking();
-      });
-
-      $('#btn-stop-recording').addEventListener('click', stopTracking);
-
-      // Limpiar puntos
-      $('#btn-clear-points').addEventListener('click', () => {
-        if (confirm('¿Limpiar todos los puntos?')) {
-          state.trackedPoints = [];
-          state.detectedPois = [];
-          updatePointsUI();
-          renderDetectedPois();
-          if (state.editingLayer) {
-            state.map.removeLayer(state.editingLayer);
-            state.editingLayer = null;
-          }
-        }
-      });
-
-      // Subida de imagen
-      $('#image-upload-area').addEventListener('click', () => {
-        $('#route-image').click();
-      });
-
-      $('#route-image').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            $('#image-preview').src = ev.target.result;
-            $('#image-preview').style.display = 'block';
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-
-      // Panel toggle
-      $('#panel-toggle').addEventListener('click', () => {
-        $('#bottom-panel').classList.toggle('collapsed');
-      });
-
-      // Tabs
-      $$('.panel-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-          $$('.panel-tab').forEach(t => t.classList.remove('active'));
-          $$('.panel-content').forEach(c => c.classList.add('hidden'));
-          tab.classList.add('active');
-          $(`#tab-${tab.dataset.tab}`).classList.remove('hidden');
+      // Secciones acordeón
+      $$('.section-header').forEach(h => {
+        h.addEventListener('click', () => {
+          h.parentElement.classList.toggle('open');
         });
       });
 
-      // Herramientas de edición
+      // Color picker
+      $$('.color-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          $$('.color-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          $('#route-color').value = chip.dataset.color;
+          if (state.editingLayer) {
+            state.editingLayer.setStyle({ color: chip.dataset.color });
+          }
+        });
+      });
+
+      // Herramientas
       $$('.tool-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const tool = btn.dataset.tool;
@@ -1898,21 +2359,25 @@
             }
             return;
           }
-
           if (tool === 'clear') {
             if (confirm('¿Limpiar todos los puntos?')) {
               state.trackedPoints = [];
+              state.detectedStreets = [];
               state.detectedPois = [];
-              updatePointsUI();
-              renderDetectedPois();
               renderEditingTrack();
+              updatePointsUI();
+              renderStreetsList();
+              renderPoisEditList();
             }
             return;
           }
-
           if (tool === 'gps') {
             if (state.isTracking) stopTracking();
             else startTracking();
+            return;
+          }
+          if (tool === 'detect') {
+            detectAllNow();
             return;
           }
 
@@ -1922,66 +2387,305 @@
         });
       });
 
-      // Radio de búsqueda
-      $('#search-radius').addEventListener('input', (e) => {
-        state.searchRadius = parseInt(e.target.value);
-        $('#radius-value').textContent = `${state.searchRadius}m`;
+      // GPS desde sheet
+      $('#btn-start-tracking').addEventListener('click', () => {
+        if (state.isTracking) stopTracking();
+        else startTracking();
       });
 
-      // Buscar viaje
-      $('#btn-search-trip').addEventListener('click', searchTrip);
+      $('#btn-stop-recording').addEventListener('click', stopTracking);
 
-      // Cerrar modal al hacer clic fuera
-      $('#route-modal').addEventListener('click', (e) => {
-        if (e.target === $('#route-modal')) closeModal();
+      $('#btn-clear-points').addEventListener('click', () => {
+        if (confirm('¿Limpiar todos los puntos?')) {
+          state.trackedPoints = [];
+          state.detectedStreets = [];
+          state.detectedPois = [];
+          renderEditingTrack();
+          updatePointsUI();
+          renderStreetsList();
+          renderPoisEditList();
+        }
       });
 
-      // Funciones globales
+      // Detección de calles
+      $('#btn-detect-streets').addEventListener('click', async () => {
+        if (state.trackedPoints.length < 2) {
+          showToast('Traza la ruta primero');
+          return;
+        }
+        const bar = $('#detecting-bar');
+        bar.classList.add('active');
+        try {
+          const streets = await detectStreetsAlongRoute(
+            state.trackedPoints,
+            (i, total) => {
+              $('#detecting-text').textContent = `Detectando calles... ${i}/${total}`;
+            }
+          );
+          state.detectedStreets = streets;
+          renderStreetsList();
+          showToast(`${streets.length} calles detectadas`);
+        } catch (e) {
+          showToast('Error en detección');
+        } finally {
+          bar.classList.remove('active');
+        }
+      });
+
+      $('#btn-reverse-order').addEventListener('click', () => {
+        state.detectedStreets.reverse();
+        renderStreetsList();
+        showToast('Orden invertido');
+      });
+
+      // Detección de negocios
+      $('#btn-detect-businesses').addEventListener('click', async () => {
+        if (state.trackedPoints.length < 2) {
+          showToast('Traza la ruta primero');
+          return;
+        }
+        const bar = $('#detecting-bar');
+        bar.classList.add('active');
+        try {
+          const pois = await detectBusinessesAlongRoute(state.trackedPoints);
+          state.detectedPois = [...state.detectedPois, ...pois];
+          renderPoisEditList();
+          pois.forEach(p => renderPoiMarker(p));
+          showToast(`${pois.length} negocios detectados`);
+        } catch (e) {
+          showToast('Error en detección');
+        } finally {
+          bar.classList.remove('active');
+        }
+      });
+
+      $('#btn-add-custom-poi').addEventListener('click', () => {
+        state.activeTool = 'poi';
+        $$('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === 'poi'));
+        showToast('Toca el mapa para agregar un punto');
+        // Colapsar sheet para ver el mapa
+        sheet.el.classList.add('collapsed');
+      });
+
+      // Imagen
+      $('#image-upload-area').addEventListener('click', () => $('#route-image').click());
+      $('#route-image').addEventListener('change', (e) => {
+        const f = e.target.files[0];
+        if (f) {
+          const r = new FileReader();
+          r.onload = (ev) => {
+            $('#image-preview').src = ev.target.result;
+            $('#image-preview').style.display = 'block';
+          };
+          r.readAsDataURL(f);
+        }
+      });
+
+      // Panel inferior
+      $('#panel-toggle').addEventListener('click', () => {
+        $('#bottom-panel').classList.toggle('open');
+      });
+
+      // Tabs
+      $$('.panel-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          $$('.panel-tab').forEach(t => t.classList.remove('active'));
+          $$('.panel-content').forEach(c => c.classList.remove('active'));
+          tab.classList.add('active');
+          $(`#tab-${tab.dataset.tab}`).classList.add('active');
+
+          if (tab.dataset.tab === 'trip') {
+            renderTripSearch();
+          } else if (tab.dataset.tab === 'stats') {
+            renderStats();
+          } else if (tab.dataset.tab === 'pois') {
+            renderPoisList();
+          }
+        });
+      });
+
+      // Global functions
       window.viewRoute = selectRoute;
-      window.editRoute = (id) => openModal(id);
+      window.editRoute = (id) => openSheet(id);
       window.deleteRoute = deleteRoute;
     }
 
-    // =====================================================
-    // INICIALIZACIÓN
-    // =====================================================
-    async function init() {
-      console.log('Iniciando app...');
+    async function detectAllNow() {
+      if (state.trackedPoints.length < 2) {
+        showToast('Traza la ruta primero');
+        return;
+      }
+      $('#detecting-bar').classList.add('active');
+      try {
+        $('#detecting-text').textContent = 'Detectando calles...';
+        const streets = await detectStreetsAlongRoute(state.trackedPoints, (i, t) => {
+          $('#detecting-text').textContent = `Detectando calles... ${i}/${t}`;
+        });
+        state.detectedStreets = streets;
+        renderStreetsList();
 
+        $('#detecting-text').textContent = 'Detectando negocios...';
+        const pois = await detectBusinessesAlongRoute(state.trackedPoints);
+        state.detectedPois = [...state.detectedPois, ...pois];
+        renderPoisEditList();
+        pois.forEach(p => renderPoiMarker(p));
+
+        showToast(`Detectados: ${streets.length} calles, ${pois.length} negocios`);
+      } catch (e) {
+        console.error(e);
+        showToast('Error detectando');
+      } finally {
+        $('#detecting-bar').classList.remove('active');
+      }
+    }
+
+    async function deleteRoute(id) {
+      const route = state.routes.find(r => r.id === id);
+      if (!route) return;
+      if (!confirm(`¿Eliminar "${route.nombre}"?`)) return;
+
+      try {
+        await localDB.deleteRoute(id);
+        if (state.isOnline) {
+          try { await deleteRouteFromFirebase(id); } catch (e) { console.error(e); }
+        }
+        state.routes = state.routes.filter(r => r.id !== id);
+
+        if (state.routeLayers[id]) {
+          if (state.routeLayers[id].polyline) state.map.removeLayer(state.routeLayers[id].polyline);
+          state.routeLayers[id].markers?.forEach(m => state.map.removeLayer(m));
+          delete state.routeLayers[id];
+        }
+
+        renderRoutesList();
+        showToast('Ruta eliminada');
+      } catch (e) {
+        showToast('Error al eliminar');
+      }
+    }
+
+    function renderPoisList() {
+      const container = $('#pois-list');
+      const allPois = [];
+      state.routes.forEach(r => {
+        (r.pois || []).forEach(p => allPois.push({ ...p, rutaNombre: r.nombre, rutaId: r.id }));
+      });
+
+      if (allPois.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No hay puntos de interés registrados</p></div>';
+        return;
+      }
+
+      container.innerHTML = allPois.map(p => `
+        <div class="poi-item" onclick="window.viewRoute('${p.rutaId}')">
+          <div class="poi-icon ${p.tipo || 'custom'}">${p.icono || '📍'}</div>
+          <div class="poi-info">
+            <h4>${escapeHtml(p.nombre)}</h4>
+            <p>${escapeHtml(p.rutaNombre)}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderStats() {
+      const container = $('#stats-content');
+      const totalStreets = state.routes.reduce((sum, r) => sum + (r.streets?.length || 0), 0);
+      const totalPois = state.routes.reduce((sum, r) => sum + (r.pois?.length || 0), 0);
+      const totalPoints = state.routes.reduce((sum, r) => sum + (r.puntos?.length || 0), 0);
+
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div style="background:var(--bg);padding:14px;border-radius:10px;text-align:center;">
+            <div style="font-size:24px;font-weight:700;color:var(--primary);">${state.routes.length}</div>
+            <div style="font-size:11px;color:var(--text-muted);">Rutas</div>
+          </div>
+          <div style="background:var(--bg);padding:14px;border-radius:10px;text-align:center;">
+            <div style="font-size:24px;font-weight:700;color:var(--success);">${totalStreets}</div>
+            <div style="font-size:11px;color:var(--text-muted);">Calles</div>
+          </div>
+          <div style="background:var(--bg);padding:14px;border-radius:10px;text-align:center;">
+            <div style="font-size:24px;font-weight:700;color:var(--warning);">${totalPois}</div>
+            <div style="font-size:11px;color:var(--text-muted);">Puntos interés</div>
+          </div>
+          <div style="background:var(--bg);padding:14px;border-radius:10px;text-align:center;">
+            <div style="font-size:24px;font-weight:700;color:var(--danger);">${totalPoints}</div>
+            <div style="font-size:11px;color:var(--text-muted);">Puntos GPS</div>
+          </div>
+        </div>
+
+        <h3 style="font-size:13px;margin-bottom:10px;">Acciones</h3>
+        <button class="btn btn-secondary btn-block" id="btn-export" style="margin-bottom:8px;">📥 Exportar rutas (JSON)</button>
+        <button class="btn btn-secondary btn-block" id="btn-refresh" style="margin-bottom:8px;">🔄 Sincronizar</button>
+        <button class="btn btn-danger btn-block" id="btn-clear-all">🗑️ Borrar todas las rutas</button>
+      `;
+
+      $('#btn-export').addEventListener('click', () => {
+        const data = JSON.stringify(state.routes, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `rutas-tuxtla-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      $('#btn-refresh').addEventListener('click', async () => {
+        if (!state.isOnline) {
+          showToast('Sin conexión');
+          return;
+        }
+        const firebaseRoutes = await loadRoutesFromFirebase();
+        state.routes = firebaseRoutes;
+        for (const r of firebaseRoutes) await localDB.saveRoute(r);
+        renderRoutesList();
+        renderRoutesOnMap();
+        renderStats();
+        showToast('Sincronizado');
+      });
+
+      $('#btn-clear-all').addEventListener('click', async () => {
+        if (!confirm('¿Borrar TODAS las rutas? Esta acción no se puede deshacer.')) return;
+        for (const r of state.routes) {
+          await localDB.deleteRoute(r.id);
+          if (state.isOnline) try { await deleteRouteFromFirebase(r.id); } catch(e) {}
+        }
+        state.routes = [];
+        Object.values(state.routeLayers).forEach(l => {
+          if (l.polyline) state.map.removeLayer(l.polyline);
+          l.markers?.forEach(m => state.map.removeLayer(m));
+        });
+        state.routeLayers = {};
+        renderRoutesList();
+        renderRoutesOnMap();
+        renderStats();
+        showToast('Todas las rutas eliminadas');
+      });
+    }
+
+    // ==================== INIT ====================
+    async function init() {
       await initDB();
       initMap();
+      sheet.init();
 
-      // Cargar rutas locales
-      const localRoutes = await getRoutesFromLocal();
+      // Cargar local primero
+      const localRoutes = await localDB.getRoutes();
       if (localRoutes.length > 0) {
         state.routes = localRoutes;
         renderRoutesList();
         renderRoutesOnMap();
       }
 
-      // Cargar POIs locales
-      const localPois = await getPoisFromLocal();
-      if (localPois.length > 0) {
-        state.pois = localPois;
-      }
-
-      // Cargar desde Firebase si hay conexión
+      // Cargar desde Firebase
       if (state.isOnline) {
-        const firebaseRoutes = await loadRoutesFromFirebase();
-
-        const merged = [...firebaseRoutes];
-        localRoutes.forEach(local => {
-          if (!firebaseRoutes.find(f => f.id === local.id)) {
-            merged.push(local);
-          }
+        const fbRoutes = await loadRoutesFromFirebase();
+        const merged = [...fbRoutes];
+        localRoutes.forEach(l => {
+          if (!fbRoutes.find(f => f.id === l.id)) merged.push(l);
         });
-
         state.routes = merged;
-
-        for (const route of merged) {
-          await saveRouteToLocal(route);
-        }
-
+        for (const r of merged) await localDB.saveRoute(r);
         renderRoutesList();
         renderRoutesOnMap();
       }
@@ -1993,13 +2697,15 @@
         updateConnectionStatus();
         showToast('Conexión restaurada');
       });
-
       window.addEventListener('offline', () => {
         updateConnectionStatus();
-        showToast('Sin conexión - Modo offline');
+        showToast('Modo offline');
       });
 
-      console.log('App lista');
+      // Abrir panel por defecto
+      setTimeout(() => {
+        $('#bottom-panel').classList.add('open');
+      }, 100);
     }
 
     init().catch(console.error);
@@ -2008,9 +2714,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('SW registrado:', reg.scope))
-          .catch(err => console.error('SW error:', err));
+        navigator.serviceWorker.register('/sw.js').catch(console.error);
       });
     }
   </script>
