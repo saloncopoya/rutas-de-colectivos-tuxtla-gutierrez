@@ -212,6 +212,23 @@
             flex-direction: column;
         }
         .fullscreen-map.active { display: flex; }
+        .fullscreen-map:fullscreen,
+        .fullscreen-map:-webkit-full-screen,
+        .fullscreen-map:-ms-fullscreen {
+            width: 100vw;
+            height: 100vh;
+            background: #020617;
+        }
+        .fullscreen-map:fullscreen .map-body,
+        .fullscreen-map:-webkit-full-screen .map-body,
+        .fullscreen-map:-ms-fullscreen .map-body {
+            flex: 1;
+        }
+        .fullscreen-map:fullscreen .map-footer,
+        .fullscreen-map:-webkit-full-screen .map-footer,
+        .fullscreen-map:-ms-fullscreen .map-footer {
+            max-height: 30vh;
+        }
         .fullscreen-map .map-header {
             padding: 12px 16px;
             background: #0f172a;
@@ -374,7 +391,10 @@
                     <p id="mapRouteCategory" class="text-[10px] text-cyan-400 font-bold uppercase">Categoría</p>
                 </div>
             </div>
-            <button onclick="shareRouteFromMap()" class="p-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl text-sm"><i class="fa-solid fa-share-nodes"></i></button>
+                       <div class="flex items-center gap-1.5">
+                <button onclick="shareRouteFromMap()" class="p-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl text-sm" title="Compartir"><i class="fa-solid fa-share-nodes"></i></button>
+                <button onclick="toggleMapFullscreen()" id="mapFullscreenBtn" class="p-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl text-sm" title="Pantalla completa"><i class="fa-solid fa-expand"></i></button>
+            </div>
         </div>
         <div class="map-body">
             <iframe id="fullscreenMapIframe" src="about:blank" class="w-full h-full border-0"></iframe>
@@ -1479,6 +1499,48 @@
                 }
             }
         }
+
+        function toggleMapFullscreen() {
+            const mapEl = document.getElementById('fullscreenMap');
+            const btn = document.getElementById('mapFullscreenBtn');
+            const icon = btn.querySelector('i');
+
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                // Entrar a pantalla completa
+                const requestFs = mapEl.requestFullscreen || mapEl.webkitRequestFullscreen || mapEl.msRequestFullscreen;
+                if (requestFs) {
+                    requestFs.call(mapEl).then(() => {
+                        icon.className = 'fa-solid fa-compress';
+                        btn.title = 'Salir de pantalla completa';
+                    }).catch(err => {
+                        console.warn('Fullscreen error:', err);
+                    });
+                } else {
+                    Swal.fire('No soportado', 'Tu navegador no soporta pantalla completa.', 'info');
+                }
+            } else {
+                // Salir de pantalla completa
+                const exitFs = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+                if (exitFs) {
+                    exitFs.call(document).then(() => {
+                        icon.className = 'fa-solid fa-expand';
+                        btn.title = 'Pantalla completa';
+                    }).catch(() => {});
+                }
+            }
+        }
+
+        // Detectar cambios de fullscreen (por si el usuario sale con ESC)
+        ['fullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange'].forEach(evt => {
+            document.addEventListener(evt, () => {
+                const btn = document.getElementById('mapFullscreenBtn');
+                if (!btn) return;
+                const icon = btn.querySelector('i');
+                const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+                icon.className = isFs ? 'fa-solid fa-compress' : 'fa-solid fa-expand';
+                btn.title = isFs ? 'Salir de pantalla completa' : 'Pantalla completa';
+            });
+        });
 
         function shareRoute() { shareRouteFromMap(); }
 
