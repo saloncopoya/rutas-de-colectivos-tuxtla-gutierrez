@@ -463,12 +463,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div class="relative">
                         <label class="block text-xs font-bold text-cyan-400 mb-1"><i class="fa-solid fa-location-dot"></i> Estoy en / Buscar:</label>
-                        <input type="text" id="plannerOrigin" oninput="onSearchChange()" onfocus="showSuggestions('plannerOrigin')" autocomplete="off" placeholder="Ej. Ruta 1, Calle, Hospital..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
+                        <input type="text" id="plannerOrigin" oninput="onSearchChange(event)" onfocus="showSuggestions('plannerOrigin')" autocomplete="off" placeholder="Ej. Ruta 1, Calle, Hospital..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
                         <div id="suggestions-plannerOrigin" class="hidden absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto"></div>
                     </div>
                     <div class="relative">
                         <label class="block text-xs font-bold text-rose-400 mb-1"><i class="fa-solid fa-flag-checkered"></i> Quiero ir a:</label>
-                        <input type="text" id="plannerDestination" oninput="onSearchChange()" onfocus="showSuggestions('plannerDestination')" autocomplete="off" placeholder="Destino..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
+                        <input type="text" id="plannerDestination" oninput="onSearchChange(event)" onfocus="showSuggestions('plannerDestination')" autocomplete="off" placeholder="Destino..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
                         <div id="suggestions-plannerDestination" class="hidden absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto"></div>
                     </div>
                 </div>
@@ -534,7 +534,7 @@
         </button>
     </nav>
 
-
+   
     <!-- MODAL POST / PUBLICACIÓN -->
     <div id="postModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-2 hidden">
         <div class="bg-slate-900 w-full max-w-2xl max-h-[90vh] rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
@@ -1035,7 +1035,7 @@
             }
         }
 
-                // ===== MOTOR DE SUGERENCIAS (ignora apóstrofes, comas y acentos) =====
+        // ===== MOTOR DE SUGERENCIAS (ignora apóstrofes, comas y acentos) =====
         let allPointsCache = [];
 
         function buildPointsCache() {
@@ -1103,9 +1103,6 @@
                 }
             });
         });
-
-        
-
 
         // ===== ADMIN =====
         function toggleAdminSession() {
@@ -1360,10 +1357,10 @@
             }
         }
 
-        // ===== RUTAS =====
-        function onSearchChange() { 
-            filterSuggestions('plannerOrigin');
-            filterSuggestions('plannerDestination');
+              function onSearchChange(event) { 
+            const target = event && event.target ? event.target.id : null;
+            if (target === 'plannerOrigin') filterSuggestions('plannerOrigin');
+            if (target === 'plannerDestination') filterSuggestions('plannerDestination');
             renderExplorerView(); 
             const origin = document.getElementById('plannerOrigin').value.trim();
             const dest = document.getElementById('plannerDestination').value.trim();
