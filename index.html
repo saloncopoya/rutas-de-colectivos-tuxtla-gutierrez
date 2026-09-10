@@ -958,24 +958,10 @@
 
         // ===== SINCRONIZACIÓN FIREBASE =====
         function initFirebaseSync() {
-    routesRef.on('value', (snapshot) => { 
-        const data = snapshot.val(); 
-        routesData = data ? (Array.isArray(data) ? data : Object.values(data)) : []; 
-        saveAllData(); renderAll(); updateNetworkState(true, 'EN LÍNEA'); 
-    }, () => updateNetworkState(false, 'MODO OFFLINE'));
-    
-    postsRef.on('value', (snapshot) => { 
-        const data = snapshot.val(); 
-        postsData = data ? (Array.isArray(data) ? data : Object.values(data)) : []; 
-        saveAllData(); renderAll(); 
-    });
-    
-    marketplaceRef.on('value', (snapshot) => { 
-        const data = snapshot.val(); 
-        listingsData = data ? (Array.isArray(data) ? data : Object.values(data)) : []; 
-        saveAllData(); renderAll(); 
-    });
-}
+            routesRef.on('value', (snapshot) => { const data = snapshot.val(); if (data) { routesData = Array.isArray(data) ? data : Object.values(data); saveAllData(); renderAll(); updateNetworkState(true, 'EN LÍNEA'); } }, () => updateNetworkState(false, 'MODO OFFLINE'));
+            postsRef.on('value', (snapshot) => { const data = snapshot.val(); if (data) { postsData = Array.isArray(data) ? data : Object.values(data); saveAllData(); renderAll(); } });
+            marketplaceRef.on('value', (snapshot) => { const data = snapshot.val(); if (data) { listingsData = Array.isArray(data) ? data : Object.values(data); saveAllData(); renderAll(); } });
+        }
 
         function syncDataWithFirebase() {
             if (navigator.onLine) {
@@ -2073,14 +2059,10 @@ function selectStreet(streetName) {
             initCommentsDrag();
 window.addEventListener('online', () => { 
     updateNetworkState(true, 'EN LÍNEA'); 
-    // ⚠️ NO subir datos locales al reconectar: evita resucitar borrados del admin.
-    // Solo dejamos que Firebase empuje el estado actual (listeners .on('value')).
+    syncDataWithFirebase(); // ← sincroniza cambios pendientes
     renderAll(); 
-});
-window.addEventListener('offline', () => { 
-    updateNetworkState(false, 'MODO OFFLINE'); 
-    renderAll(); 
-});
+});            window.addEventListener('offline', () => { updateNetworkState(false, 'MODO OFFLINE'); renderAll(); });
+        });
 
         // Exponer funciones globales
         window.navigateTo = navigateTo;
