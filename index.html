@@ -239,9 +239,6 @@
             overflow: hidden;
             position: relative;
         }
-        .fullscreen-map .map-body:has(#fullscreenOfflinePlaceholder:not(.hidden)) {
-    flex: 0 0 auto;
-}
         .fullscreen-map .map-footer {
             padding: 12px 16px;
             background: #0f172a;
@@ -381,8 +378,8 @@
         </div>
         <div class="map-body">
             <iframe id="fullscreenMapIframe" src="about:blank" class="w-full h-full border-0"></iframe>
-<div id="fullscreenOfflinePlaceholder" class="hidden w-full py-4 flex items-center justify-center bg-slate-900 text-slate-400 text-sm">
-    <i class="fa-solid fa-wifi-slash mr-2"></i> Sin conexión - Mapa no disponible
+            <div id="fullscreenOfflinePlaceholder" class="hidden absolute inset-0 flex items-center justify-center bg-slate-900 text-slate-400 text-sm">
+                <i class="fa-solid fa-wifi-slash mr-2"></i> Sin conexión - Mapa no disponible
             </div>
         </div>
         <div class="map-footer">
