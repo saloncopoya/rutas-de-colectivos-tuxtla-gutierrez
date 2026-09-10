@@ -462,12 +462,12 @@
                 <!-- Buscador dual -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div class="relative">
-                        <label class="block text-xs font-bold text-cyan-400 mb-1"><i class="fa-solid fa-location-dot"></i> Estoy en / Buscar:</label>
+                        <label class="block text-xs font-bold text-cyan-400 mb-1"><i class="fa-solid fa-location-dot"></i>BUSCAR/ Estoy en:</label>
                         <input type="text" id="plannerOrigin" oninput="onSearchChange(event)" onfocus="showSuggestions('plannerOrigin')" autocomplete="off" placeholder="Ej. Ruta 1, Calle, Hospital..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
                         <div id="suggestions-plannerOrigin" class="hidden absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto"></div>
                     </div>
                     <div class="relative">
-                        <label class="block text-xs font-bold text-rose-400 mb-1"><i class="fa-solid fa-flag-checkered"></i> Quiero ir a:</label>
+                        <label class="block text-xs font-bold text-rose-400 mb-1"><i class="fa-solid fa-flag-checkered"></i> ¿A donde vamos?:</label>
                         <input type="text" id="plannerDestination" oninput="onSearchChange(event)" onfocus="showSuggestions('plannerDestination')" autocomplete="off" placeholder="Destino..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
                         <div id="suggestions-plannerDestination" class="hidden absolute z-50 left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto"></div>
                     </div>
@@ -476,7 +476,7 @@
                 <!-- Botones de acción -->
                 <div class="flex gap-2">
                     <button onclick="calculateMultiRoute()" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-2xl text-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-route text-lg"></i> Calcular Conexiones
+                        <i class="fa-solid fa-route text-lg"></i> BUSCAR RUTAS
                     </button>
                     <button onclick="clearSearchFields()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-4 rounded-2xl text-sm flex items-center justify-center gap-2 border border-slate-700">
                         <i class="fa-solid fa-eraser"></i> Limpiar
