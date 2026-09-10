@@ -456,6 +456,7 @@
                     <button onclick="setViewMode('ROUTES')" id="btnViewRoutes" class="mode-chip bg-cyan-600 text-white px-4 py-2 rounded-xl font-bold text-sm">Rutas</button>
                     <button onclick="setViewMode('STOPS')" id="btnViewStops" class="mode-chip bg-slate-800 text-slate-400 px-4 py-2 rounded-xl font-bold text-sm">Paradas</button>
                     <button onclick="setViewMode('POIS')" id="btnViewPois" class="mode-chip bg-slate-800 text-slate-400 px-4 py-2 rounded-xl font-bold text-sm">POIs</button>
+                    <button onclick="setViewMode('STREETS')" id="btnViewStreets" class="mode-chip bg-slate-800 text-slate-400 px-4 py-2 rounded-xl font-bold text-sm">Calles</button>
                     <button onclick="setViewMode('RETURNS')" id="btnViewReturns" class="mode-chip bg-slate-800 text-slate-400 px-4 py-2 rounded-xl font-bold text-sm">Retornos</button>
                 </div>
 
@@ -1417,9 +1418,11 @@
                     return;
                 }
                 container.innerHTML = filtered.map(r => renderSquareRouteCard(r)).join('');
-            } else {
-                renderItemizedPointsView(container, filtered, currentViewMode, term);
-            }
+     } else if (currentViewMode === 'STREETS') {
+    renderStreetsView(container, filtered, term);
+} else {
+    renderItemizedPointsView(container, filtered, currentViewMode, term);
+}
         }
 
         function renderSquareRouteCard(r) {
@@ -1438,6 +1441,47 @@
                 </div>
             `;
         }
+
+        function renderStreetsView(container, routes, term) {
+    const mapStreets = new Map();
+    routes.forEach(r => {
+        const streetsList = (r.streets || '').split(/[,\n]+/).map(s => s.trim()).filter(Boolean);
+        streetsList.forEach(st => {
+            if (term && !matchText(st, term)) return;
+            if (!mapStreets.has(st)) mapStreets.set(st, []);
+            mapStreets.get(st).push(r.name);
+        });
+    });
+
+    if (mapStreets.size === 0) {
+        container.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 text-sm">No se encontraron calles.</div>`;
+        return;
+    }
+
+    let html = '';
+    mapStreets.forEach((routesArr, streetName) => {
+        html += `
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3 col-span-full sm:col-span-1">
+                <div>
+                    <span class="text-[10px] font-bold text-purple-400 uppercase tracking-wider block">CALLE</span>
+                    <h4 class="font-bold text-sm text-white mt-0.5">${escapeHtml(streetName)}</h4>
+                    <p class="text-xs text-slate-400 mt-1">Rutas que pasan (${routesArr.length}):</p>
+                    <div class="flex flex-wrap gap-1 mt-1">${routesArr.map(rn => `<span class="bg-slate-950 border border-slate-800 text-purple-300 text-[11px] px-2 py-0.5 rounded">${escapeHtml(rn)}</span>`).join('')}</div>
+                </div>
+                <button onclick="selectStreet('${escapeHtml(streetName).replace(/'/g, "\\'")}')" class="w-full bg-slate-800 hover:bg-slate-700 text-purple-400 font-bold py-2 rounded-xl text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-road"></i> Buscar en esta calle</button>
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+function selectStreet(streetName) {
+    document.getElementById('plannerOrigin').value = streetName;
+    setViewMode('ROUTES');
+    renderExplorerView();
+    const dest = document.getElementById('plannerDestination').value.trim();
+    if (dest) calculateMultiRoute();
+}
 
         function renderItemizedPointsView(container, routes, mode, term) {
             const mapPoints = new Map();
