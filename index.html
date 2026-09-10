@@ -1037,18 +1037,26 @@
             }
         }
 
-        function updateAllDatalists() {
-            const global = new Set();
-            routesData.forEach(r => {
-                (r.stops || []).forEach(p => global.add(p));
-                (r.returnStops || []).forEach(p => global.add(p));
-                (r.poisUrban || []).forEach(p => global.add(p));
-                (r.poisForeign || []).forEach(p => global.add(p));
-                if (r.streets) r.streets.split(/[,\n]+/).map(s => s.trim()).filter(Boolean).forEach(st => global.add(st));
-            });
-            const dl = document.getElementById('globalPointsDatalist');
-            if (dl) dl.innerHTML = Array.from(global).sort().map(i => `<option value="${escapeHtml(i)}"></option>`).join('');
-        }
+      function updateAllDatalists() {
+    const global = new Set();
+    const addVariants = (p) => {
+        if (!p) return;
+        const clean = String(p).trim();
+        if (!clean) return;
+        global.add(clean);                          // original: "Autom'aticas"
+        global.add(normalizeText(clean));           // sin apóstrofes/acentos: "automaticas"
+        global.add(clean.replace(/[''`´,]/g, ''));  // sin apóstrofes/comas: "Automaticas"
+    };
+    routesData.forEach(r => {
+        (r.stops || []).forEach(addVariants);
+        (r.returnStops || []).forEach(addVariants);
+        (r.poisUrban || []).forEach(addVariants);
+        (r.poisForeign || []).forEach(addVariants);
+        if (r.streets) r.streets.split(/[,\n]+/).map(s => s.trim()).filter(Boolean).forEach(addVariants);
+    });
+    const dl = document.getElementById('globalPointsDatalist');
+    if (dl) dl.innerHTML = Array.from(global).sort().map(i => `<option value="${escapeHtml(i)}"></option>`).join('');
+}
 
         // ===== ADMIN =====
         function toggleAdminSession() {
