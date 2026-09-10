@@ -42,26 +42,50 @@
         html:not(.dark) .text-white { color: #0f172a !important; }
         html:not(.dark) .text-slate-400 { color: #475569 !important; }
         html:not(.dark) .text-slate-300 { color: #334155 !important; }
+        html:not(.dark) .text-slate-200 { color: #1e293b !important; }
         html:not(.dark) .border-slate-800 { border-color: #cbd5e1 !important; }
         html:not(.dark) #bottomNav { background-color: #ffffff !important; border-color: #cbd5e1 !important; }
         html:not(.dark) .bg-slate-800 { background-color: #e2e8f0 !important; border-color: #cbd5e1 !important; }
         html:not(.dark) .bg-slate-950\/80 { background-color: #f1f5f9 !important; }
+        html:not(.dark) .bg-slate-900\/90 { background-color: rgba(255,255,255,0.9) !important; }
+        html:not(.dark) .bg-cyan-950\/40 { background-color: #e0f2fe !important; }
+        html:not(.dark) .bg-emerald-950\/40 { background-color: #d1fae5 !important; }
+        html:not(.dark) .bg-cyan-950\/30 { background-color: #e0f2fe !important; }
+        html:not(.dark) .bg-slate-950\/95 { background-color: rgba(248,250,252,0.95) !important; }
+        html:not(.dark) .bg-slate-950\/90 { background-color: rgba(248,250,252,0.9) !important; }
+        html:not(.dark) .bg-slate-900\/90 { background-color: rgba(255,255,255,0.9) !important; }
+        html:not(.dark) .text-cyan-300 { color: #0e7490 !important; }
+        html:not(.dark) .text-cyan-400 { color: #0891b2 !important; }
+        html:not(.dark) .bg-cyan-500\/20 { background-color: rgba(6,182,212,0.15) !important; }
+        html:not(.dark) .border-cyan-500\/40 { border-color: rgba(6,182,212,0.4) !important; }
+        html:not(.dark) .bg-cyan-600 { background-color: #0891b2 !important; }
+        html:not(.dark) .hover\:bg-cyan-500:hover { background-color: #06b6d4 !important; }
+        html:not(.dark) .bg-emerald-600 { background-color: #059669 !important; }
+        html:not(.dark) .hover\:bg-emerald-500:hover { background-color: #10b981 !important; }
+        html:not(.dark) .bg-green-600 { background-color: #16a34a !important; }
+        html:not(.dark) .hover\:bg-green-500:hover { background-color: #22c55e !important; }
+        html:not(.dark) .bg-purple-950 { background-color: #f3e8ff !important; }
+        html:not(.dark) .text-purple-400 { color: #7c3aed !important; }
+        html:not(.dark) .border-purple-800 { border-color: #c4b5fd !important; }
+        html:not(.dark) .bg-amber-950 { background-color: #fef3c7 !important; }
+        html:not(.dark) .text-amber-400 { color: #d97706 !important; }
+        html:not(.dark) .text-emerald-400 { color: #059669 !important; }
+        html:not(.dark) .bg-slate-950 { background-color: #f8fafc !important; }
 
         .tab-active { color: #06b6d4 !important; border-bottom: 3px solid #06b6d4; }
         .map-wrapper { transition: transform 0.2s ease-in-out; transform-origin: center center; }
 
-        /* Botones grandes para adultos mayores */
         .btn-lg { padding: 14px 24px; font-size: 1.1rem; border-radius: 16px; }
         .btn-md { padding: 12px 20px; font-size: 1rem; border-radius: 14px; }
 
         input, select, textarea { font-size: 16px !important; }
 
-        /* Animaciones */
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .post-card { transition: all 0.2s; background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid #1e293b; border-radius: 20px; padding: 20px; }
         .post-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+        html:not(.dark) .post-card { background: linear-gradient(145deg, #ffffff, #f1f5f9); border-color: #cbd5e1; }
 
         .like-btn { transition: all 0.15s; }
         .like-btn.liked { color: #ef4444; }
@@ -70,8 +94,8 @@
 
         .marketplace-card { transition: all 0.2s; background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; }
         .marketplace-card:hover { transform: scale(1.02); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+        html:not(.dark) .marketplace-card { background: linear-gradient(145deg, #ffffff, #f1f5f9); border-color: #cbd5e1; }
 
-        /* Comentarios flotantes estilo TikTok */
         .comments-overlay {
             position: fixed;
             bottom: 0;
@@ -87,8 +111,10 @@
             border-top: 2px solid #1e293b;
             box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
         }
+        html:not(.dark) .comments-overlay { background: #ffffff; border-color: #cbd5e1; }
         .comments-overlay.open { transform: translateY(0); }
-        .comments-overlay .handle { width: 40px; height: 4px; background: #334155; border-radius: 4px; margin: 0 auto 16px; }
+        .comments-overlay .handle { width: 40px; height: 4px; background: #334155; border-radius: 4px; margin: 0 auto 16px; cursor: grab; }
+        html:not(.dark) .comments-overlay .handle { background: #94a3b8; }
 
         .post-highlight {
             border: 2px solid #06b6d4 !important;
@@ -102,13 +128,17 @@
             overflow: hidden;
             border-radius: 16px;
             background: #0f172a;
+            cursor: pointer;
         }
+        html:not(.dark) .media-container { background: #e2e8f0; }
         .media-container img, .media-container video {
             width: 100%;
             max-height: 500px;
             object-fit: contain;
             border-radius: 16px;
+            transition: transform 0.2s;
         }
+        .media-container:hover img { transform: scale(1.02); }
         .media-container .media-placeholder {
             width: 100%;
             height: 200px;
@@ -118,48 +148,198 @@
             background: #1e293b;
             color: #475569;
         }
+        html:not(.dark) .media-container .media-placeholder { background: #e2e8f0; color: #94a3b8; }
+
+        /* Visor de imagen a pantalla completa */
+        .fullscreen-viewer {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .fullscreen-viewer.active { display: flex; }
+        .fullscreen-viewer img, .fullscreen-viewer video {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .fullscreen-viewer .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            z-index: 101;
+        }
+        .fullscreen-viewer .close-btn:hover { background: rgba(255,255,255,0.2); }
+
+        /* Mapa a pantalla completa */
+        .fullscreen-map {
+            position: fixed;
+            inset: 0;
+            background: #020617;
+            z-index: 80;
+            display: none;
+            flex-direction: column;
+        }
+        .fullscreen-map.active { display: flex; }
+        .fullscreen-map .map-header {
+            padding: 12px 16px;
+            background: #0f172a;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+        html:not(.dark) .fullscreen-map { background: #f1f5f9; }
+        html:not(.dark) .fullscreen-map .map-header { background: #ffffff; border-color: #cbd5e1; }
+        .fullscreen-map .map-body {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        .fullscreen-map .map-body iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+        .fullscreen-map .map-footer {
+            padding: 12px 16px;
+            background: #0f172a;
+            border-top: 1px solid #1e293b;
+            flex-shrink: 0;
+            max-height: 40vh;
+            overflow-y: auto;
+        }
+        html:not(.dark) .fullscreen-map .map-footer { background: #ffffff; border-color: #cbd5e1; }
+
+        /* Chips de filtro marketplace */
+        .filter-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border: 1px solid #1e293b;
+            background: #0f172a;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .filter-chip.active {
+            background: #06b6d4;
+            color: #fff;
+            border-color: #06b6d4;
+        }
+        html:not(.dark) .filter-chip { background: #f1f5f9; border-color: #cbd5e1; color: #475569; }
+        html:not(.dark) .filter-chip.active { background: #0891b2; color: #fff; }
+
+        /* Drag handle para comentarios */
+        .comments-overlay .handle {
+            touch-action: none;
+            user-select: none;
+        }
+
+        /* Ajustes responsive para 4 columnas en rutas */
+        @media (min-width: 1024px) {
+            .routes-grid { grid-template-columns: repeat(4, 1fr) !important; }
+        }
+        @media (min-width: 640px) and (max-width: 1023px) {
+            .routes-grid { grid-template-columns: repeat(3, 1fr) !important; }
+        }
+        @media (min-width: 480px) and (max-width: 639px) {
+            .routes-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+        @media (max-width: 479px) {
+            .routes-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black">
 
-    <!-- BARRA SUPERIOR -->
-    <div id="statusBanner" class="bg-slate-900 border-b border-slate-800 text-xs py-2 px-3 flex flex-wrap justify-between items-center text-slate-400 z-30 gap-1">
-        <span id="connectionState" class="flex items-center gap-2 text-[11px] font-mono">
-            <span id="netStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-            <span id="netStatusText">MODO OFFLINE (CACHÉ LOCAL)</span>
+    <!-- VISOR DE IMAGEN A PANTALLA COMPLETA -->
+    <div id="fullscreenViewer" class="fullscreen-viewer" onclick="closeFullscreenViewer(event)">
+        <button class="close-btn" onclick="closeFullscreenViewer(event)"><i class="fa-solid fa-xmark"></i></button>
+        <div id="fullscreenContent"></div>
+    </div>
+
+    <!-- MAPA A PANTALLA COMPLETA -->
+    <div id="fullscreenMap" class="fullscreen-map">
+        <div class="map-header">
+            <div class="flex items-center gap-3">
+                <button onclick="closeFullscreenMap()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm"><i class="fa-solid fa-arrow-left"></i></button>
+                <div>
+                    <h3 id="mapRouteTitle" class="text-sm font-black text-white">Nombre de Ruta</h3>
+                    <p id="mapRouteCategory" class="text-[10px] text-cyan-400 font-bold uppercase">Categoría</p>
+                </div>
+            </div>
+            <button onclick="shareRouteFromMap()" class="p-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl text-sm"><i class="fa-solid fa-share-nodes"></i></button>
+        </div>
+        <div class="map-body">
+            <iframe id="fullscreenMapIframe" src="about:blank" class="w-full h-full border-0"></iframe>
+            <div id="fullscreenOfflinePlaceholder" class="hidden absolute inset-0 flex items-center justify-center bg-slate-900 text-slate-400 text-sm">
+                <i class="fa-solid fa-wifi-slash mr-2"></i> Sin conexión - Mapa no disponible
+            </div>
+        </div>
+        <div class="map-footer">
+            <div id="mapRouteInfoGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs"></div>
+        </div>
+    </div>
+
+    <!-- BARRA SUPERIOR (compacta) -->
+    <div id="statusBanner" class="bg-slate-900 border-b border-slate-800 text-xs py-1.5 px-3 flex flex-wrap justify-between items-center text-slate-400 z-30 gap-1">
+        <span id="connectionState" class="flex items-center gap-2 text-[10px] font-mono">
+            <span id="netStatusDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span id="netStatusText">OFFLINE</span>
         </span>
-        <div class="flex items-center gap-2 flex-wrap">
-            <button id="btnInstallPwa" onclick="installPWA()" class="hidden p-2 px-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold border border-cyan-500 flex items-center gap-1 shadow-lg animate-pulse">
-                <i class="fa-solid fa-download"></i> Instalar App
+        <div class="flex items-center gap-1.5 flex-wrap">
+            <button id="btnInstallPwa" onclick="installPWA()" class="hidden p-1.5 px-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-[10px] font-bold border border-cyan-500 flex items-center gap-1 shadow-lg">
+                <i class="fa-solid fa-download"></i> Instalar
             </button>
-            <button onclick="toggleTheme()" class="p-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl text-sm" title="Cambiar Tema">
+            <button onclick="toggleTheme()" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg text-xs" title="Cambiar Tema">
                 <i class="fa-solid fa-moon" id="themeIcon"></i>
             </button>
-            <button onclick="toggleAdminSession()" id="adminAuthBtn" class="text-xs text-cyan-400 font-bold flex items-center gap-1 border border-cyan-500/30 px-3 py-1.5 rounded-xl bg-cyan-950/40">
+            <button onclick="toggleAdminSession()" id="adminAuthBtn" class="text-[10px] text-cyan-400 font-bold flex items-center gap-1 border border-cyan-500/30 px-2.5 py-1 rounded-lg bg-cyan-950/40">
                 <i class="fa-solid fa-shield-halved"></i> <span id="adminBtnText">Admin</span>
             </button>
         </div>
     </div>
 
-    <!-- ENCABEZADO -->
-    <header class="bg-slate-900/90 border-b border-slate-800 px-4 py-3 sticky top-0 z-20 backdrop-blur">
+    <!-- ENCABEZADO SIMPLE (no flotante) -->
+    <header class="bg-slate-900/90 border-b border-slate-800 px-3 py-2">
         <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0">
-                    <i class="fa-solid fa-bus text-2xl"></i>
+            <div class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0">
+                    <i class="fa-solid fa-bus text-lg"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-black tracking-wider text-white uppercase flex items-center gap-2">
-                        Colectivos TGZ <span class="text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 px-2 py-0.5 rounded font-mono">PRO</span>
+                    <h1 class="text-sm font-black tracking-wider text-white uppercase flex items-center gap-1.5">
+                        Colectivos TGZ <span class="text-[8px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 px-1.5 py-0.5 rounded font-mono">PRO</span>
                     </h1>
-                    <p class="text-[10px] text-slate-400">Rutas · Publicaciones · Marketplace</p>
+                    <p class="text-[9px] text-slate-400">Rutas · Publicaciones · Marketplace</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <button id="btnCreatePost" onclick="openCreatePost()" class="hidden bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
+            <div class="flex items-center gap-1.5">
+                <button id="btnCreatePost" onclick="openCreatePost()" class="hidden bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5">
                     <i class="fa-solid fa-pen-to-square"></i> <span class="hidden sm:inline">Publicar</span>
                 </button>
-                <button onclick="syncDataWithFirebase()" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 p-2.5 rounded-xl text-sm border border-slate-700" title="Sincronizar">
+                <button onclick="syncDataWithFirebase()" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 p-2 rounded-lg text-xs border border-slate-700" title="Sincronizar">
                     <i class="fa-solid fa-rotate"></i>
                 </button>
             </div>
@@ -167,16 +347,16 @@
     </header>
 
     <!-- NAVEGACIÓN PRINCIPAL -->
-    <div class="max-w-7xl mx-auto w-full px-3 pt-3">
-        <div class="grid grid-cols-3 gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800 text-sm font-bold">
-            <button onclick="switchTab('inicio')" id="top-tab-inicio" class="top-tab py-3 rounded-xl flex items-center justify-center gap-2 bg-cyan-600 text-white">
-                <i class="fa-solid fa-house text-base"></i> Inicio
+    <div class="max-w-7xl mx-auto w-full px-3 pt-2">
+        <div class="grid grid-cols-3 gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs font-bold">
+            <button onclick="switchTab('inicio')" id="top-tab-inicio" class="top-tab py-2 rounded-lg flex items-center justify-center gap-1.5 bg-cyan-600 text-white">
+                <i class="fa-solid fa-house text-sm"></i> Inicio
             </button>
-            <button onclick="switchTab('rutas')" id="top-tab-rutas" class="top-tab py-3 rounded-xl text-slate-400 hover:text-white flex items-center justify-center gap-2">
-                <i class="fa-solid fa-route text-base"></i> Rutas
+            <button onclick="switchTab('rutas')" id="top-tab-rutas" class="top-tab py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-route text-sm"></i> Rutas
             </button>
-            <button onclick="switchTab('marketplace')" id="top-tab-marketplace" class="top-tab py-3 rounded-xl text-slate-400 hover:text-white flex items-center justify-center gap-2">
-                <i class="fa-solid fa-store text-base"></i> Market
+            <button onclick="switchTab('marketplace')" id="top-tab-marketplace" class="top-tab py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-store text-sm"></i> Market
             </button>
         </div>
     </div>
@@ -189,7 +369,7 @@
             <div class="space-y-4" id="postsContainer"></div>
         </section>
 
-        <!-- VISTA RUTAS: Buscador + Trasbordos + Filtros + Resultados -->
+        <!-- VISTA RUTAS -->
         <section id="view-rutas" class="tab-content hidden space-y-4">
             <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-4">
                 <!-- Filtros -->
@@ -201,7 +381,7 @@
                     <button onclick="setViewMode('RETURNS')" id="btnViewReturns" class="mode-chip bg-slate-800 text-slate-400 px-4 py-2 rounded-xl font-bold text-sm">Retornos</button>
                 </div>
 
-                <!-- Buscador dual: Estoy en / Quiero ir a -->
+                <!-- Buscador dual -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-cyan-400 mb-1"><i class="fa-solid fa-location-dot"></i> Estoy en / Buscar:</label>
@@ -209,19 +389,23 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-rose-400 mb-1"><i class="fa-solid fa-flag-checkered"></i> Quiero ir a:</label>
-                        <input list="globalPointsDatalist" id="plannerDestination" placeholder="Destino..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
+                        <input list="globalPointsDatalist" id="plannerDestination" oninput="onSearchChange()" placeholder="Destino..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
                     </div>
                 </div>
 
-                <button onclick="calculateMultiRoute()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-2xl text-base flex items-center justify-center gap-3 btn-lg">
-                    <i class="fa-solid fa-route text-xl"></i> Calcular Conexiones
-                </button>
+                <!-- Botones de acción -->
+                <div class="flex gap-2">
+                    <button onclick="calculateMultiRoute()" class="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-2xl text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-route text-lg"></i> Calcular Conexiones
+                    </button>
+                    <button onclick="clearSearchFields()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-4 rounded-2xl text-sm flex items-center justify-center gap-2 border border-slate-700">
+                        <i class="fa-solid fa-eraser"></i> Limpiar
+                    </button>
+                </div>
             </div>
 
-            <!-- Resultados de búsqueda / explorador -->
-            <div id="explorerResultsContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
-
-            <!-- Resultados de trasbordos -->
+            <!-- Resultados -->
+            <div id="explorerResultsContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 routes-grid"></div>
             <div id="plannerResults" class="space-y-3"></div>
         </section>
 
@@ -237,13 +421,22 @@
                 <div class="mt-2">
                     <input type="text" id="marketSearch" oninput="renderMarketplace()" placeholder="Buscar en marketplace..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
                 </div>
+                <!-- Filtros por categoría -->
+                <div class="flex flex-wrap gap-2 mt-3" id="marketFilters">
+                    <button onclick="setMarketFilter('ALL')" class="filter-chip active" data-filter="ALL">Todos</button>
+                    <button onclick="setMarketFilter('AUTO')" class="filter-chip" data-filter="AUTO">Auto / Camioneta</button>
+                    <button onclick="setMarketFilter('TERRENO')" class="filter-chip" data-filter="TERRENO">Terreno / Lote</button>
+                    <button onclick="setMarketFilter('CASA')" class="filter-chip" data-filter="CASA">Casa / Renta</button>
+                    <button onclick="setMarketFilter('SERVICIO')" class="filter-chip" data-filter="SERVICIO">Servicio</button>
+                    <button onclick="setMarketFilter('OTRO')" class="filter-chip" data-filter="OTRO">Otro</button>
+                </div>
             </div>
             <div id="marketplaceContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
         </section>
 
     </main>
 
-    <!-- BARRA INFERIOR -->
+    <!-- BARRA INFERIOR FLOTANTE -->
     <nav id="bottomNav" class="fixed bottom-0 left-0 w-full bg-slate-900 border-t border-slate-800 py-2 px-2 flex items-center justify-around z-40">
         <button onclick="switchTab('inicio')" id="nav-inicio" class="bottom-nav-btn tab-active flex flex-col items-center gap-0.5 text-slate-400 px-2 py-1">
             <i class="fa-solid fa-house text-xl"></i>
@@ -322,34 +515,6 @@
         </div>
     </div>
 
-    <!-- MODAL RUTA DETALLE (con mapa) -->
-    <div id="routeDetailModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-2 hidden">
-        <div class="bg-slate-900 w-full max-w-4xl h-[90vh] rounded-2xl border border-slate-800 flex flex-col overflow-hidden shadow-2xl">
-            <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400"><i class="fa-solid fa-bus text-lg"></i></div>
-                    <div><h3 id="modalRouteTitle" class="text-sm font-black text-white">Nombre de Ruta</h3><p id="modalRouteCategory" class="text-[10px] text-cyan-400 font-bold uppercase">Categoría</p></div>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="shareRoute()" class="p-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl text-sm"><i class="fa-solid fa-share-nodes"></i></button>
-                    <button onclick="closeModal('routeDetailModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-            </div>
-            <div class="flex-1 flex flex-col p-3 overflow-y-auto space-y-3">
-                <div id="routeMapContainer" class="relative w-full h-80 sm:h-96 bg-slate-950 rounded-xl border border-slate-800 overflow-hidden">
-                    <iframe id="modalMapIframe" src="about:blank" class="w-full h-[calc(100%+52px)] -mt-[52px] border-0"></iframe>
-                    <div id="offlineMapPlaceholder" class="hidden absolute inset-0 flex items-center justify-center bg-slate-900 text-slate-400 text-sm">
-                        <i class="fa-solid fa-wifi-slash mr-2"></i> Sin conexión - Mapa no disponible
-                    </div>
-                </div>
-                <div id="modalRouteInfoGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs"></div>
-                <button onclick="shareRoute()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-share-nodes"></i> Compartir Ruta
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- WIZARD RUTAS (Admin) -->
     <div id="adminWizardModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex flex-col hidden">
         <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0">
@@ -407,7 +572,7 @@
 
     <!-- COMENTARIOS FLOTANTES ESTILO TIKTOK -->
     <div id="commentsOverlay" class="comments-overlay">
-        <div class="handle"></div>
+        <div class="handle" id="commentsHandle"></div>
         <div class="flex justify-between items-center mb-4">
             <h4 class="font-bold text-sm text-white"><i class="fa-regular fa-comment"></i> Comentarios</h4>
             <button onclick="closeComments()" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm"><i class="fa-solid fa-xmark"></i></button>
@@ -421,6 +586,9 @@
             </form>
         </div>
     </div>
+
+    <!-- Overlay para cerrar comentarios al tocar fuera -->
+    <div id="commentsBackdrop" class="fixed inset-0 z-50 hidden" onclick="closeComments()"></div>
 
     <script>
         // ===== CONFIGURACIÓN =====
@@ -447,17 +615,83 @@
         const postsRef = db.ref('publicaciones');
         const marketplaceRef = db.ref('marketplace');
 
+        // ===== INDEXEDDB =====
+        const DB_NAME = 'ColectivosTGZ';
+        const DB_VERSION = 1;
+        let idb = null;
+
+        function openIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('routes')) {
+                        db.createObjectStore('routes', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('posts')) {
+                        db.createObjectStore('posts', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('listings')) {
+                        db.createObjectStore('listings', { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = (e) => { idb = e.target.result; resolve(idb); };
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        function idbGetAll(storeName) {
+            return new Promise((resolve) => {
+                if (!idb) { resolve([]); return; }
+                try {
+                    const tx = idb.transaction(storeName, 'readonly');
+                    const store = tx.objectStore(storeName);
+                    const req = store.getAll();
+                    req.onsuccess = () => resolve(req.result || []);
+                    req.onerror = () => resolve([]);
+                } catch(e) { resolve([]); }
+            });
+        }
+
+        function idbPutAll(storeName, items) {
+            return new Promise((resolve) => {
+                if (!idb || !items || items.length === 0) { resolve(); return; }
+                try {
+                    const tx = idb.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    items.forEach(item => store.put(item));
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => resolve();
+                } catch(e) { resolve(); }
+            });
+        }
+
+        function idbClearStore(storeName) {
+            return new Promise((resolve) => {
+                if (!idb) { resolve(); return; }
+                try {
+                    const tx = idb.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    store.clear();
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => resolve();
+                } catch(e) { resolve(); }
+            });
+        }
+
         // ===== ESTADO GLOBAL =====
         let routesData = [];
         let postsData = [];
         let listingsData = [];
         let currentCategory = 'ALL';
         let currentViewMode = 'ROUTES';
+        let currentMarketFilter = 'ALL';
         let isAdminLoggedIn = false;
         let deferredPrompt = null;
         let currentWizardStep = 1;
         let currentPostId = null;
         let isOnline = navigator.onLine;
+        let currentRouteForMap = null;
 
         // ===== PWA =====
         window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('btnInstallPwa').classList.remove('hidden'); });
@@ -477,19 +711,58 @@
         }
         initTheme();
 
+        // ===== UTILIDADES DE BÚSQUEDA SIN APÓSTROFES =====
+        function normalizeText(str) {
+            if (!str) return '';
+            return str.toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '') // quitar tildes
+                .replace(/[''`´]/g, '') // quitar apóstrofes y comillas
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function matchText(text, query) {
+            if (!query) return true;
+            return normalizeText(text).includes(normalizeText(query));
+        }
+
         // ===== CARGA DE DATOS =====
-        function loadAllData() {
-            const savedRoutes = localStorage.getItem('tgz_routes_pro_cache');
-            if (savedRoutes) { try { routesData = JSON.parse(savedRoutes); } catch(e) { routesData = []; } } else { routesData = []; }
-            const savedPosts = localStorage.getItem('tgz_posts_cache');
-            if (savedPosts) { try { postsData = JSON.parse(savedPosts); } catch(e) { postsData = []; } } else { postsData = []; }
-            const savedListings = localStorage.getItem('tgz_listings_cache');
-            if (savedListings) { try { listingsData = JSON.parse(savedListings); } catch(e) { listingsData = []; } } else { listingsData = []; }
+        async function loadAllData() {
+            await openIndexedDB();
+            
+            // Intentar cargar desde IndexedDB primero
+            const idbRoutes = await idbGetAll('routes');
+            const idbPosts = await idbGetAll('posts');
+            const idbListings = await idbGetAll('listings');
+
+            if (idbRoutes.length > 0) routesData = idbRoutes;
+            else {
+                const savedRoutes = localStorage.getItem('tgz_routes_pro_cache');
+                if (savedRoutes) { try { routesData = JSON.parse(savedRoutes); } catch(e) { routesData = []; } }
+            }
+            if (idbPosts.length > 0) postsData = idbPosts;
+            else {
+                const savedPosts = localStorage.getItem('tgz_posts_cache');
+                if (savedPosts) { try { postsData = JSON.parse(savedPosts); } catch(e) { postsData = []; } }
+            }
+            if (idbListings.length > 0) listingsData = idbListings;
+            else {
+                const savedListings = localStorage.getItem('tgz_listings_cache');
+                if (savedListings) { try { listingsData = JSON.parse(savedListings); } catch(e) { listingsData = []; } }
+            }
+
             updateAllDatalists();
             renderAll();
         }
 
-        function saveAllData() {
+        async function saveAllData() {
+            // Guardar en IndexedDB
+            await idbPutAll('routes', routesData);
+            await idbPutAll('posts', postsData);
+            await idbPutAll('listings', listingsData);
+            
+            // Mantener localStorage como respaldo
             localStorage.setItem('tgz_routes_pro_cache', JSON.stringify(routesData));
             localStorage.setItem('tgz_posts_cache', JSON.stringify(postsData));
             localStorage.setItem('tgz_listings_cache', JSON.stringify(listingsData));
@@ -515,14 +788,8 @@
             isOnline = isOnlineVal;
             const dot = document.getElementById('netStatusDot');
             const txt = document.getElementById('netStatusText');
-            if (isOnlineVal) { dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400"; txt.innerText = text || "EN LÍNEA"; }
-            else { dot.className = "w-2.5 h-2.5 rounded-full bg-amber-400"; txt.innerText = text || "MODO OFFLINE"; }
-            // Ocultar iframes de mapa si offline
-            document.querySelectorAll('iframe[src*="google.com/maps"]').forEach(el => {
-                el.style.display = isOnlineVal ? 'block' : 'none';
-                const placeholder = el.parentElement.querySelector('#offlineMapPlaceholder');
-                if (placeholder) { placeholder.classList.toggle('hidden', isOnlineVal); }
-            });
+            if (isOnlineVal) { dot.className = "w-2 h-2 rounded-full bg-emerald-400"; txt.innerText = text || "EN LÍNEA"; }
+            else { dot.className = "w-2 h-2 rounded-full bg-amber-400"; txt.innerText = text || "MODO OFFLINE"; }
         }
 
         // ===== CLOUDINARY UPLOAD =====
@@ -599,8 +866,8 @@
             document.getElementById(`view-${tabId}`).classList.remove('hidden');
 
             const topTabs = document.getElementsByClassName('top-tab');
-            for (let t of topTabs) t.className = "top-tab py-3 rounded-xl text-slate-400 hover:text-white flex items-center justify-center gap-2";
-            document.getElementById(`top-tab-${tabId}`).className = "top-tab py-3 rounded-xl flex items-center justify-center gap-2 bg-cyan-600 text-white";
+            for (let t of topTabs) t.className = "top-tab py-2 rounded-lg text-slate-400 hover:text-white flex items-center justify-center gap-1.5";
+            document.getElementById(`top-tab-${tabId}`).className = "top-tab py-2 rounded-lg flex items-center justify-center gap-1.5 bg-cyan-600 text-white";
 
             const navBtns = document.getElementsByClassName('bottom-nav-btn');
             for (let n of navBtns) n.classList.remove('tab-active');
@@ -630,6 +897,28 @@
             renderAll();
         }
 
+        // ===== VISOR DE IMAGEN A PANTALLA COMPLETA =====
+        function openFullscreenViewer(url) {
+            const viewer = document.getElementById('fullscreenViewer');
+            const content = document.getElementById('fullscreenContent');
+            const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video');
+            if (isVideo) {
+                content.innerHTML = `<video controls autoplay src="${url}" class="max-w-full max-h-full object-contain"></video>`;
+            } else {
+                content.innerHTML = `<img src="${url}" alt="Imagen" class="max-w-full max-h-full object-contain">`;
+            }
+            viewer.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFullscreenViewer(e) {
+            if (e && e.target !== e.currentTarget && !e.target.closest('.close-btn')) return;
+            const viewer = document.getElementById('fullscreenViewer');
+            viewer.classList.remove('active');
+            document.getElementById('fullscreenContent').innerHTML = '';
+            document.body.style.overflow = '';
+        }
+
         // ===== PUBLICACIONES (POSTS) =====
         function renderPosts() {
             const container = document.getElementById('postsContainer');
@@ -638,12 +927,10 @@
                 container.innerHTML = `<div class="bg-slate-900 p-8 rounded-2xl text-center text-slate-500 text-sm">No hay publicaciones aún.</div>`;
                 return;
             }
-            // Detectar URL destacada
             const params = new URLSearchParams(window.location.search);
             const highlightPostId = params.get('post');
             
             let sorted = [...postsData].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-            // Si hay post destacado, ponerlo al inicio
             if (highlightPostId) {
                 const idx = sorted.findIndex(p => p.id === highlightPostId);
                 if (idx > -1) {
@@ -662,10 +949,7 @@
             return `
                 <div class="post-card fade-in ${highlighted ? 'post-highlight' : ''}" data-post-id="${post.id}">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400"><i class="fa-solid fa-user text-lg"></i></div>
-                            <div><span class="font-bold text-sm text-white">Admin TGZ</span><p class="text-[10px] text-slate-500">${new Date(post.timestamp || Date.now()).toLocaleString()}</p></div>
-                        </div>
+                        <span class="text-[10px] text-slate-500">${new Date(post.timestamp || Date.now()).toLocaleString()}</span>
                         ${isAdminLoggedIn ? `<button onclick="deletePost('${post.id}')" class="p-2 bg-slate-800 hover:bg-slate-700 text-rose-400 rounded-xl text-sm"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </div>
                     <div class="text-base text-slate-200 whitespace-pre-wrap mt-2">${escapeHtml(post.content)}</div>
@@ -689,9 +973,9 @@
             if (!url) return '';
             const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video');
             if (isVideo) {
-                return `<div class="media-container mt-2"><video controls src="${url}" class="w-full max-h-[500px] object-contain" onerror="this.style.display='none'"></video></div>`;
+                return `<div class="media-container mt-2" onclick="openFullscreenViewer('${url}')"><video src="${url}" class="w-full max-h-[500px] object-contain" onerror="this.style.display='none'"></video></div>`;
             }
-            return `<div class="media-container mt-2"><img src="${url}" alt="Imagen" class="w-full max-h-[500px] object-contain" onerror="this.style.display='none'"></div>`;
+            return `<div class="media-container mt-2" onclick="openFullscreenViewer('${url}')"><img src="${url}" alt="Imagen" class="w-full max-h-[500px] object-contain" onerror="this.style.display='none'"></div>`;
         }
 
         function openCreatePost() {
@@ -744,10 +1028,12 @@
             document.getElementById('commentPostId').value = postId;
             renderComments(postId);
             document.getElementById('commentsOverlay').classList.add('open');
+            document.getElementById('commentsBackdrop').classList.remove('hidden');
         }
 
         function closeComments() {
             document.getElementById('commentsOverlay').classList.remove('open');
+            document.getElementById('commentsBackdrop').classList.add('hidden');
         }
 
         function renderComments(postId) {
@@ -821,10 +1107,8 @@
             const url = window.location.origin + window.location.pathname + '?post=' + postId;
             if (navigator.share) { navigator.share({ title: 'Publicación TGZ', text: 'Mira esta publicación', url }).catch(() => {}); }
             else {
-                // Compartir vía WhatsApp
                 const text = encodeURIComponent(`Mira esta publicación en Colectivos TGZ: ${url}`);
                 window.open(`https://wa.me/?text=${text}`, '_blank');
-                // También Facebook
                 window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
             }
         }
@@ -832,12 +1116,18 @@
         // ===== RUTAS =====
         function onSearchChange() { 
             renderExplorerView(); 
-            // También actualizar trasbordos si ambos campos tienen valor
             const origin = document.getElementById('plannerOrigin').value.trim();
             const dest = document.getElementById('plannerDestination').value.trim();
             if (origin && dest) {
                 calculateMultiRoute();
             }
+        }
+
+        function clearSearchFields() {
+            document.getElementById('plannerOrigin').value = '';
+            document.getElementById('plannerDestination').value = '';
+            document.getElementById('plannerResults').innerHTML = '';
+            renderExplorerView();
         }
 
         function setViewMode(mode) {
@@ -852,21 +1142,20 @@
         function renderExplorerView() {
             const container = document.getElementById('explorerResultsContainer');
             if (!container) return;
-            const term = (document.getElementById('plannerOrigin').value || '').toLowerCase().trim();
+            const term = (document.getElementById('plannerOrigin').value || '').trim();
 
             let filtered = routesData.filter(r => {
                 if (currentCategory !== 'ALL' && r.category !== currentCategory) return false;
                 if (!term) return true;
-                const matchName = (r.name || '').toLowerCase().includes(term);
-                const matchStops = (r.stops || []).some(s => s.toLowerCase().includes(term));
-                const matchReturns = (r.returnStops || []).some(s => s.toLowerCase().includes(term));
-                const matchPoisU = (r.poisUrban || []).some(s => s.toLowerCase().includes(term));
-                const matchPoisF = (r.poisForeign || []).some(s => s.toLowerCase().includes(term));
-                const matchStreets = (r.streets || '').toLowerCase().includes(term);
+                const matchName = matchText(r.name || '', term);
+                const matchStops = (r.stops || []).some(s => matchText(s, term));
+                const matchReturns = (r.returnStops || []).some(s => matchText(s, term));
+                const matchPoisU = (r.poisUrban || []).some(s => matchText(s, term));
+                const matchPoisF = (r.poisForeign || []).some(s => matchText(s, term));
+                const matchStreets = matchText(r.streets || '', term);
                 return matchName || matchStops || matchReturns || matchPoisU || matchPoisF || matchStreets;
             });
 
-            // Si hay origen y destino, ocultar rutas y mostrar solo trasbordos
             const origin = document.getElementById('plannerOrigin').value.trim();
             const dest = document.getElementById('plannerDestination').value.trim();
             if (origin && dest) {
@@ -909,7 +1198,7 @@
                 if (mode === 'STOPS') list = r.stops || [];
                 if (mode === 'RETURNS') list = r.returnStops || [];
                 if (mode === 'POIS') list = [...(r.poisUrban || []), ...(r.poisForeign || [])];
-                list.forEach(pt => { if (term && !pt.toLowerCase().includes(term)) return; if (!mapPoints.has(pt)) mapPoints.set(pt, []); mapPoints.get(pt).push(r.name); });
+                list.forEach(pt => { if (term && !matchText(pt, term)) return; if (!mapPoints.has(pt)) mapPoints.set(pt, []); mapPoints.get(pt).push(r.name); });
             });
             if (mapPoints.size === 0) {
                 container.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 text-sm">No se encontraron puntos.</div>`;
@@ -932,47 +1221,61 @@
         function selectPoint(pointName) {
             document.getElementById('plannerOrigin').value = pointName;
             onSearchChange();
-            // Si hay destino, calcular
             const dest = document.getElementById('plannerDestination').value.trim();
             if (dest) calculateMultiRoute();
         }
 
+        // ===== MAPA A PANTALLA COMPLETA =====
         function openRouteModal(routeId) {
             const route = routesData.find(r => r.id === routeId);
             if (!route) return;
-            document.getElementById('modalRouteTitle').innerText = route.name;
-            document.getElementById('modalRouteCategory').innerText = route.category;
-            
-            const iframe = document.getElementById('modalMapIframe');
+            currentRouteForMap = route;
+
+            document.getElementById('mapRouteTitle').innerText = route.name;
+            document.getElementById('mapRouteCategory').innerText = route.category;
+
+            const iframe = document.getElementById('fullscreenMapIframe');
             if (isOnline && route.mapUrl) {
                 iframe.src = route.mapUrl;
                 iframe.style.display = 'block';
-                document.getElementById('offlineMapPlaceholder').classList.add('hidden');
+                document.getElementById('fullscreenOfflinePlaceholder').classList.add('hidden');
             } else {
                 iframe.src = 'about:blank';
                 iframe.style.display = 'none';
-                document.getElementById('offlineMapPlaceholder').classList.remove('hidden');
+                document.getElementById('fullscreenOfflinePlaceholder').classList.remove('hidden');
             }
-            
-            document.getElementById('modalRouteInfoGrid').innerHTML = `
+
+            document.getElementById('mapRouteInfoGrid').innerHTML = `
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800"><span class="text-cyan-400 font-bold block mb-1">Paradas</span><p class="text-slate-300 text-xs">${(route.stops || []).join(', ') || 'Sin info'}</p></div>
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800"><span class="text-emerald-400 font-bold block mb-1">Retornos</span><p class="text-slate-300 text-xs">${(route.returnStops || []).join(', ') || 'Sin info'}</p></div>
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800"><span class="text-amber-400 font-bold block mb-1">POIs</span><p class="text-slate-300 text-xs">${[...(route.poisUrban || []), ...(route.poisForeign || [])].join(', ') || 'Sin info'}</p></div>
                 <div class="bg-slate-950 p-3 rounded-xl border border-slate-800"><span class="text-purple-400 font-bold block mb-1">Calles</span><p class="text-slate-300 text-xs font-mono">${route.streets || 'Sin info'}</p></div>
             `;
-            openModal('routeDetailModal');
+
+            document.getElementById('fullscreenMap').classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
 
-        function shareRoute() {
-            const title = document.getElementById('modalRouteTitle').innerText;
-            const url = window.location.origin + window.location.pathname + '?ruta=' + encodeURIComponent(title);
-            if (navigator.share) { navigator.share({ title: 'Ruta TGZ', text: title, url }).catch(() => {}); }
-            else {
-                const text = encodeURIComponent(`Ruta ${title} en Colectivos TGZ: ${url}`);
-                window.open(`https://wa.me/?text=${text}`, '_blank');
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+        function closeFullscreenMap() {
+            document.getElementById('fullscreenMap').classList.remove('active');
+            document.getElementById('fullscreenMapIframe').src = 'about:blank';
+            document.body.style.overflow = '';
+            currentRouteForMap = null;
+        }
+
+        function shareRouteFromMap() {
+            if (currentRouteForMap) {
+                const url = window.location.origin + window.location.pathname + '?ruta=' + encodeURIComponent(currentRouteForMap.name);
+                if (navigator.share) { navigator.share({ title: 'Ruta TGZ', text: currentRouteForMap.name, url }).catch(() => {}); }
+                else {
+                    const text = encodeURIComponent(`Ruta ${currentRouteForMap.name} en Colectivos TGZ: ${url}`);
+                    window.open(`https://wa.me/?text=${text}`, '_blank');
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+                }
             }
         }
+
+        function shareRoute() { shareRouteFromMap(); }
 
         function shareRouteById(routeId) {
             const route = routesData.find(r => r.id === routeId);
@@ -988,8 +1291,8 @@
 
         // ===== TRASBORDOS =====
         function calculateMultiRoute() {
-            const origin = (document.getElementById('plannerOrigin').value || '').trim().toLowerCase();
-            const destination = (document.getElementById('plannerDestination').value || '').trim().toLowerCase();
+            const origin = normalizeText(document.getElementById('plannerOrigin').value || '');
+            const destination = normalizeText(document.getElementById('plannerDestination').value || '');
             const container = document.getElementById('plannerResults');
             const explorerContainer = document.getElementById('explorerResultsContainer');
             
@@ -999,12 +1302,11 @@
                 return;
             }
 
-            // Ocultar explorador cuando hay origen y destino
             explorerContainer.innerHTML = '';
 
             const getAllRoutePoints = (r) => {
                 return [...(r.stops || []), ...(r.returnStops || []), ...(r.poisUrban || []), ...(r.poisForeign || []),
-                    ...(r.streets ? r.streets.split(',').map(s => s.trim()) : [])].map(p => p.toLowerCase());
+                    ...(r.streets ? r.streets.split(',').map(s => s.trim()) : [])].map(p => normalizeText(p));
             };
 
             const directRoutes = routesData.filter(r => {
@@ -1154,14 +1456,27 @@
         }
 
         // ===== MARKETPLACE =====
+        function setMarketFilter(filter) {
+            currentMarketFilter = filter;
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.dataset.filter === filter);
+            });
+            renderMarketplace();
+        }
+
         function renderMarketplace() {
             const container = document.getElementById('marketplaceContainer');
             if (!container) return;
-            const search = (document.getElementById('marketSearch')?.value || '').toLowerCase().trim();
+            const search = normalizeText(document.getElementById('marketSearch')?.value || '');
             let filtered = listingsData;
-            if (search) filtered = filtered.filter(l => (l.title || '').toLowerCase().includes(search) || (l.description || '').toLowerCase().includes(search));
+
+            if (currentMarketFilter !== 'ALL') {
+                filtered = filtered.filter(l => l.category === currentMarketFilter);
+            }
+            if (search) {
+                filtered = filtered.filter(l => matchText(l.title || '', search) || matchText(l.description || '', search));
+            }
             
-            // Detectar URL destacada
             const params = new URLSearchParams(window.location.search);
             const highlightListingId = params.get('market');
             if (highlightListingId) {
@@ -1178,7 +1493,7 @@
             }
             container.innerHTML = filtered.map(l => `
                 <div class="marketplace-card ${l.id === highlightListingId ? 'post-highlight' : ''}">
-                    ${l.mediaUrl ? renderMedia(l.mediaUrl) : `<div class="w-full h-48 bg-slate-800 flex items-center justify-center text-slate-600"><i class="fa-solid fa-image text-4xl"></i></div>`}
+                    ${l.mediaUrl ? `<div class="media-container" onclick="openFullscreenViewer('${l.mediaUrl}')">${renderMedia(l.mediaUrl)}</div>` : `<div class="w-full h-48 bg-slate-800 flex items-center justify-center text-slate-600"><i class="fa-solid fa-image text-4xl"></i></div>`}
                     <div class="p-4 flex-1 flex flex-col">
                         <h3 class="font-bold text-sm text-white">${escapeHtml(l.title)}</h3>
                         <span class="text-[10px] bg-slate-800 text-cyan-400 px-2 py-0.5 rounded self-start mt-1">${l.category || 'Otro'}</span>
@@ -1286,14 +1601,81 @@
             }
         }
 
+        // ===== DRAG PARA COMENTARIOS =====
+        function initCommentsDrag() {
+            const overlay = document.getElementById('commentsOverlay');
+            const handle = document.getElementById('commentsHandle');
+            let startY = 0;
+            let currentY = 0;
+            let isDragging = false;
+
+            handle.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+                isDragging = true;
+            }, { passive: true });
+
+            handle.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                currentY = e.touches[0].clientY;
+                const delta = currentY - startY;
+                if (delta > 0) {
+                    overlay.style.transform = `translateY(${Math.min(delta, 200)}px)`;
+                } else if (delta < 0) {
+                    overlay.style.transform = `translateY(${Math.max(delta, -50)}px)`;
+                }
+            }, { passive: true });
+
+            handle.addEventListener('touchend', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                const delta = currentY - startY;
+                if (delta > 100) {
+                    closeComments();
+                }
+                overlay.style.transform = '';
+                startY = 0;
+                currentY = 0;
+            });
+
+            // Para mouse
+            handle.addEventListener('mousedown', (e) => {
+                startY = e.clientY;
+                isDragging = true;
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                currentY = e.clientY;
+                const delta = currentY - startY;
+                if (delta > 0) {
+                    overlay.style.transform = `translateY(${Math.min(delta, 200)}px)`;
+                } else if (delta < 0) {
+                    overlay.style.transform = `translateY(${Math.max(delta, -50)}px)`;
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                const delta = currentY - startY;
+                if (delta > 100) {
+                    closeComments();
+                }
+                overlay.style.transform = '';
+                startY = 0;
+                currentY = 0;
+            });
+        }
+
         // ===== INICIALIZACIÓN =====
-        document.addEventListener('DOMContentLoaded', () => {
-            loadAllData();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllData();
             initFirebaseSync();
             switchTab('inicio');
             handleUrlParams();
+            initCommentsDrag();
             window.addEventListener('popstate', handleUrlParams);
-            // Detectar cambios de conexión
             window.addEventListener('online', () => { updateNetworkState(true, 'EN LÍNEA'); renderAll(); });
             window.addEventListener('offline', () => { updateNetworkState(false, 'MODO OFFLINE'); renderAll(); });
         });
@@ -1304,9 +1686,13 @@
         window.sharePost = sharePost;
         window.shareListing = shareListing;
         window.openRouteModal = openRouteModal;
+        window.openFullscreenViewer = openFullscreenViewer;
+        window.closeFullscreenViewer = closeFullscreenViewer;
+        window.closeFullscreenMap = closeFullscreenMap;
+        window.clearSearchFields = clearSearchFields;
+        window.setMarketFilter = setMarketFilter;
 
-        console.log('🚍 Colectivos TGZ Pro - Sistema Integral v3.0');
-        console.log('📦 Datos:', { routes: routesData.length, posts: postsData.length, listings: listingsData.length });
+        console.log('🚍 Colectivos TGZ Pro - Sistema Integral v3.0 con IndexedDB');
     </script>
 </body>
 </html>
