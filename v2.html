@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1e40af">
+  <meta name="description" content="Sistema de rutas de colectivo para Tuxtla Gutiérrez - Funciona offline">
+  <link rel="manifest" href="/manifest.json">
+  <title>Rutas Tuxtla Gutiérrez</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- Leaflet Control Geocoder -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+  <style>
+    :root {
+      --primary: #1e40af;
+      --primary-dark: #1e3a8a;
+      --secondary: #64748b;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --warning: #ca8a04;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    /* Header */
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 1000;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .status-dot.offline { background: var(--danger); }
+
+    /* Mapa */
+    #map-container {
+      flex: 1;
+      position: relative;
+      min-height: 200px;
+    }
+
+    #map { height: 100%; width: 100%; }
+
+    /* Barra de búsqueda flotante */
+    .search-overlay {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 1000;
+      display: flex;
+      gap: 8px;
+    }
+
+    .search-box {
+      flex: 1;
+      display: flex;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+
+    .search-box input {
+      flex: 1;
+      border: none;
+      padding: 12px 16px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .search-box button {
+      background: none;
+      border: none;
+      padding: 12px;
+      cursor: pointer;
+      color: var(--secondary);
+    }
+
+    .btn-add {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      width: 48px;
+      height: 48px;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(30,64,175,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Panel inferior */
+    .bottom-panel {
+      background: var(--card);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+      max-height: 45vh;
+      display: flex;
+      flex-direction: column;
+      transition: max-height 0.3s ease;
+      z-index: 999;
+    }
+
+    .bottom-panel.collapsed { max-height: 60px; }
+
+    .panel-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .panel-header h2 { font-size: 14px; font-weight: 600; }
+
+    .panel-handle {
+      width: 40px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto;
+    }
+
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Tarjetas de ruta */
+    .route-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .route-card:active { transform: scale(0.98); }
+    .route-card.selected { border-color: var(--primary); background: #eff6ff; }
+
+    .route-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .route-card h3 { font-size: 15px; font-weight: 600; color: var(--text); }
+
+    .route-badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-ida { background: #dbeafe; color: #1e40af; }
+    .badge-vuelta { background: #fef3c7; color: #92400e; }
+    .badge-circular { background: #dcfce7; color: #166534; }
+
+    .route-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .route-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-view { background: var(--primary); color: white; }
+    .btn-edit { background: var(--border); color: var(--text); }
+    .btn-delete { background: #fee2e2; color: var(--danger); }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 2000;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal.active { display: flex; }
+
+    .modal-content {
+      background: white;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      border-radius: 20px 20px 0 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 { font-size: 18px; }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--secondary);
+    }
+
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Formularios */
+    .form-group { margin-bottom: 16px; }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: var(--primary);
+    }
+
+    .form-group textarea { resize: vertical; min-height: 80px; }
+
+    /* Botones */
+    .btn {
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary { background: var(--primary); color: white; flex: 1; }
+    .btn-primary:active { background: var(--primary-dark); }
+
+    .btn-secondary { background: var(--border); color: var(--text); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-success { background: var(--success); color: white; }
+
+    /* Subida de imagen */
+    .image-upload {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .image-upload:active { border-color: var(--primary); background: #eff6ff; }
+
+    .image-preview {
+      max-width: 100%;
+      max-height: 150px;
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+
+    /* Indicador de grabación */
+    .recording-indicator {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--danger);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 30px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 1500;
+      box-shadow: 0 4px 20px rgba(220,38,38,0.4);
+    }
+
+    .recording-indicator.active { display: flex; }
+
+    .pulse {
+      width: 12px;
+      height: 12px;
+      background: white;
+      border-radius: 50%;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* Estado vacío */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state svg { width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.5; }
+
+    /* Loading */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      gap: 12px;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 3000;
+      pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+      .bottom-panel { max-height: 35vh; }
+      .modal { align-items: center; }
+      .modal-content { border-radius: 20px; max-height: 85vh; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <h1>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+          <circle cx="12" cy="9" r="2.5"/>
+        </svg>
+        Rutas Tuxtla
+      </h1>
+      <div class="header-status">
+        <span class="status-dot" id="connection-dot"></span>
+        <span id="connection-text">Online</span>
+      </div>
+    </header>
+
+    <!-- Mapa -->
+    <div id="map-container">
+      <div id="map"></div>
+
+      <!-- Búsqueda flotante -->
+      <div class="search-overlay">
+        <div class="search-box">
+          <input type="text" id="search-input" placeholder="Buscar rutas, calles...">
+          <button id="search-btn" aria-label="Buscar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </button>
+        </div>
+        <button class="btn-add" id="btn-add-route" aria-label="Agregar ruta">+</button>
+      </div>
+    </div>
+
+    <!-- Panel inferior -->
+    <div class="bottom-panel" id="bottom-panel">
+      <div class="panel-header" id="panel-toggle">
+        <div class="panel-handle"></div>
+      </div>
+      <div class="panel-content" id="routes-list">
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>Cargando rutas...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Indicador de grabación -->
+  <div class="recording-indicator" id="recording-indicator">
+    <span class="pulse"></span>
+    <span id="recording-text">Grabando ruta... 0 puntos</span>
+    <button class="btn btn-sm btn-danger" id="btn-stop-tracking">Detener</button>
+  </div>
+
+  <!-- Modal de ruta -->
+  <div class="modal" id="route-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">Nueva Ruta</h2>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="route-form">
+          <input type="hidden" id="route-id">
+
+          <div class="form-group">
+            <label for="route-name">Nombre de la ruta *</label>
+            <input type="text" id="route-name" required placeholder="Ej: Ruta 15 - Centro Sur">
+          </div>
+
+          <div class="form-group">
+            <label for="route-desc">Descripción</label>
+            <textarea id="route-desc" placeholder="Describe el recorrido, puntos importantes..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="route-type">Tipo de ruta</label>
+            <select id="route-type">
+              <option value="ida">Ida</option>
+              <option value="vuelta">Vuelta</option>
+              <option value="circular">Circular</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="route-color">Color en el mapa</label>
+            <input type="color" id="route-color" value="#1e40af" style="height: 50px; cursor: pointer;">
+          </div>
+
+          <div class="form-group">
+            <label>Imagen de referencia</label>
+            <div class="image-upload" id="image-upload-area">
+              <input type="file" id="route-image" accept="image/*" hidden>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.5;margin-bottom:8px;">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <path d="M21 15l-5-5L5 21"/>
+              </svg>
+              <p style="font-size:13px;color:var(--text-muted);">Toca para subir imagen</p>
+              <img id="image-preview" class="image-preview" style="display:none;">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Puntos de la ruta</label>
+            <div id="points-info" style="padding: 12px; background: var(--bg); border-radius: 10px; font-size: 13px;">
+              <span id="points-count">0 puntos registrados</span>
+              <p style="color: var(--text-muted); margin-top: 4px; font-size: 12px;">
+                Usa el botón de grabación o haz clic en el mapa para agregar puntos.
+              </p>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:8px; margin-bottom:16px;">
+            <button type="button" class="btn btn-success" id="btn-start-tracking" style="flex:1;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+              </svg>
+              Grabar recorrido
+            </button>
+            <button type="button" class="btn btn-secondary" id="btn-clear-points">
+              Limpiar
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-cancel">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save">Guardar Ruta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/idb@8/build/umd.js"></script>
+
+  <script type="module">
+    // =====================================================
+    // CONFIGURACIÓN
+    // =====================================================
+
+    // Firebase Realtime Database (REST API para evitar problemas de módulos)
+    const FIREBASE_DB_URL = 'https://galloslivebadge-default-rtdb.firebaseio.com';
+
+    // Cloudinary
+    const CLOUDINARY_CONFIG = {
+      cloud_name: 'dxjgyqcby',
+      upload_preset: 'sinfirmaupload'
+    };
+
+    // Tuxtla Gutiérrez centro
+    const TUXTLA_CENTER = [16.7538, -93.1156];
+    const DEFAULT_ZOOM = 13;
+
+    // =====================================================
+    // ESTADO GLOBAL
+    // =====================================================
+    const state = {
+      map: null,
+      routes: [],
+      currentRoute: null,
+      editingRouteId: null,
+      isTracking: false,
+      trackedPoints: [],
+      watchId: null,
+      routeLayers: {},
+      db: null,
+      isOnline: navigator.onLine,
+      filterText: ''
+    };
+
+    // =====================================================
+    // UTILIDADES
+    // =====================================================
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    function showToast(message, duration = 3000) {
+      const toast = $('#toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), duration);
+    }
+
+    function updateConnectionStatus() {
+      state.isOnline = navigator.onLine;
+      const dot = $('#connection-dot');
+      const text = $('#connection-text');
+
+      if (state.isOnline) {
+        dot.classList.remove('offline');
+        text.textContent = 'Online';
+      } else {
+        dot.classList.add('offline');
+        text.textContent = 'Offline';
+      }
+    }
+
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    // =====================================================
+    // INDEXEDDB - Almacenamiento offline
+    // =====================================================
+    async function initDB() {
+      state.db = await idb.openDB('rutas-tuxtla-db', 1, {
+        upgrade(db) {
+          if (!db.objectStoreNames.contains('rutas')) {
+            db.createObjectStore('rutas', { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains('sync-queue')) {
+            db.createObjectStore('sync-queue', { keyPath: 'id', autoIncrement: true });
+          }
+        }
+      });
+      console.log('IndexedDB inicializada');
+    }
+
+    async function saveRouteToLocal(route) {
+      if (!state.db) await initDB();
+      await state.db.put('rutas', route);
+      console.log('Ruta guardada localmente:', route.id);
+    }
+
+    async function getRoutesFromLocal() {
+      if (!state.db) await initDB();
+      return await state.db.getAll('rutas');
+    }
+
+    async function deleteRouteFromLocal(id) {
+      if (!state.db) await initDB();
+      await state.db.delete('rutas', id);
+    }
+
+    async function addToSyncQueue(action, data) {
+      if (!state.db) await initDB();
+      await state.db.add('sync-queue', {
+        action,
+        data,
+        timestamp: Date.now()
+      });
+    }
+
+    async function processSyncQueue() {
+      if (!state.isOnline || !state.db) return;
+
+      const queue = await state.db.getAll('sync-queue');
+
+      for (const item of queue) {
+        try {
+          if (item.action === 'create' || item.action === 'update') {
+            await syncRouteToFirebase(item.data);
+          } else if (item.action === 'delete') {
+            await deleteRouteFromFirebase(item.data.id);
+          }
+          await state.db.delete('sync-queue', item.id);
+          console.log('Sincronizado:', item.action, item.data?.id);
+        } catch (error) {
+          console.error('Error sincronizando:', error);
+          break; // Detener si falla
+        }
+      }
+    }
+
+    // =====================================================
+    // FIREBASE - Sincronización
+    // =====================================================
+    async function syncRouteToFirebase(route) {
+      const url = `${FIREBASE_DB_URL}/rutas/${route.id}.json`;
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...route,
+          updatedAt: Date.now()
+        })
+      });
+
+      if (!response.ok) throw new Error('Error guardando en Firebase');
+      return response.json();
+    }
+
+    async function deleteRouteFromFirebase(id) {
+      const url = `${FIREBASE_DB_URL}/rutas/${id}.json`;
+      const response = await fetch(url, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Error eliminando de Firebase');
+    }
+
+    async function loadRoutesFromFirebase() {
+      try {
+        const url = `${FIREBASE_DB_URL}/rutas.json`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Error cargando rutas');
+
+        const data = await response.json();
+        if (!data) return [];
+
+        return Object.entries(data).map(([id, route]) => ({
+          ...route,
+          id
+        }));
+      } catch (error) {
+        console.error('Error cargando de Firebase:', error);
+        return [];
+      }
+    }
+
+    // =====================================================
+    // CLOUDINARY - Subida de imágenes
+    // =====================================================
+    async function uploadImage(file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_CONFIG.upload_preset);
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloud_name}/image/upload`,
+        { method: 'POST', body: formData }
+      );
+
+      if (!response.ok) throw new Error('Error subiendo imagen');
+      const data = await response.json();
+      return data.secure_url;
+    }
+
+    // =====================================================
+    // MAPA - Inicialización
+    // =====================================================
+    function initMap() {
+      state.map = L.map('map', {
+        center: TUXTLA_CENTER,
+        zoom: DEFAULT_ZOOM,
+        zoomControl: false,
+        attributionControl: false
+      });
+
+      // Control de zoom en posición personalizada
+      L.control.zoom({ position: 'bottomright' }).addTo(state.map);
+
+      // Capa de tiles OSM
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(state.map);
+
+      // Geocoder para búsqueda de direcciones
+      L.Control.geocoder({
+        defaultMarkGeocode: false,
+        placeholder: 'Buscar dirección...',
+        errorMessage: 'No encontrado'
+      })
+        .on('markgeocode', function(e) {
+          state.map.fitBounds(e.geocode.bbox);
+        })
+        .addTo(state.map);
+
+      // Click en mapa para agregar puntos durante edición
+      state.map.on('click', handleMapClick);
+
+      console.log('Mapa inicializado');
+    }
+
+    function handleMapClick(e) {
+      if (!state.editingRouteId && !state.isTracking) return;
+
+      const { lat, lng } = e.latlng;
+      addTrackedPoint({ lat, lng, tipo: 'manual' });
+    }
+
+    // =====================================================
+    // RUTAS - Renderizado
+    // =====================================================
+    function renderRoutesList() {
+      const container = $('#routes-list');
+      const filtered = state.routes.filter(r => {
+        if (!state.filterText) return true;
+        const search = state.filterText.toLowerCase();
+        return (
+          (r.nombre && r.nombre.toLowerCase().includes(search)) ||
+          (r.descripcion && r.descripcion.toLowerCase().includes(search))
+        );
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+            </svg>
+            <p>${state.filterText ? 'No se encontraron rutas' : 'No hay rutas registradas'}</p>
+            <p style="font-size:12px;margin-top:8px;">Toca + para agregar una nueva ruta</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(route => `
+        <div class="route-card ${state.currentRoute?.id === route.id ? 'selected' : ''}"
+             data-id="${route.id}">
+          <div class="route-card-header">
+            <h3>${escapeHtml(route.nombre || 'Sin nombre')}</h3>
+            <span class="route-badge badge-${route.tipo || 'ida'}">${route.tipo || 'ida'}</span>
+          </div>
+          ${route.descripcion ? `<p style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">${escapeHtml(route.descripcion)}</p>` : ''}
+          <div class="route-meta">
+            <span>📍 ${route.puntos?.length || 0} puntos</span>
+            ${route.imagen ? '<span>📷 Con imagen</span>' : ''}
+          </div>
+          <div class="route-actions">
+            <button class="btn-sm btn-view" onclick="viewRoute('${route.id}')">Ver</button>
+            <button class="btn-sm btn-edit" onclick="editRoute('${route.id}')">Editar</button>
+            <button class="btn-sm btn-delete" onclick="deleteRoute('${route.id}')">Eliminar</button>
+          </div>
+        </div>
+      `).join('');
+
+      // Click en tarjeta para seleccionar
+      container.querySelectorAll('.route-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('button')) return;
+          selectRoute(card.dataset.id);
+        });
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function renderRoutesOnMap() {
+      // Limpiar capas anteriores
+      Object.values(state.routeLayers).forEach(layer => {
+        if (layer.polyline) state.map.removeLayer(layer.polyline);
+        if (layer.markers) {
+          layer.markers.forEach(m => state.map.removeLayer(m));
+        }
+      });
+      state.routeLayers = {};
+
+      state.routes.forEach(route => {
+        if (!route.puntos || route.puntos.length < 2) return;
+
+        const coords = route.puntos.map(p => [p.lat, p.lng]);
+        const color = route.color || '#1e40af';
+
+        const polyline = L.polyline(coords, {
+          color,
+          weight: 4,
+          opacity: 0.8,
+          lineJoin: 'round'
+        }).addTo(state.map);
+
+        // Marcadores de inicio y fin
+        const markers = [
+          L.marker(coords[0], {
+            icon: L.divIcon({
+              className: 'route-marker',
+              html: `<div style="background:${color};width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+              iconSize: [16, 16],
+              iconAnchor: [8, 8]
+            })
+          }).bindPopup(`<b>${route.nombre}</b><br>Inicio`),
+          L.marker(coords[coords.length - 1], {
+            icon: L.divIcon({
+              className: 'route-marker',
+              html: `<div style="background:${color};width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+              iconSize: [16, 16],
+              iconAnchor: [8, 8]
+            })
+          }).bindPopup(`<b>${route.nombre}</b><br>Fin`)
+        ];
+
+        markers.forEach(m => m.addTo(state.map));
+
+        state.routeLayers[route.id] = { polyline, markers };
+      });
+    }
+
+    function selectRoute(id) {
+      const route = state.routes.find(r => r.id === id);
+      if (!route) return;
+
+      state.currentRoute = route;
+      renderRoutesList();
+
+      // Resaltar en el mapa
+      Object.entries(state.routeLayers).forEach(([routeId, layer]) => {
+        if (layer.polyline) {
+          layer.polyline.setStyle({
+            weight: routeId === id ? 6 : 4,
+            opacity: routeId === id ? 1 : 0.6
+          });
+        }
+      });
+
+      // Centrar en la ruta
+      if (layer = state.routeLayers[id]) {
+        const bounds = layer.polyline.getBounds();
+        state.map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+
+    // =====================================================
+    // GRABACIÓN EN TIEMPO REAL
+    // =====================================================
+    function startTracking() {
+      if (!navigator.geolocation) {
+        showToast('Geolocalización no soportada');
+        return;
+      }
+
+      state.isTracking = true;
+      state.trackedPoints = [];
+      updateTrackingUI(true);
+
+      state.watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude, accuracy } = position.coords;
+          addTrackedPoint({
+            lat: latitude,
+            lng: longitude,
+            accuracy,
+            tipo: 'gps',
+            timestamp: position.timestamp
+          });
+
+          // Centrar mapa en posición actual
+          state.map.setView([latitude, longitude], 16);
+        },
+        (error) => {
+          console.error('Error GPS:', error);
+          showToast('Error de ubicación: ' + error.message);
+          stopTracking();
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 5000,
+          timeout: 15000
+        }
+      );
+
+      showToast('Grabando recorrido...');
+    }
+
+    function stopTracking() {
+      state.isTracking = false;
+
+      if (state.watchId) {
+        navigator.geolocation.clearWatch(state.watchId);
+        state.watchId = null;
+      }
+
+      updateTrackingUI(false);
+      showToast(`Recorrido detenido: ${state.trackedPoints.length} puntos`);
+    }
+
+    function updateTrackingUI(active) {
+      const indicator = $('#recording-indicator');
+      const btn = $('#btn-start-tracking');
+
+      if (active) {
+        indicator.classList.add('active');
+        if (btn) {
+          btn.innerHTML = '⏹ Detener grabación';
+          btn.classList.remove('btn-success');
+          btn.classList.add('btn-danger');
+        }
+      } else {
+        indicator.classList.remove('active');
+        if (btn) {
+          btn.innerHTML = '📍 Grabar recorrido';
+          btn.classList.remove('btn-danger');
+          btn.classList.add('btn-success');
+        }
+      }
+    }
+
+    function addTrackedPoint(point) {
+      state.trackedPoints.push(point);
+      updatePointsUI();
+      renderCurrentTrack();
+    }
+
+    function updatePointsUI() {
+      const count = state.trackedPoints.length;
+      const countEl = $('#points-count');
+      const recordingText = $('#recording-text');
+
+      if (countEl) countEl.textContent = `${count} puntos registrados`;
+      if (recordingText) recordingText.textContent = `Grabando ruta... ${count} puntos`;
+    }
+
+    let currentTrackLayer = null;
+
+    function renderCurrentTrack() {
+      if (currentTrackLayer) {
+        state.map.removeLayer(currentTrackLayer);
+      }
+
+      if (state.trackedPoints.length < 2) return;
+
+      const coords = state.trackedPoints.map(p => [p.lat, p.lng]);
+      currentTrackLayer = L.polyline(coords, {
+        color: '#16a34a',
+        weight: 5,
+        opacity: 0.9,
+        dashArray: state.isTracking ? '10, 10' : null
+      }).addTo(state.map);
+
+      // Añadir marcadores para puntos manuales
+      state.trackedPoints.forEach((p, i) => {
+        if (p.tipo === 'manual') {
+          L.circleMarker([p.lat, p.lng], {
+            radius: 6,
+            fillColor: '#dc2626',
+            color: 'white',
+            weight: 2,
+            fillOpacity: 1
+          }).addTo(state.map).bindPopup(`Punto ${i + 1}`);
+        }
+      });
+    }
+
+    // =====================================================
+    // MODAL - Gestión
+    // =====================================================
+    function openModal(routeId = null) {
+      state.editingRouteId = routeId;
+      state.trackedPoints = [];
+
+      const modal = $('#route-modal');
+      const title = $('#modal-title');
+      const form = $('#route-form');
+
+      form.reset();
+      $('#image-preview').style.display = 'none';
+      $('#route-color').value = '#1e40af';
+
+      if (routeId) {
+        title.textContent = 'Editar Ruta';
+        const route = state.routes.find(r => r.id === routeId);
+        if (route) {
+          $('#route-id').value = route.id;
+          $('#route-name').value = route.nombre || '';
+          $('#route-desc').value = route.descripcion || '';
+          $('#route-type').value = route.tipo || 'ida';
+          $('#route-color').value = route.color || '#1e40af';
+          state.trackedPoints = route.puntos || [];
+
+          if (route.imagen) {
+            $('#image-preview').src = route.imagen;
+            $('#image-preview').style.display = 'block';
+          }
+        }
+      } else {
+        title.textContent = 'Nueva Ruta';
+        $('#route-id').value = '';
+      }
+
+      updatePointsUI();
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      $('#route-modal').classList.remove('active');
+      state.editingRouteId = null;
+      state.trackedPoints = [];
+
+      if (currentTrackLayer) {
+        state.map.removeLayer(currentTrackLayer);
+        currentTrackLayer = null;
+      }
+
+      if (state.isTracking) stopTracking();
+    }
+
+    // =====================================================
+    // GUARDAR RUTA
+    // =====================================================
+    async function saveRoute() {
+      const name = $('#route-name').value.trim();
+
+      if (!name) {
+        showToast('Ingresa un nombre para la ruta');
+        return;
+      }
+
+      if (state.trackedPoints.length < 2) {
+        showToast('Necesitas al menos 2 puntos en la ruta');
+        return;
+      }
+
+      const saveBtn = $('#btn-save');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Guardando...';
+
+      try {
+        const routeId = $('#route-id').value || generateId();
+        const imageFile = $('#route-image').files[0];
+
+        let imageUrl = null;
+        if (imageFile) {
+          try {
+            imageUrl = await uploadImage(imageFile);
+          } catch (error) {
+            console.error('Error subiendo imagen:', error);
+            showToast('Error subiendo imagen, se guardará sin ella');
+          }
+        } else if ($('#image-preview').src && $('#image-preview').style.display !== 'none') {
+          imageUrl = $('#image-preview').src;
+        }
+
+        const route = {
+          id: routeId,
+          nombre: name,
+          descripcion: $('#route-desc').value.trim(),
+          tipo: $('#route-type').value,
+          color: $('#route-color').value,
+          imagen: imageUrl,
+          puntos: state.trackedPoints,
+          createdAt: state.editingRouteId ? undefined : Date.now(),
+          updatedAt: Date.now()
+        };
+
+        // Guardar localmente
+        await saveRouteToLocal(route);
+
+        // Intentar sincronizar con Firebase
+        if (state.isOnline) {
+          try {
+            await syncRouteToFirebase(route);
+            showToast('Ruta guardada y sincronizada');
+          } catch (error) {
+            console.error('Error sincronizando:', error);
+            await addToSyncQueue('create', route);
+            showToast('Ruta guardada localmente (pendiente de sincronizar)');
+          }
+        } else {
+          await addToSyncQueue('create', route);
+          showToast('Ruta guardada offline');
+        }
+
+        // Actualizar estado local
+        const existingIndex = state.routes.findIndex(r => r.id === routeId);
+        if (existingIndex >= 0) {
+          state.routes[existingIndex] = { ...state.routes[existingIndex], ...route };
+        } else {
+          state.routes.push(route);
+        }
+
+        renderRoutesList();
+        renderRoutesOnMap();
+        closeModal();
+
+      } catch (error) {
+        console.error('Error guardando:', error);
+        showToast('Error al guardar la ruta');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Guardar Ruta';
+      }
+    }
+
+    // =====================================================
+    // ELIMINAR RUTA
+    // =====================================================
+    async function deleteRoute(id) {
+      const route = state.routes.find(r => r.id === id);
+      if (!route) return;
+
+      if (!confirm(`¿Eliminar la ruta "${route.nombre}"?`)) return;
+
+      try {
+        // Eliminar localmente
+        await deleteRouteFromLocal(id);
+
+        // Intentar eliminar de Firebase
+        if (state.isOnline) {
+          try {
+            await deleteRouteFromFirebase(id);
+          } catch (error) {
+            await addToSyncQueue('delete', { id });
+          }
+        } else {
+          await addToSyncQueue('delete', { id });
+        }
+
+        // Actualizar estado
+        state.routes = state.routes.filter(r => r.id !== id);
+
+        // Eliminar capa del mapa
+        if (state.routeLayers[id]) {
+          if (state.routeLayers[id].polyline) {
+            state.map.removeLayer(state.routeLayers[id].polyline);
+          }
+          if (state.routeLayers[id].markers) {
+            state.routeLayers[id].markers.forEach(m => state.map.removeLayer(m));
+          }
+          delete state.routeLayers[id];
+        }
+
+        renderRoutesList();
+        showToast('Ruta eliminada');
+
+      } catch (error) {
+        console.error('Error eliminando:', error);
+        showToast('Error al eliminar');
+      }
+    }
+
+    // =====================================================
+    // INICIALIZACIÓN
+    // =====================================================
+    async function init() {
+      console.log('Iniciando aplicación...');
+
+      // Inicializar IndexedDB
+      await initDB();
+
+      // Inicializar mapa
+      initMap();
+
+      // Cargar rutas
+      // Primero desde local (rápido)
+      const localRoutes = await getRoutesFromLocal();
+      if (localRoutes.length > 0) {
+        state.routes = localRoutes;
+        renderRoutesList();
+        renderRoutesOnMap();
+      }
+
+      // Luego desde Firebase (si hay conexión)
+      if (state.isOnline) {
+        const firebaseRoutes = await loadRoutesFromFirebase();
+
+        // Merge: Firebase tiene prioridad, pero mantener locales que no estén en Firebase
+        const merged = [...firebaseRoutes];
+        localRoutes.forEach(local => {
+          if (!firebaseRoutes.find(f => f.id === local.id)) {
+            merged.push(local);
+          }
+        });
+
+        state.routes = merged;
+
+        // Guardar todas localmente
+        for (const route of merged) {
+          await saveRouteToLocal(route);
+        }
+
+        renderRoutesList();
+        renderRoutesOnMap();
+
+        // Procesar cola de sincronización
+        await processSyncQueue();
+      }
+
+      // Event listeners
+      setupEventListeners();
+
+      // Actualizar estado de conexión
+      updateConnectionStatus();
+      window.addEventListener('online', () => {
+        updateConnectionStatus();
+        processSyncQueue();
+        showToast('Conexión restaurada');
+      });
+      window.addEventListener('offline', () => {
+        updateConnectionStatus();
+        showToast('Sin conexión - Modo offline');
+      });
+
+      console.log('Aplicación lista');
+    }
+
+    function setupEventListeners() {
+      // Búsqueda
+      $('#search-btn').addEventListener('click', () => {
+        state.filterText = $('#search-input').value.trim();
+        renderRoutesList();
+      });
+
+      $('#search-input').addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+          state.filterText = e.target.value.trim();
+          renderRoutesList();
+        }
+      });
+
+      $('#search-input').addEventListener('input', (e) => {
+        state.filterText = e.target.value.trim();
+        renderRoutesList();
+      });
+
+      // Agregar ruta
+      $('#btn-add-route').addEventListener('click', () => openModal());
+
+      // Cerrar modal
+      $('#modal-close').addEventListener('click', closeModal);
+      $('#btn-cancel').addEventListener('click', closeModal);
+
+      // Guardar ruta
+      $('#btn-save').addEventListener('click', saveRoute);
+
+      // Grabar recorrido
+      $('#btn-start-tracking').addEventListener('click', () => {
+        if (state.isTracking) {
+          stopTracking();
+        } else {
+          startTracking();
+        }
+      });
+
+      // Detener grabación desde indicador
+      $('#btn-stop-tracking').addEventListener('click', stopTracking);
+
+      // Limpiar puntos
+      $('#btn-clear-points').addEventListener('click', () => {
+        state.trackedPoints = [];
+        updatePointsUI();
+        if (currentTrackLayer) {
+          state.map.removeLayer(currentTrackLayer);
+          currentTrackLayer = null;
+        }
+      });
+
+      // Subida de imagen
+      $('#image-upload-area').addEventListener('click', () => {
+        $('#route-image').click();
+      });
+
+      $('#route-image').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const preview = $('#image-preview');
+            preview.src = ev.target.result;
+            preview.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Toggle panel inferior
+      $('#panel-toggle').addEventListener('click', () => {
+        $('#bottom-panel').classList.toggle('collapsed');
+      });
+
+      // Cerrar modal al hacer clic fuera
+      $('#route-modal').addEventListener('click', (e) => {
+        if (e.target === $('#route-modal')) closeModal();
+      });
+
+      // Exponer funciones globales para onclick
+      window.viewRoute = selectRoute;
+      window.editRoute = (id) => openModal(id);
+      window.deleteRoute = deleteRoute;
+    }
+
+    // Iniciar aplicación
+    init().catch(console.error);
+  </script>
+
+  <!-- Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('SW registrado:', reg.scope))
+          .catch(err => console.error('Error SW:', err));
+      });
+    }
+  </script>
+</body>
+</html>
