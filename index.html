@@ -1503,8 +1503,8 @@ function selectStreet(streetName) {
                         <div><span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">${mode}</span><h4 class="font-bold text-sm text-white mt-0.5">${escapeHtml(ptName)}</h4>
                         <p class="text-xs text-slate-400 mt-1">Conecta con (${routesArr.length}) ruta(s):</p>
                         <div class="flex flex-wrap gap-1 mt-1">${routesArr.map(rn => `<span class="bg-slate-950 border border-slate-800 text-cyan-300 text-[11px] px-2 py-0.5 rounded">${escapeHtml(rn)}</span>`).join('')}</div></div>
-                        <button onclick="selectPoint('${escapeHtml(ptName)}')" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-2 rounded-xl text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-location-dot"></i> Seleccionar</button>
-                    </div>
+<button onclick="selectPoint('${escapeHtml(ptName).replace(/'/g, "\\'")}')" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-2 rounded-xl text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-location-dot"></i> Seleccionar</button>
+</div>
                 `;
             });
             container.innerHTML = html;
@@ -1609,15 +1609,22 @@ function selectStreet(streetName) {
 
             explorerContainer.innerHTML = '';
 
-            const getAllRoutePoints = (r) => {
-                return [...(r.stops || []), ...(r.returnStops || []), ...(r.poisUrban || []), ...(r.poisForeign || []),
-                    ...(r.streets ? r.streets.split(/[,\n]+/).map(s => s.trim()) : [])].map(p => normalizeText(p));
-            };
+            // Puntos "reales" (paradas, retornos, POIs) — para coincidencia DIRECTA
+const getRouteRealPoints = (r) => {
+    return [...(r.stops || []), ...(r.returnStops || []), ...(r.poisUrban || []), ...(r.poisForeign || [])]
+        .map(p => normalizeText(p));
+};
 
-            const directRoutes = routesData.filter(r => {
-                const pts = getAllRoutePoints(r);
-                return pts.some(p => p.includes(origin)) && pts.some(p => p.includes(destination));
-            });
+// Calles (solo referencia, NO para coincidencia directa)
+const getRouteStreets = (r) => {
+    return (r.streets ? r.streets.split(/[,\n]+/).map(s => s.trim()).filter(Boolean) : [])
+        .map(p => normalizeText(p));
+};
+
+           const directRoutes = routesData.filter(r => {
+    const pts = getRouteRealPoints(r);
+    return pts.some(p => p.includes(origin)) && pts.some(p => p.includes(destination));
+});
 
             let html = '';
             if (directRoutes.length > 0) {
@@ -1626,8 +1633,11 @@ function selectStreet(streetName) {
                         <span class="text-sm font-bold text-emerald-400 uppercase flex items-center gap-2"><i class="fa-solid fa-bolt"></i> Directo (${directRoutes.length})</span>
                         ${directRoutes.map(r => `
                             <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex flex-wrap justify-between items-center gap-2">
-                                <span class="font-bold text-sm text-white">${escapeHtml(r.name)}</span>
-                                <span class="text-[10px] bg-slate-950 px-2 py-0.5 rounded text-cyan-400 border border-slate-800">${r.category}</span>
+<div>
+    <span class="font-bold text-sm text-white">${escapeHtml(r.name)}</span>
+    <p class="text-[10px] text-amber-300/70 mt-0.5">Coincide: ${getRouteStreets(r).filter(s => s.includes(origin) || s.includes(destination)).join(', ')}</p>
+</div>
+<span class="text-[10px] bg-slate-950 px-2 py-0.5 rounded text-cyan-400 border border-slate-800">${r.category}</span>
                                 <div class="flex gap-2">
                                     <button onclick="openRouteModal('${r.id}')" class="text-xs bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-3 py-1.5 rounded-xl flex items-center gap-1"><i class="fa-solid fa-map-location-dot"></i> Ver</button>
                                     <button onclick="shareRouteById('${r.id}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold px-3 py-1.5 rounded-xl"><i class="fa-solid fa-share-nodes"></i></button>
@@ -1638,12 +1648,15 @@ function selectStreet(streetName) {
                 `;
             } else {
                 const transferOptions = [];
-                routesData.forEach(r1 => {
-                    const pts1 = getAllRoutePoints(r1);
-                    if (pts1.some(p => p.includes(origin))) {
-                        routesData.forEach(r2 => {
-                            if (r1.id !== r2.id) {
-                                const pts2 = getAllRoutePoints(r2);
+                
+               routesData.forEach(r1 => {
+    const pts1 = getRouteRealPoints(r1);
+    if (pts1.some(p => p.includes(origin))) {
+        routesData.forEach(r2 => {
+            if (r1.id !== r2.id) {
+                const pts2 = getRouteRealPoints(r2);
+
+                                
                                 if (pts2.some(p => p.includes(destination))) {
                                     const commonPoints = pts1.filter(p => pts2.includes(p));
                                     if (commonPoints.length > 0) transferOptions.push({ route1: r1, route2: r2, transferPoint: commonPoints[0] });
@@ -1674,10 +1687,41 @@ function selectStreet(streetName) {
                             `).join('')}
                         </div>
                     `;
-                } else {
-                    html = `<div class="bg-slate-900 p-6 rounded-2xl text-center text-slate-400 text-sm">No se encontraron combinaciones.</div>`;
+                               } else {
+                    html = `<div class="bg-slate-900 p-6 rounded-2xl text-center text-slate-400 text-sm">No se encontraron coincidencias directas ni trasbordos confirmados. Revisa abajo las coincidencias por calle (no confirmadas).</div>`;
                 }
             }
+
+            // ===== COINCIDENCIAS SOLO POR CALLE (referencia, resultado secundario) =====
+            const streetMatches = routesData.filter(r => {
+                const streets = getRouteStreets(r);
+                if (streets.length === 0) return false;
+                const alreadyListed = directRoutes.some(d => d.id === r.id);
+                if (alreadyListed) return false;
+                return streets.some(s => s.includes(origin) || s.includes(destination));
+            });
+
+            if (streetMatches.length > 0) {
+                html += `
+                    <div class="bg-amber-950/40 border border-amber-500/30 p-4 rounded-2xl space-y-3">
+                        <span class="text-sm font-bold text-amber-400 uppercase flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Coincidencia por calle (verificar)
+                        </span>
+                        <p class="text-[11px] text-amber-200/80">Estas rutas coinciden solo en nombre de calle, no en paradas o POIs confirmados. Verifica manualmente antes de usarlas.</p>
+                        ${streetMatches.slice(0, 6).map(r => `
+                            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex flex-wrap justify-between items-center gap-2">
+                                <span class="font-bold text-sm text-white">${escapeHtml(r.name)}</span>
+                                <span class="text-[10px] bg-slate-950 px-2 py-0.5 rounded text-amber-400 border border-slate-800">${r.category}</span>
+                                <div class="flex gap-2">
+                                    <button onclick="openRouteModal('${r.id}')" class="text-xs bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-3 py-1.5 rounded-xl flex items-center gap-1"><i class="fa-solid fa-map-location-dot"></i> Ver</button>
+                                    <button onclick="shareRouteById('${r.id}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-1.5 rounded-xl"><i class="fa-solid fa-share-nodes"></i></button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
             container.innerHTML = html;
         }
 
