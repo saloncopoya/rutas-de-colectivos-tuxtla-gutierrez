@@ -345,6 +345,90 @@
             .route-square-card .route-share { font-size: 0.65rem; padding: 4px 8px; }
         }
 
+                /* ===== TOOLTIP DE PUNTOS COMPARTIDOS ===== */
+        .point-tooltip {
+            position: fixed;
+            z-index: 9999;
+            max-width: 280px;
+            background: #0f172a;
+            border: 1px solid #06b6d4;
+            border-radius: 14px;
+            padding: 12px 14px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            font-size: 12px;
+            color: #f8fafc;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            pointer-events: none;
+        }
+        .point-tooltip.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        html:not(.dark) .point-tooltip {
+            background: #ffffff;
+            border-color: #0891b2;
+            color: #0f172a;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        .point-tooltip .tt-title {
+            font-weight: 800;
+            color: #22d3ee;
+            margin-bottom: 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        html:not(.dark) .point-tooltip .tt-title { color: #0891b2; }
+        .point-tooltip .tt-routes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .point-tooltip .tt-route-chip {
+            background: #1e293b;
+            color: #67e8f9;
+            border: 1px solid #334155;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .point-tooltip .tt-route-chip:hover {
+            background: #06b6d4;
+            color: #fff;
+        }
+        html:not(.dark) .point-tooltip .tt-route-chip {
+            background: #e2e8f0;
+            color: #0e7490;
+            border-color: #cbd5e1;
+        }
+        .point-tooltip .tt-empty {
+            color: #94a3b8;
+            font-style: italic;
+            font-size: 11px;
+        }
+
+        .clickable-point {
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.15s;
+            padding: 2px 4px;
+            margin: -2px -4px;
+        }
+        .clickable-point:hover {
+            background: rgba(6, 182, 212, 0.15);
+        }
+        .clickable-point.active {
+            background: rgba(6, 182, 212, 0.25);
+            outline: 1px solid #06b6d4;
+        }
+
+
         /* Botones admin contextuales */
         .admin-action-btn {
             display: none;
@@ -355,6 +439,9 @@
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black">
+
+        <!-- TOOLTIP DE PUNTOS COMPARTIDOS -->
+    <div id="pointTooltip" class="point-tooltip"></div>
 
     <!-- VISOR DE IMAGEN A PANTALLA COMPLETA -->
     <div id="fullscreenViewer" class="fullscreen-viewer" onclick="closeFullscreenViewer(event)">
@@ -1575,14 +1662,16 @@ const poisIda = (route.poisUrban || []).filter(Boolean);
 const poisRegreso = (route.poisForeign || []).filter(Boolean);
 const streetsList = (route.streets || '').split(/[,\n]+/).map(s => s.trim()).filter(Boolean);
 
-const renderBulletList = (arr, colorClass) => {
+const renderBulletList = (arr, colorClass, pointType) => {
     if (!arr.length) return `<p class="text-slate-500 text-xs italic">Sin información</p>`;
-    return `<ul class="space-y-1.5">${arr.map(item => `
+    return `<ul class="space-y-1.5">${arr.map(item => {
+        const safe = escapeHtml(item).replace(/'/g, "\\'");
+        return `
         <li class="flex items-start gap-2 text-xs text-slate-200 leading-snug">
             <span class="mt-1 w-2 h-2 rounded-full ${colorClass} shrink-0"></span>
-            <span class="break-words">${escapeHtml(item)}</span>
-        </li>
-    `).join('')}</ul>`;
+            <span class="break-words clickable-point" onclick="event.stopPropagation();showPointTooltip(event, '${safe}', '${pointType}')">${escapeHtml(item)}</span>
+        </li>`;
+    }).join('')}</ul>`;
 };
 
 document.getElementById('mapRouteInfoGrid').innerHTML = `
@@ -1591,7 +1680,7 @@ document.getElementById('mapRouteInfoGrid').innerHTML = `
         <span class="text-cyan-400 font-bold block mb-2 text-xs uppercase tracking-wider flex items-center gap-1.5">
             <i class="fa-solid fa-location-dot"></i> Paradas (${stopsList.length})
         </span>
-        ${renderBulletList(stopsList, 'bg-cyan-400')}
+        ${renderBulletList(stopsList, 'bg-cyan-400', 'parada')}
     </div>
 
     <!-- RETORNOS -->
@@ -1599,7 +1688,7 @@ document.getElementById('mapRouteInfoGrid').innerHTML = `
         <span class="text-emerald-400 font-bold block mb-2 text-xs uppercase tracking-wider flex items-center gap-1.5">
             <i class="fa-solid fa-rotate-left"></i> Retornos (${returnsList.length})
         </span>
-        ${renderBulletList(returnsList, 'bg-emerald-400')}
+        ${renderBulletList(returnsList, 'bg-emerald-400', 'retorno')}
     </div>
 
     <!-- POIs IDA -->
@@ -1607,7 +1696,7 @@ document.getElementById('mapRouteInfoGrid').innerHTML = `
         <span class="text-amber-400 font-bold block mb-2 text-xs uppercase tracking-wider flex items-center gap-1.5">
             <i class="fa-solid fa-arrow-right"></i> POIs Ida (${poisIda.length})
         </span>
-        ${renderBulletList(poisIda, 'bg-amber-400')}
+        ${renderBulletList(poisIda, 'bg-amber-400', 'poi ida')}
     </div>
 
     <!-- POIs REGRESO -->
@@ -1615,7 +1704,7 @@ document.getElementById('mapRouteInfoGrid').innerHTML = `
         <span class="text-orange-400 font-bold block mb-2 text-xs uppercase tracking-wider flex items-center gap-1.5">
             <i class="fa-solid fa-arrow-left"></i> POIs Regreso (${poisRegreso.length})
         </span>
-        ${renderBulletList(poisRegreso, 'bg-orange-400')}
+        ${renderBulletList(poisRegreso, 'bg-orange-400', 'poi regreso')}
     </div>
 
     <!-- CALLES CON FLECHAS (ancho completo) -->
@@ -1626,12 +1715,14 @@ document.getElementById('mapRouteInfoGrid').innerHTML = `
         ${streetsList.length === 0 
             ? `<p class="text-slate-500 text-xs italic">Sin información</p>`
             : `<div class="flex flex-wrap items-center gap-1.5">
-                ${streetsList.map((street, i) => `
-                    <span class="inline-flex items-center gap-1.5 bg-slate-900 border border-purple-800/60 text-purple-200 text-xs font-medium px-2.5 py-1 rounded-lg">
+                ${streetsList.map((street, i) => {
+                    const safe = escapeHtml(street).replace(/'/g, "\\'");
+                    return `
+                    <span class="inline-flex items-center gap-1.5 bg-slate-900 border border-purple-800/60 text-purple-200 text-xs font-medium px-2.5 py-1 rounded-lg clickable-point" onclick="event.stopPropagation();showPointTooltip(event, '${safe}', 'calle')">
                         ${escapeHtml(street)}
                     </span>
                     ${i < streetsList.length - 1 ? `<i class="fa-solid fa-arrow-right text-purple-500 text-[10px]"></i>` : ''}
-                `).join('')}
+                `;}).join('')}
             </div>`
         }
     </div>
@@ -2162,6 +2253,94 @@ window.addEventListener('online', () => {
         window.closeModalWithHistory = closeModalWithHistory;
         window.closeCommentsWithHistory = closeCommentsWithHistory;
 
+                // ===== TOOLTIP DE PUNTOS COMPARTIDOS =====
+        function showPointTooltip(event, pointName, pointType) {
+            event.stopPropagation();
+            const tooltip = document.getElementById('pointTooltip');
+            const normPoint = normalizeText(pointName);
+
+            // Buscar todas las rutas que contienen ese punto (en cualquier categoría)
+            const matchingRoutes = [];
+            routesData.forEach(r => {
+                const allPoints = [
+                    ...(r.stops || []),
+                    ...(r.returnStops || []),
+                    ...(r.poisUrban || []),
+                    ...(r.poisForeign || []),
+                    ...((r.streets || '').split(/[,\n]+/).map(s => s.trim()).filter(Boolean))
+                ];
+                const hasPoint = allPoints.some(p => normalizeText(p) === normPoint);
+                if (hasPoint) matchingRoutes.push(r);
+            });
+
+            // Marcar el elemento activo
+            document.querySelectorAll('.clickable-point.active').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            // Construir contenido
+            let routesHtml = '';
+            if (matchingRoutes.length === 0) {
+                routesHtml = `<span class="tt-empty">Solo en esta ruta</span>`;
+            } else {
+                routesHtml = matchingRoutes.map(r => {
+                    const safeName = escapeHtml(r.name).replace(/'/g, "\\'");
+                    return `<span class="tt-route-chip" onclick="event.stopPropagation();openRouteModal('${r.id}');hidePointTooltip();">${escapeHtml(r.name)}</span>`;
+                }).join('');
+            }
+
+            tooltip.innerHTML = `
+                <div class="tt-title">
+                    <i class="fa-solid fa-link"></i>
+                    ${escapeHtml(pointName)}
+                    <span style="font-weight:400;opacity:0.7;font-size:10px;text-transform:uppercase;">(${pointType})</span>
+                </div>
+                <div class="tt-routes">${routesHtml}</div>
+            `;
+
+            // Posicionar tooltip cerca del elemento
+            const rect = event.currentTarget.getBoundingClientRect();
+            tooltip.classList.add('show');
+
+            const tooltipRect = tooltip.getBoundingClientRect();
+            let top = rect.bottom + 8;
+            let left = rect.left;
+
+            // Ajustar si se sale de pantalla
+            if (left + tooltipRect.width > window.innerWidth - 10) {
+                left = window.innerWidth - tooltipRect.width - 10;
+            }
+            if (left < 10) left = 10;
+            if (top + tooltipRect.height > window.innerHeight - 10) {
+                top = rect.top - tooltipRect.height - 8;
+            }
+            if (top < 10) top = 10;
+
+            tooltip.style.top = top + 'px';
+            tooltip.style.left = left + 'px';
+        }
+
+        function hidePointTooltip() {
+            const tooltip = document.getElementById('pointTooltip');
+            tooltip.classList.remove('show');
+            document.querySelectorAll('.clickable-point.active').forEach(el => el.classList.remove('active'));
+        }
+
+        // Cerrar tooltip al tocar fuera
+        document.addEventListener('click', (e) => {
+            const tooltip = document.getElementById('pointTooltip');
+            if (!tooltip.classList.contains('show')) return;
+            if (tooltip.contains(e.target)) return;
+            if (e.target.closest('.clickable-point')) return;
+            hidePointTooltip();
+        });
+
+        // Cerrar tooltip al hacer scroll
+        window.addEventListener('scroll', () => {
+            const tooltip = document.getElementById('pointTooltip');
+            if (tooltip.classList.contains('show')) hidePointTooltip();
+        }, { passive: true });
+
+        
         console.log('🚍 Colectivos TGZ Pro - Sistema Integral v4.0 con historial y URLs personalizadas');
     </script>
 </body>
