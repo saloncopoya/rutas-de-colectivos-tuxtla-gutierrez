@@ -2,16 +2,16 @@
 <html lang="es" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.5, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#020617">
     <link rel="manifest" href="./manifest.json">
     <title>Colectivos TGZ Pro | Sistema Integral</title>
-
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Firebase SDK -->
+    <!-- SDK Firebase JS v9 (Compatibilidad) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
@@ -30,400 +30,612 @@
     </script>
 
     <style>
+        * { box-sizing: border-box; }
+        
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #020617; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
 
-        html.dark body { background-color: #020617; color: #f8fafc; }
-        html:not(.dark) body { background-color: #f1f5f9; color: #0f172a; }
+        html { font-size: 18px; }
+        body { 
+            background-color: #020617; 
+            color: #f8fafc; 
+            font-family: system-ui, -apple-system, sans-serif;
+            padding-bottom: 80px;
+            min-height: 100vh;
+        }
+
+        html:not(.dark) body { 
+            background-color: #f1f5f9; 
+            color: #0f172a; 
+        }
 
         html:not(.dark) .bg-slate-900 { background-color: #ffffff !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
         html:not(.dark) .bg-slate-950 { background-color: #f8fafc !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+        html:not(.dark) .bg-slate-800 { background-color: #e2e8f0 !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
         html:not(.dark) .text-white { color: #0f172a !important; }
         html:not(.dark) .text-slate-400 { color: #475569 !important; }
         html:not(.dark) .text-slate-300 { color: #334155 !important; }
         html:not(.dark) .border-slate-800 { border-color: #cbd5e1 !important; }
         html:not(.dark) #bottomNav { background-color: #ffffff !important; border-color: #cbd5e1 !important; }
-        html:not(.dark) .bg-slate-800 { background-color: #e2e8f0 !important; border-color: #cbd5e1 !important; }
-        html:not(.dark) .bg-slate-950\/80 { background-color: #f1f5f9 !important; }
+        html:not(.dark) .bg-slate-950\/90 { background-color: rgba(255,255,255,0.95) !important; }
+        html:not(.dark) .bg-slate-950\/40 { background-color: rgba(241,245,249,0.8) !important; }
 
-        .tab-active { color: #06b6d4 !important; border-bottom: 3px solid #06b6d4; }
+        .tab-active { color: #06b6d4 !important; border-bottom: 2px solid #06b6d4; }
         .map-wrapper { transition: transform 0.2s ease-in-out; transform-origin: center center; }
 
-        /* Botones grandes para adultos mayores */
-        .btn-lg { padding: 14px 24px; font-size: 1.1rem; border-radius: 16px; }
-        .btn-md { padding: 12px 20px; font-size: 1rem; border-radius: 14px; }
+        /* Estilos para publicaciones */
+        .post-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(30, 41, 59, 0.5);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .post-card:hover {
+            border-color: rgba(6, 182, 212, 0.3);
+            box-shadow: 0 8px 32px rgba(6, 182, 212, 0.1);
+        }
+        .post-card.highlighted {
+            border-color: #06b6d4;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
+        }
 
-        input, select, textarea { font-size: 16px !important; }
+        html:not(.dark) .post-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(203, 213, 225, 0.5);
+        }
+        html:not(.dark) .post-card.highlighted {
+            border-color: #06b6d4;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.2);
+        }
 
-        /* Animaciones */
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .post-card { transition: all 0.2s; background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid #1e293b; border-radius: 20px; padding: 20px; }
-        .post-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
-
-        .like-btn { transition: all 0.15s; }
-        .like-btn.liked { color: #ef4444; }
-        .like-btn.liked i { animation: heartPop 0.3s ease; }
-        @keyframes heartPop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
-
-        .marketplace-card { transition: all 0.2s; background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; }
-        .marketplace-card:hover { transform: scale(1.02); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+        .post-media {
+            border-radius: 16px;
+            overflow: hidden;
+            max-height: 500px;
+            width: 100%;
+            object-fit: cover;
+        }
 
         /* Comentarios flotantes estilo TikTok */
-        .comments-overlay {
+        .comments-panel {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
             max-height: 70vh;
-            background: #0f172a;
+            background: rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(20px);
             border-radius: 24px 24px 0 0;
+            border-top: 1px solid rgba(30, 41, 59, 0.5);
             padding: 20px;
-            z-index: 60;
+            z-index: 100;
             transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-top: 2px solid #1e293b;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+            transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+            overflow-y: auto;
         }
-        .comments-overlay.open { transform: translateY(0); }
-        .comments-overlay .handle { width: 40px; height: 4px; background: #334155; border-radius: 4px; margin: 0 auto 16px; }
-
-        .post-highlight {
-            border: 2px solid #06b6d4 !important;
-            box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
-            animation: glowPulse 2s ease-in-out infinite;
+        .comments-panel.open {
+            transform: translateY(0);
         }
-        @keyframes glowPulse { 0%, 100% { box-shadow: 0 0 30px rgba(6, 182, 212, 0.3); } 50% { box-shadow: 0 0 60px rgba(6, 182, 212, 0.6); } }
+        .comments-panel .handle {
+            width: 40px;
+            height: 4px;
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 2px;
+            margin: 0 auto 12px;
+            cursor: grab;
+        }
+        html:not(.dark) .comments-panel {
+            background: rgba(255, 255, 255, 0.98);
+            border-color: rgba(203, 213, 225, 0.5);
+        }
 
-        .media-container {
-            position: relative;
+        /* Marketplace */
+        .market-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(30, 41, 59, 0.5);
+            border-radius: 16px;
             overflow: hidden;
-            border-radius: 16px;
-            background: #0f172a;
+            transition: all 0.3s ease;
         }
-        .media-container img, .media-container video {
-            width: 100%;
-            max-height: 500px;
-            object-fit: contain;
-            border-radius: 16px;
+        .market-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(6, 182, 212, 0.3);
+            box-shadow: 0 12px 40px rgba(6, 182, 212, 0.15);
         }
-        .media-container .media-placeholder {
+        .market-card.highlighted {
+            border-color: #06b6d4;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
+        }
+        .market-card img, .market-card video {
             width: 100%;
-            height: 200px;
-            display: flex;
+            height: 220px;
+            object-fit: cover;
+        }
+
+        html:not(.dark) .market-card {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(203, 213, 225, 0.5);
+        }
+
+        /* Botones grandes para adultos mayores */
+        .btn-lg {
+            padding: 14px 24px;
+            font-size: 1.1rem;
+            border-radius: 16px;
+            min-height: 56px;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: #1e293b;
-            color: #475569;
+            gap: 10px;
+            font-weight: 700;
+        }
+
+        .input-lg {
+            padding: 16px 20px;
+            font-size: 1.05rem;
+            border-radius: 16px;
+            min-height: 56px;
+            border: 2px solid rgba(30, 41, 59, 0.5);
+            background: rgba(15, 23, 42, 0.6);
+            color: #f8fafc;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .input-lg:focus {
+            border-color: #06b6d4;
+        }
+        html:not(.dark) .input-lg {
+            background: rgba(255, 255, 255, 0.8);
+            color: #0f172a;
+            border-color: rgba(203, 213, 225, 0.5);
+        }
+
+        /* Navegación inferior mejorada */
+        #bottomNav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 16px;
+            padding-bottom: env(safe-area-inset-bottom, 12px);
+            background: rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(30, 41, 59, 0.5);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 50;
+        }
+        .bottom-nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            color: #64748b;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: all 0.3s;
+            min-width: 64px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        .bottom-nav-btn i {
+            font-size: 1.4rem;
+        }
+        .bottom-nav-btn.tab-active {
+            color: #06b6d4;
+            background: rgba(6, 182, 212, 0.1);
+        }
+        .bottom-nav-btn:hover {
+            color: #f8fafc;
+        }
+
+        html:not(.dark) #bottomNav {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(203, 213, 225, 0.5);
+        }
+
+        /* Pestañas superiores */
+        .top-tab {
+            padding: 12px 8px;
+            font-size: 0.85rem;
+            border-radius: 12px;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 48px;
+        }
+        .top-tab.active {
+            background: rgba(6, 182, 212, 0.15);
+            color: #06b6d4;
+        }
+        .top-tab:hover {
+            color: #f8fafc;
+        }
+
+        /* Filtros */
+        .filter-chip {
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 2px solid rgba(30, 41, 59, 0.3);
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 44px;
+        }
+        .filter-chip.active {
+            background: rgba(6, 182, 212, 0.15);
+            border-color: #06b6d4;
+            color: #06b6d4;
+        }
+        .filter-chip:hover {
+            border-color: #06b6d4;
+            color: #f8fafc;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            html { font-size: 16px; }
+            .post-card { padding: 16px; }
+            .market-card img, .market-card video { height: 160px; }
+            .btn-lg { padding: 12px 18px; font-size: 1rem; min-height: 48px; }
+            .input-lg { padding: 14px 16px; font-size: 0.95rem; min-height: 48px; }
+            .bottom-nav-btn { padding: 6px 10px; min-width: 48px; }
+            .bottom-nav-btn i { font-size: 1.2rem; }
+        }
+
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in-up {
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(6, 182, 212, 0.4); }
+        }
+        .highlighted {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        /* Scrollbar para comentarios */
+        .comments-panel::-webkit-scrollbar { width: 4px; }
+        .comments-panel::-webkit-scrollbar-thumb { background: #06b6d4; border-radius: 2px; }
+
+        .hidden-iframe {
+            display: none !important;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black">
+<body>
 
     <!-- BARRA SUPERIOR -->
-    <div id="statusBanner" class="bg-slate-900 border-b border-slate-800 text-xs py-2 px-3 flex flex-wrap justify-between items-center text-slate-400 z-30 gap-1">
+    <div id="statusBanner" class="bg-slate-900/80 backdrop-blur-sm border-b border-slate-800 text-xs py-2 px-4 flex flex-wrap items-center justify-between gap-2 z-30 sticky top-0">
         <span id="connectionState" class="flex items-center gap-2 text-[11px] font-mono">
-            <span id="netStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            <span id="netStatusDot" class="w-3 h-3 rounded-full bg-emerald-400"></span> 
             <span id="netStatusText">MODO OFFLINE (CACHÉ LOCAL)</span>
         </span>
         <div class="flex items-center gap-2 flex-wrap">
-            <button id="btnInstallPwa" onclick="installPWA()" class="hidden p-2 px-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold border border-cyan-500 flex items-center gap-1 shadow-lg animate-pulse">
+            <button id="btnInstallPwa" onclick="installPWA()" class="hidden btn-lg bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold border border-cyan-500 shadow-lg animate-pulse" style="padding:6px 14px; min-height:36px; font-size:0.75rem;">
                 <i class="fa-solid fa-download"></i> Instalar App
             </button>
-            <button onclick="toggleTheme()" class="p-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl text-sm" title="Cambiar Tema">
+            <button onclick="toggleTheme()" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl text-base" title="Cambiar Tema">
                 <i class="fa-solid fa-moon" id="themeIcon"></i>
             </button>
-            <button onclick="toggleAdminSession()" id="adminAuthBtn" class="text-xs text-cyan-400 font-bold flex items-center gap-1 border border-cyan-500/30 px-3 py-1.5 rounded-xl bg-cyan-950/40">
+            <button onclick="toggleAdminSession()" id="adminAuthBtn" class="text-xs font-bold flex items-center gap-1.5 border border-cyan-500/30 px-3 py-1.5 rounded-xl bg-cyan-950/40 text-cyan-400">
                 <i class="fa-solid fa-shield-halved"></i> <span id="adminBtnText">Admin</span>
             </button>
         </div>
     </div>
 
     <!-- ENCABEZADO -->
-    <header class="bg-slate-900/90 border-b border-slate-800 px-4 py-3 sticky top-0 z-20 backdrop-blur">
-        <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
+    <header class="bg-slate-900/80 backdrop-blur-sm border-b border-slate-800 px-4 py-3 sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 flex-wrap">
             <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0">
-                    <i class="fa-solid fa-bus text-2xl"></i>
+                <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0 text-2xl">
+                    <i class="fa-solid fa-bus"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-black tracking-wider text-white uppercase flex items-center gap-2">
-                        Colectivos TGZ <span class="text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 px-2 py-0.5 rounded font-mono">PRO</span>
+                    <h1 class="text-base font-black tracking-wider text-white uppercase flex items-center gap-2">
+                        Colectivos TGZ <span class="text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 px-2 py-0.5 rounded font-mono">FULL SYSTEM</span>
                     </h1>
-                    <p class="text-[10px] text-slate-400">Rutas · Publicaciones · Marketplace</p>
+                    <p class="text-[11px] text-slate-400">Gestión de Rutas, Publicaciones y Marketplace</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <button id="btnCreatePost" onclick="openCreatePost()" class="hidden bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
-                    <i class="fa-solid fa-pen-to-square"></i> <span class="hidden sm:inline">Publicar</span>
+                <button id="btnAddPost" onclick="openPostWizard()" class="hidden btn-lg bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold px-4 py-2" style="min-height:40px;">
+                    <i class="fa-solid fa-plus"></i> Publicar
                 </button>
-                <button onclick="syncDataWithFirebase()" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 p-2.5 rounded-xl text-sm border border-slate-700" title="Sincronizar">
-                    <i class="fa-solid fa-rotate"></i>
+                <button id="btnAddMarket" onclick="openMarketWizard()" class="hidden btn-lg bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold px-4 py-2" style="min-height:40px;">
+                    <i class="fa-solid fa-store"></i> Vender
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- NAVEGACIÓN PRINCIPAL -->
+    <!-- PESTAÑAS SUPERIORES -->
     <div class="max-w-7xl mx-auto w-full px-3 pt-3">
-        <div class="grid grid-cols-3 gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800 text-sm font-bold">
-            <button onclick="switchTab('inicio')" id="top-tab-inicio" class="top-tab py-3 rounded-xl flex items-center justify-center gap-2 bg-cyan-600 text-white">
-                <i class="fa-solid fa-house text-base"></i> Inicio
+        <div class="grid grid-cols-3 gap-2 bg-slate-900/50 p-1.5 rounded-2xl border border-slate-800 text-sm font-bold">
+            <button onclick="switchTab('feed')" id="top-tab-feed" class="top-tab active flex items-center justify-center gap-2">
+                <i class="fa-solid fa-house text-base"></i> INICIO
             </button>
-            <button onclick="switchTab('rutas')" id="top-tab-rutas" class="top-tab py-3 rounded-xl text-slate-400 hover:text-white flex items-center justify-center gap-2">
-                <i class="fa-solid fa-route text-base"></i> Rutas
+            <button onclick="switchTab('routes')" id="top-tab-routes" class="top-tab flex items-center justify-center gap-2">
+                <i class="fa-solid fa-route text-base"></i> RUTAS
             </button>
-            <button onclick="switchTab('marketplace')" id="top-tab-marketplace" class="top-tab py-3 rounded-xl text-slate-400 hover:text-white flex items-center justify-center gap-2">
-                <i class="fa-solid fa-store text-base"></i> Market
+            <button onclick="switchTab('market')" id="top-tab-market" class="top-tab flex items-center justify-center gap-2">
+                <i class="fa-solid fa-store text-base"></i> MARKET
             </button>
         </div>
     </div>
 
     <!-- CONTENIDO PRINCIPAL -->
-    <main class="max-w-7xl mx-auto w-full px-3 py-3 flex-1 mb-20">
+    <main class="max-w-7xl mx-auto w-full px-3 py-4 flex-1">
 
-        <!-- VISTA INICIO: PUBLICACIONES -->
-        <section id="view-inicio" class="tab-content space-y-4">
-            <div class="space-y-4" id="postsContainer"></div>
+        <!-- VISTA 1: FEED PUBLICACIONES -->
+        <section id="view-feed" class="tab-content space-y-4">
+            <div id="feedContainer" class="space-y-4 max-w-2xl mx-auto"></div>
         </section>
 
-        <!-- VISTA RUTAS: Buscador + Trasbordos + Filtros + Resultados -->
-        <section id="view-rutas" class="tab-content hidden space-y-4">
-            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-4">
-                <!-- Filtros -->
-                <div class="flex flex-wrap items-center gap-2 text-sm">
-                    <span class="font-bold text-slate-400 mr-1"><i class="fa-solid fa-filter text-cyan-400"></i> Ver:</span>
-                    <button onclick="setViewMode('ROUTES')" id="btnViewRoutes" class="mode-chip bg-cyan-600 text-white px-4 py-2 rounded-xl font-bold text-sm">Rutas</button>
-                    <button onclick="setViewMode('STOPS')" id="btnViewStops" class="mode-chip bg-slate-800 text-slate-400 px-4 py-2 rounded-xl font-bold text-sm">Paradas</button>
-                    <button onclick="setViewMode('POIS')" id="btnViewPois" class="mode-chip bg-slate-800 text-slate-400 px-4 py-2 rounded-xl font-bold text-sm">POIs</button>
-                    <button onclick="setViewMode('RETURNS')" id="btnViewReturns" class="mode-chip bg-slate-800 text-slate-400 px-4 py-2 rounded-xl font-bold text-sm">Retornos</button>
-                </div>
-
-                <!-- Buscador dual: Estoy en / Quiero ir a -->
+        <!-- VISTA 2: RUTAS Y TRASBORDOS -->
+        <section id="view-routes" class="tab-content hidden space-y-4">
+            <!-- Buscadores duales -->
+            <div class="bg-slate-900/50 backdrop-blur-sm p-4 rounded-2xl border border-slate-800 space-y-3">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-cyan-400 mb-1"><i class="fa-solid fa-location-dot"></i> Estoy en / Buscar:</label>
-                        <input list="globalPointsDatalist" id="plannerOrigin" oninput="onSearchChange()" placeholder="Ej. Ruta 1, Calle, Hospital..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
+                        <label class="block text-sm font-bold text-cyan-400 mb-1.5"><i class="fa-solid fa-location-dot"></i> Estoy en:</label>
+                        <input type="text" id="routeOrigin" list="globalPointsDatalist" 
+                            placeholder="Calle, parada o punto de referencia..." 
+                            class="input-lg" oninput="onRouteSearchChange()">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-rose-400 mb-1"><i class="fa-solid fa-flag-checkered"></i> Quiero ir a:</label>
-                        <input list="globalPointsDatalist" id="plannerDestination" placeholder="Destino..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
+                        <label class="block text-sm font-bold text-emerald-400 mb-1.5"><i class="fa-solid fa-flag-checkered"></i> Quiero ir a:</label>
+                        <input type="text" id="routeDestination" list="globalPointsDatalist" 
+                            placeholder="Destino, calle o punto..." 
+                            class="input-lg" oninput="onRouteSearchChange()">
                     </div>
                 </div>
-
-                <button onclick="calculateMultiRoute()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-2xl text-base flex items-center justify-center gap-3 btn-lg">
-                    <i class="fa-solid fa-route text-xl"></i> Calcular Conexiones
+                <button onclick="calculateConnections()" class="btn-lg w-full bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl">
+                    <i class="fa-solid fa-route"></i> Calcular Conexiones
                 </button>
             </div>
 
-            <!-- Resultados de búsqueda / explorador -->
-            <div id="explorerResultsContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+            <!-- Filtros de visualización -->
+            <div class="flex flex-wrap gap-2 items-center">
+                <span class="text-sm font-bold text-slate-400 mr-1"><i class="fa-solid fa-filter text-cyan-400"></i> Ver:</span>
+                <button onclick="setRouteView('ROUTES')" id="rv-routes" class="filter-chip active">Rutas</button>
+                <button onclick="setRouteView('STOPS')" id="rv-stops" class="filter-chip">Paradas</button>
+                <button onclick="setRouteView('POIS')" id="rv-pois" class="filter-chip">Puntos de Interés</button>
+                <button onclick="setRouteView('RETURNS')" id="rv-returns" class="filter-chip">Retornos</button>
+            </div>
 
-            <!-- Resultados de trasbordos -->
-            <div id="plannerResults" class="space-y-3"></div>
+            <!-- Contenedor de resultados de rutas -->
+            <div id="routesResultsContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+
+            <!-- Contenedor de resultados de conexiones -->
+            <div id="connectionsContainer" class="space-y-3 hidden"></div>
         </section>
 
-        <!-- VISTA MARKETPLACE -->
-        <section id="view-marketplace" class="tab-content hidden space-y-4">
-            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <h2 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-store text-cyan-400"></i> Marketplace</h2>
-                    <button id="btnCreateListing" onclick="openCreateListing()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-plus"></i> Publicar Venta
+        <!-- VISTA 3: MARKETPLACE -->
+        <section id="view-market" class="tab-content hidden space-y-4">
+            <!-- Filtros marketplace -->
+            <div class="bg-slate-900/50 backdrop-blur-sm p-4 rounded-2xl border border-slate-800 space-y-3">
+                <div class="flex flex-wrap gap-2 items-center">
+                    <span class="text-sm font-bold text-slate-400 mr-1">Categoría:</span>
+                    <button onclick="filterMarket('ALL')" id="mk-all" class="filter-chip active">Todos</button>
+                    <button onclick="filterMarket('AUTO')" id="mk-auto" class="filter-chip">🚗 Autos</button>
+                    <button onclick="filterMarket('TERRENO')" id="mk-terreno" class="filter-chip">🏞️ Terrenos</button>
+                    <button onclick="filterMarket('CASA')" id="mk-casa" class="filter-chip">🏠 Casas</button>
+                    <button onclick="filterMarket('SERVICIO')" id="mk-servicio" class="filter-chip">🔧 Servicios</button>
+                    <button onclick="filterMarket('OTRO')" id="mk-otro" class="filter-chip">📦 Otro</button>
+                </div>
+                <div class="flex flex-wrap gap-3 items-center">
+                    <div class="flex-1 min-w-[150px]">
+                        <label class="text-xs font-bold text-slate-400">Precio mínimo</label>
+                        <input type="number" id="priceMin" class="input-lg" style="min-height:44px; padding:10px 14px;" placeholder="$0" oninput="filterMarketPrices()">
+                    </div>
+                    <div class="flex-1 min-w-[150px]">
+                        <label class="text-xs font-bold text-slate-400">Precio máximo</label>
+                        <input type="number" id="priceMax" class="input-lg" style="min-height:44px; padding:10px 14px;" placeholder="$999,999" oninput="filterMarketPrices()">
+                    </div>
+                    <button onclick="filterMarketPrices()" class="btn-lg bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl" style="min-height:44px; padding:10px 20px; font-size:0.9rem;">
+                        <i class="fa-solid fa-magnifying-glass"></i> Filtrar
                     </button>
                 </div>
-                <div class="mt-2">
-                    <input type="text" id="marketSearch" oninput="renderMarketplace()" placeholder="Buscar en marketplace..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
-                </div>
             </div>
-            <div id="marketplaceContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+
+            <!-- Grid marketplace -->
+            <div id="marketContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
         </section>
 
     </main>
 
     <!-- BARRA INFERIOR -->
-    <nav id="bottomNav" class="fixed bottom-0 left-0 w-full bg-slate-900 border-t border-slate-800 py-2 px-2 flex items-center justify-around z-40">
-        <button onclick="switchTab('inicio')" id="nav-inicio" class="bottom-nav-btn tab-active flex flex-col items-center gap-0.5 text-slate-400 px-2 py-1">
-            <i class="fa-solid fa-house text-xl"></i>
-            <span class="text-[10px] font-bold">Inicio</span>
+    <nav id="bottomNav">
+        <button onclick="switchTab('feed')" id="nav-feed" class="bottom-nav-btn tab-active">
+            <i class="fa-solid fa-house"></i>
+            <span>INICIO</span>
         </button>
-        <button onclick="switchTab('rutas')" id="nav-rutas" class="bottom-nav-btn flex flex-col items-center gap-0.5 text-slate-400 px-2 py-1">
-            <i class="fa-solid fa-route text-xl"></i>
-            <span class="text-[10px] font-bold">Rutas</span>
+        <button onclick="switchTab('routes')" id="nav-routes" class="bottom-nav-btn">
+            <i class="fa-solid fa-route"></i>
+            <span>RUTAS</span>
         </button>
-        <button onclick="switchTab('marketplace')" id="nav-marketplace" class="bottom-nav-btn flex flex-col items-center gap-0.5 text-slate-400 px-2 py-1">
-            <i class="fa-solid fa-store text-xl"></i>
-            <span class="text-[10px] font-bold">Market</span>
+        <button onclick="switchTab('market')" id="nav-market" class="bottom-nav-btn">
+            <i class="fa-solid fa-store"></i>
+            <span>MARKET</span>
         </button>
     </nav>
 
     <!-- DATALIST GLOBAL -->
     <datalist id="globalPointsDatalist"></datalist>
 
-    <!-- MODAL POST / PUBLICACIÓN -->
-    <div id="postModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-2 hidden">
-        <div class="bg-slate-900 w-full max-w-2xl max-h-[90vh] rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
-            <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex justify-between items-center shrink-0">
-                <h3 id="postModalTitle" class="font-bold text-sm text-white">Nueva Publicación</h3>
-                <button onclick="closeModal('postModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-4 overflow-y-auto flex-1">
-                <form id="postForm" onsubmit="handlePostSubmit(event)">
-                    <input type="hidden" id="editPostId" value="">
-                    <div class="space-y-3">
-                        <textarea id="postContent" rows="4" placeholder="¿Qué estás pensando?" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500"></textarea>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-300 mb-1">Imagen o Video (URL)</label>
-                            <input type="text" id="postMediaUrl" placeholder="https://..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
-                            <button type="button" onclick="uploadToCloudinary('postMediaUrl')" class="mt-2 bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-bold">Subir a Cloudinary</button>
-                            <input type="file" id="cloudinaryFileInput" accept="image/*,video/*" class="hidden" onchange="uploadToCloudinaryFile(this)">
-                        </div>
-                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-2xl text-base flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-paper-plane"></i> Publicar
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL MARKETPLACE -->
-    <div id="marketplaceModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-2 hidden">
-        <div class="bg-slate-900 w-full max-w-2xl max-h-[90vh] rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
-            <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex justify-between items-center shrink-0">
-                <h3 class="font-bold text-sm text-white"><i class="fa-solid fa-tag"></i> Nueva Publicación</h3>
-                <button onclick="closeModal('marketplaceModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-4 overflow-y-auto flex-1">
-                <form id="marketplaceForm" onsubmit="handleMarketplaceSubmit(event)">
-                    <input type="hidden" id="editListingId" value="">
-                    <div class="space-y-3">
-                        <input type="text" id="listingTitle" required placeholder="Título del producto/servicio" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
-                        <select id="listingCategory" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500">
-                            <option value="AUTO">Auto / Camioneta</option>
-                            <option value="TERRENO">Terreno / Lote</option>
-                            <option value="CASA">Casa / Renta</option>
-                            <option value="SERVICIO">Servicio</option>
-                            <option value="OTRO">Otro</option>
-                        </select>
-                        <input type="text" id="listingPrice" placeholder="Precio (ej. $150,000 MXN)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
-                        <input type="text" id="listingWhatsApp" required placeholder="Número WhatsApp (ej. 9611234567)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
-                        <textarea id="listingDescription" rows="3" placeholder="Descripción completa..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500"></textarea>
-                        <input type="text" id="listingMediaUrl" placeholder="URL de imagen/video (opcional)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
-                        <button type="button" onclick="uploadToCloudinary('listingMediaUrl')" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-bold">Subir a Cloudinary</button>
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-2xl text-base flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-check"></i> Publicar en Marketplace
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL RUTA DETALLE (con mapa) -->
-    <div id="routeDetailModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-2 hidden">
-        <div class="bg-slate-900 w-full max-w-4xl h-[90vh] rounded-2xl border border-slate-800 flex flex-col overflow-hidden shadow-2xl">
+    <!-- MODAL RUTA COMPLETA -->
+    <div id="routeDetailModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-xl z-50 flex items-center justify-center p-2 hidden">
+        <div class="bg-slate-900 w-full max-w-6xl max-h-[95vh] rounded-2xl border border-slate-800 flex flex-col overflow-hidden shadow-2xl">
             <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400"><i class="fa-solid fa-bus text-lg"></i></div>
-                    <div><h3 id="modalRouteTitle" class="text-sm font-black text-white">Nombre de Ruta</h3><p id="modalRouteCategory" class="text-[10px] text-cyan-400 font-bold uppercase">Categoría</p></div>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="shareRoute()" class="p-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl text-sm"><i class="fa-solid fa-share-nodes"></i></button>
-                    <button onclick="closeModal('routeDetailModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-            </div>
-            <div class="flex-1 flex flex-col p-3 overflow-y-auto space-y-3">
-                <div id="routeMapContainer" class="relative w-full h-80 sm:h-96 bg-slate-950 rounded-xl border border-slate-800 overflow-hidden">
-                    <iframe id="modalMapIframe" src="about:blank" class="w-full h-[calc(100%+52px)] -mt-[52px] border-0"></iframe>
-                    <div id="offlineMapPlaceholder" class="hidden absolute inset-0 flex items-center justify-center bg-slate-900 text-slate-400 text-sm">
-                        <i class="fa-solid fa-wifi-slash mr-2"></i> Sin conexión - Mapa no disponible
+                    <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 text-lg">
+                        <i class="fa-solid fa-bus"></i>
+                    </div>
+                    <div>
+                        <h3 id="modalRouteTitle" class="text-base font-black text-white">Nombre de Ruta</h3>
+                        <p id="modalRouteCategory" class="text-xs text-cyan-400 font-bold uppercase">Categoría</p>
                     </div>
                 </div>
-                <div id="modalRouteInfoGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs"></div>
-                <button onclick="shareRoute()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-share-nodes"></i> Compartir Ruta
+                <div class="flex items-center gap-2">
+                    <button onclick="shareRoute()" class="p-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl text-sm">
+                        <i class="fa-solid fa-share-nodes"></i>
+                    </button>
+                    <button onclick="closeModal('routeDetailModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xl">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                <div class="w-full h-[50vh] min-h-[300px] bg-slate-950 rounded-xl border border-slate-800 overflow-hidden">
+                    <iframe id="modalMapIframe" src="about:blank" class="w-full h-[calc(100%+52px)] -mt-[52px] border-0"></iframe>
+                </div>
+                <div id="modalRouteInfoGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm"></div>
+                <div id="modalRouteStreets" class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-sm"></div>
+                <div id="modalRouteMatches" class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-sm"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL DE COMENTARIOS FLOTANTE -->
+    <div id="commentsPanel" class="comments-panel">
+        <div class="handle" onclick="toggleCommentsPanel()"></div>
+        <div id="commentsContent" class="space-y-3 max-h-[50vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-3">
+                <h4 class="text-base font-bold text-white">Comentarios</h4>
+                <button onclick="toggleCommentsPanel()" class="p-2 bg-slate-800 rounded-xl text-slate-300">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="commentsList" class="space-y-3"></div>
+            <div class="flex gap-2 mt-3">
+                <input type="text" id="commentInput" placeholder="Escribe un comentario..." class="input-lg flex-1" style="min-height:48px; padding:12px 16px; font-size:0.95rem;">
+                <button onclick="addComment()" class="btn-lg bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl" style="min-height:48px; padding:12px 20px;">
+                    <i class="fa-solid fa-paper-plane"></i>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- WIZARD RUTAS (Admin) -->
-    <div id="adminWizardModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex flex-col hidden">
+    <!-- WIZARD PUBLICACIONES -->
+    <div id="postWizardModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-xl z-50 flex flex-col hidden">
         <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0">
-            <div class="flex items-center gap-2"><i class="fa-solid fa-shield-halved text-cyan-400 text-lg"></i><h3 id="wizardTitle" class="font-bold text-sm text-white">Registrar / Editar Ruta</h3></div>
-            <button onclick="closeModal('adminWizardModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm font-bold"><i class="fa-solid fa-xmark"></i> Salir</button>
+            <h3 class="font-bold text-base text-white"><i class="fa-solid fa-pen-to-square text-cyan-400 mr-2"></i>Nueva Publicación</h3>
+            <button onclick="closeModal('postWizardModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
-        <div class="bg-slate-950 border-b border-slate-800 px-4 py-2 shrink-0">
-            <div class="max-w-3xl mx-auto flex items-center justify-between text-xs font-bold">
-                <div id="step-indicator-1" class="step-chip text-cyan-400 flex items-center gap-1.5"><span class="w-6 h-6 rounded-full bg-cyan-600 text-white flex items-center justify-center text-xs">1</span> Datos</div>
-                <div class="h-0.5 bg-slate-800 flex-1 mx-2"></div>
-                <div id="step-indicator-2" class="step-chip text-slate-500 flex items-center gap-1.5"><span class="w-6 h-6 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-xs">2</span> Mapa</div>
-                <div class="h-0.5 bg-slate-800 flex-1 mx-2"></div>
-                <div id="step-indicator-3" class="step-chip text-slate-500 flex items-center gap-1.5"><span class="w-6 h-6 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-xs">3</span> Paradas</div>
-                <div class="h-0.5 bg-slate-800 flex-1 mx-2"></div>
-                <div id="step-indicator-4" class="step-chip text-slate-500 flex items-center gap-1.5"><span class="w-6 h-6 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-xs">4</span> Calles</div>
-            </div>
-        </div>
-        <form id="wizardForm" onsubmit="handleRouteSubmit(event)" class="flex-1 overflow-y-auto p-4 max-w-3xl mx-auto w-full flex flex-col justify-between">
-            <input type="hidden" id="editRouteId" value="">
-            <div id="wizard-step-1" class="wizard-step space-y-4">
-                <div class="border-b border-slate-800 pb-2"><h4 class="text-sm font-bold text-cyan-400 uppercase">Paso 1: Información General</h4></div>
-                <div class="space-y-3">
-                    <input type="text" id="routeName" required placeholder="Nombre de la Ruta *" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500">
-                    <select id="routeCategory" required class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500">
-                        <option value="URBANA">Urbana (Tuxtla)</option><option value="FORANEA">Foránea</option>
-                    </select>
+        <form id="postForm" onsubmit="handlePostSubmit(event)" class="flex-1 overflow-y-auto p-4 max-w-2xl mx-auto w-full flex flex-col justify-between">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-1.5">Contenido *</label>
+                    <textarea id="postContent" required rows="4" placeholder="¿Qué quieres compartir?" class="input-lg" style="min-height:100px;"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-1.5">Imagen / Video (opcional)</label>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input type="text" id="postMediaUrl" placeholder="URL de imagen o video..." class="input-lg flex-1" style="min-height:48px; padding:12px 16px;">
+                        <label class="btn-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl cursor-pointer" style="min-height:48px; padding:12px 20px;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Subir
+                            <input type="file" id="postFileInput" accept="image/*,video/*" class="hidden" onchange="uploadPostMedia(this)">
+                        </label>
+                    </div>
                 </div>
             </div>
-            <div id="wizard-step-2" class="wizard-step hidden space-y-4">
-                <div class="border-b border-slate-800 pb-2"><h4 class="text-sm font-bold text-cyan-400 uppercase">Paso 2: Mapa y Foto</h4></div>
-                <input type="text" id="routeMapUrl" required placeholder="URL Google Maps embed *" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500 font-mono">
-                <input type="text" id="routeImageUrl" placeholder="URL Imagen plano" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500 font-mono">
-            </div>
-            <div id="wizard-step-3" class="wizard-step hidden space-y-4">
-                <div class="border-b border-slate-800 pb-2"><h4 class="text-sm font-bold text-cyan-400 uppercase">Paso 3: Paradas y POIs</h4></div>
-                <input type="text" id="routeStops" list="globalPointsDatalist" placeholder="Paradas (separadas por coma)" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500">
-                <input type="text" id="routeReturnStops" list="globalPointsDatalist" placeholder="Retornos (separados por coma)" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500">
-                <textarea id="routePoisUrban" rows="2" placeholder="POIs Urbanos" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500"></textarea>
-                <textarea id="routePoisForeign" rows="2" placeholder="POIs Foráneos" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500"></textarea>
-            </div>
-            <div id="wizard-step-4" class="wizard-step hidden space-y-4">
-                <div class="border-b border-slate-800 pb-2"><h4 class="text-sm font-bold text-cyan-400 uppercase">Paso 4: Calles</h4></div>
-                <textarea id="routeStreets" rows="4" placeholder="Calles por donde pasa *" class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 text-base text-white outline-none focus:border-cyan-500 font-mono"></textarea>
-            </div>
-            <div class="pt-4 border-t border-slate-800 flex justify-between items-center mt-6 shrink-0">
-                <button type="button" id="btnWizardPrev" onclick="navigateWizard(-1)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-sm opacity-50 cursor-not-allowed" disabled><i class="fa-solid fa-arrow-left"></i> Anterior</button>
-                <div class="flex gap-2">
-                    <button type="button" onclick="closeModal('adminWizardModal')" class="px-4 py-2 bg-slate-800 text-slate-400 rounded-xl font-bold text-sm">Cancelar</button>
-                    <button type="button" id="btnWizardNext" onclick="navigateWizard(1)" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold text-sm">Siguiente <i class="fa-solid fa-arrow-right"></i></button>
-                    <button type="submit" id="btnWizardSubmit" class="hidden px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm"><i class="fa-solid fa-check"></i> Guardar</button>
-                </div>
+            <div class="pt-4 border-t border-slate-800 flex justify-end gap-3 mt-4">
+                <button type="button" onclick="closeModal('postWizardModal')" class="btn-lg bg-slate-800 text-slate-400 rounded-xl">Cancelar</button>
+                <button type="submit" class="btn-lg bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl">
+                    <i class="fa-solid fa-check"></i> Publicar
+                </button>
             </div>
         </form>
     </div>
 
-    <!-- COMENTARIOS FLOTANTES ESTILO TIKTOK -->
-    <div id="commentsOverlay" class="comments-overlay">
-        <div class="handle"></div>
-        <div class="flex justify-between items-center mb-4">
-            <h4 class="font-bold text-sm text-white"><i class="fa-regular fa-comment"></i> Comentarios</h4>
-            <button onclick="closeComments()" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm"><i class="fa-solid fa-xmark"></i></button>
+    <!-- WIZARD MARKETPLACE -->
+    <div id="marketWizardModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-xl z-50 flex flex-col hidden">
+        <div class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0">
+            <h3 class="font-bold text-base text-white"><i class="fa-solid fa-store text-emerald-400 mr-2"></i>Nuevo Producto</h3>
+            <button onclick="closeModal('marketWizardModal')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
-        <div id="commentsList" class="overflow-y-auto max-h-[40vh] space-y-3"></div>
-        <div class="mt-4 border-t border-slate-800 pt-3">
-            <form onsubmit="addComment(event)" class="flex gap-2">
-                <input type="hidden" id="commentPostId">
-                <input type="text" id="commentInput" placeholder="Escribe un comentario..." class="flex-1 bg-slate-950 border border-slate-800 rounded-2xl p-3 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
-                <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-4 py-3 rounded-2xl"><i class="fa-solid fa-paper-plane"></i></button>
-            </form>
-        </div>
+        <form id="marketForm" onsubmit="handleMarketSubmit(event)" class="flex-1 overflow-y-auto p-4 max-w-2xl mx-auto w-full flex flex-col justify-between">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-1.5">Título *</label>
+                    <input type="text" id="marketTitle" required placeholder="Ej. Vendo auto, Terreno en..." class="input-lg">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-300 mb-1.5">Categoría *</label>
+                        <select id="marketCategory" required class="input-lg">
+                            <option value="AUTO">🚗 Auto</option>
+                            <option value="TERRENO">🏞️ Terreno</option>
+                            <option value="CASA">🏠 Casa / Renta</option>
+                            <option value="SERVICIO">🔧 Servicio</option>
+                            <option value="OTRO">📦 Otro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-300 mb-1.5">Precio *</label>
+                        <input type="text" id="marketPrice" required placeholder="$0.00" class="input-lg">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-1.5">WhatsApp *</label>
+                    <input type="text" id="marketWhatsapp" required placeholder="52 961 123 4567" class="input-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-1.5">Descripción *</label>
+                    <textarea id="marketDescription" required rows="4" placeholder="Detalles del producto..." class="input-lg" style="min-height:100px;"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-300 mb-1.5">Imagen / Video (opcional)</label>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input type="text" id="marketMediaUrl" placeholder="URL de imagen o video..." class="input-lg flex-1" style="min-height:48px; padding:12px 16px;">
+                        <label class="btn-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-xl cursor-pointer" style="min-height:48px; padding:12px 20px;">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Subir
+                            <input type="file" id="marketFileInput" accept="image/*,video/*" class="hidden" onchange="uploadMarketMedia(this)">
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-4 border-t border-slate-800 flex justify-end gap-3 mt-4">
+                <button type="button" onclick="closeModal('marketWizardModal')" class="btn-lg bg-slate-800 text-slate-400 rounded-xl">Cancelar</button>
+                <button type="submit" class="btn-lg bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl">
+                    <i class="fa-solid fa-check"></i> Publicar
+                </button>
+            </div>
+        </form>
     </div>
 
+    <!-- SCRIPT PRINCIPAL -->
     <script>
-        // ===== CONFIGURACIÓN =====
+        // ============================================================
+        // CONFIGURACIÓN FIREBASE
+        // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyASox7mRak5V0py29htEVWCVeipGpA0yfs",
             authDomain: "galloslivebadge.firebaseapp.com",
@@ -434,653 +646,1117 @@
             appId: "1:979482928760:web:3ea879dc4ee1e020df6f8d"
         };
 
-        const CLOUDINARY = {
-            cloudName: 'davovja1g',
-            apiKey: '688569119694815',
-            secret: 'jQJ12BpcfQVcgyYKir6hGYt-QcY',
-            preset: 'sinfirmaupload'
-        };
-
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const routesRef = db.ref('rutas_colectivos_tgz');
         const postsRef = db.ref('publicaciones');
-        const marketplaceRef = db.ref('marketplace');
+        const marketRef = db.ref('marketplace');
 
-        // ===== ESTADO GLOBAL =====
+        // ============================================================
+        // ESTADO GLOBAL
+        // ============================================================
         let routesData = [];
         let postsData = [];
-        let listingsData = [];
-        let currentCategory = 'ALL';
-        let currentViewMode = 'ROUTES';
+        let marketData = [];
         let isAdminLoggedIn = false;
-        let deferredPrompt = null;
-        let currentWizardStep = 1;
+        let currentRouteView = 'ROUTES';
+        let currentMarketCategory = 'ALL';
         let currentPostId = null;
-        let isOnline = navigator.onLine;
+        let currentCommentsPostId = null;
+        let mapZoomLevel = 1;
+        let deferredPrompt = null;
+        let userId = localStorage.getItem('tgz_user_id') || 'user_' + Date.now();
+        let userName = localStorage.getItem('tgz_user_name') || 'Anónimo';
+        if (!localStorage.getItem('tgz_user_name')) {
+            const names = ['Viajero', 'Explorador', 'Caminante', 'Paseante', 'Turista', 'Local'];
+            userName = names[Math.floor(Math.random() * names.length)] + '_' + Math.floor(Math.random() * 1000);
+            localStorage.setItem('tgz_user_name', userName);
+        }
 
-        // ===== PWA =====
-        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('btnInstallPwa').classList.remove('hidden'); });
-        function installPWA() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { document.getElementById('btnInstallPwa').classList.add('hidden'); }); } }
-        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); }); }
+        // ============================================================
+        // INICIALIZACIÓN
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            loadLocalData();
+            initFirebaseSync();
+            renderFeed();
+            renderRoutes();
+            renderMarket();
+            updateDatalists();
+            switchTab('feed');
+            handleUrlParams();
+        });
 
-        // ===== TEMA =====
+        // ============================================================
+        // TEMA
+        // ============================================================
         function initTheme() {
             const saved = localStorage.getItem('tgz_theme') || 'dark';
-            if (saved === 'dark') { document.documentElement.classList.add('dark'); document.getElementById('themeIcon').className = 'fa-solid fa-moon'; }
-            else { document.documentElement.classList.remove('dark'); document.getElementById('themeIcon').className = 'fa-solid fa-sun'; }
+            if (saved === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('themeIcon').className = 'fa-solid fa-moon';
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('themeIcon').className = 'fa-solid fa-sun';
+            }
         }
+
         function toggleTheme() {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('tgz_theme', isDark ? 'dark' : 'light');
             document.getElementById('themeIcon').className = isDark ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
         }
-        initTheme();
 
-        // ===== CARGA DE DATOS =====
-        function loadAllData() {
-            const savedRoutes = localStorage.getItem('tgz_routes_pro_cache');
-            if (savedRoutes) { try { routesData = JSON.parse(savedRoutes); } catch(e) { routesData = []; } } else { routesData = []; }
-            const savedPosts = localStorage.getItem('tgz_posts_cache');
-            if (savedPosts) { try { postsData = JSON.parse(savedPosts); } catch(e) { postsData = []; } } else { postsData = []; }
-            const savedListings = localStorage.getItem('tgz_listings_cache');
-            if (savedListings) { try { listingsData = JSON.parse(savedListings); } catch(e) { listingsData = []; } } else { listingsData = []; }
-            updateAllDatalists();
-            renderAll();
+        // ============================================================
+        // ALMACENAMIENTO LOCAL
+        // ============================================================
+        function loadLocalData() {
+            try {
+                const r = localStorage.getItem('tgz_routes_cache');
+                if (r) routesData = JSON.parse(r);
+                const p = localStorage.getItem('tgz_posts_cache');
+                if (p) postsData = JSON.parse(p);
+                const m = localStorage.getItem('tgz_market_cache');
+                if (m) marketData = JSON.parse(m);
+            } catch (e) { /* ignore */ }
         }
 
-        function saveAllData() {
-            localStorage.setItem('tgz_routes_pro_cache', JSON.stringify(routesData));
+        function saveLocalData() {
+            localStorage.setItem('tgz_routes_cache', JSON.stringify(routesData));
             localStorage.setItem('tgz_posts_cache', JSON.stringify(postsData));
-            localStorage.setItem('tgz_listings_cache', JSON.stringify(listingsData));
-            updateAllDatalists();
+            localStorage.setItem('tgz_market_cache', JSON.stringify(marketData));
         }
 
-        // ===== SINCRONIZACIÓN FIREBASE =====
+        // ============================================================
+        // FIREBASE SYNC
+        // ============================================================
         function initFirebaseSync() {
-            routesRef.on('value', (snapshot) => { const data = snapshot.val(); if (data) { routesData = Array.isArray(data) ? data : Object.values(data); saveAllData(); renderAll(); updateNetworkState(true, 'EN LÍNEA'); } }, () => updateNetworkState(false, 'MODO OFFLINE'));
-            postsRef.on('value', (snapshot) => { const data = snapshot.val(); if (data) { postsData = Array.isArray(data) ? data : Object.values(data); saveAllData(); renderAll(); } });
-            marketplaceRef.on('value', (snapshot) => { const data = snapshot.val(); if (data) { listingsData = Array.isArray(data) ? data : Object.values(data); saveAllData(); renderAll(); } });
-        }
+            // Rutas
+            routesRef.on('value', (snap) => {
+                const data = snap.val();
+                if (data) routesData = Array.isArray(data) ? data : Object.values(data);
+                saveLocalData();
+                renderRoutes();
+                updateDatalists();
+                updateNetworkState(true, 'EN LÍNEA');
+            }, () => updateNetworkState(false, 'MODO OFFLINE'));
 
-        function syncDataWithFirebase() {
-            if (navigator.onLine) {
-                Promise.all([routesRef.set(routesData), postsRef.set(postsData), marketplaceRef.set(listingsData)])
-                    .then(() => { /* sin popup */ })
-                    .catch(err => Swal.fire('Error', err.message, 'error'));
-            }
-        }
+            // Publicaciones
+            postsRef.on('value', (snap) => {
+                const data = snap.val();
+                if (data) postsData = Array.isArray(data) ? data : Object.values(data);
+                postsData.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                saveLocalData();
+                renderFeed();
+                updateNetworkState(true, 'EN LÍNEA');
+            });
 
-        function updateNetworkState(isOnlineVal, text) {
-            isOnline = isOnlineVal;
-            const dot = document.getElementById('netStatusDot');
-            const txt = document.getElementById('netStatusText');
-            if (isOnlineVal) { dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400"; txt.innerText = text || "EN LÍNEA"; }
-            else { dot.className = "w-2.5 h-2.5 rounded-full bg-amber-400"; txt.innerText = text || "MODO OFFLINE"; }
-            // Ocultar iframes de mapa si offline
-            document.querySelectorAll('iframe[src*="google.com/maps"]').forEach(el => {
-                el.style.display = isOnlineVal ? 'block' : 'none';
-                const placeholder = el.parentElement.querySelector('#offlineMapPlaceholder');
-                if (placeholder) { placeholder.classList.toggle('hidden', isOnlineVal); }
+            // Marketplace
+            marketRef.on('value', (snap) => {
+                const data = snap.val();
+                if (data) marketData = Array.isArray(data) ? data : Object.values(data);
+                marketData.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                saveLocalData();
+                renderMarket();
+                updateNetworkState(true, 'EN LÍNEA');
             });
         }
 
-        // ===== CLOUDINARY UPLOAD =====
-        function uploadToCloudinary(targetInputId) {
-            const input = document.getElementById('cloudinaryFileInput');
-            input.click();
-            input._target = targetInputId;
-        }
-
-        function uploadToCloudinaryFile(fileInput) {
-            const file = fileInput.files[0];
-            if (!file) return;
-            const targetId = fileInput._target || 'postMediaUrl';
-            const target = document.getElementById(targetId);
-            if (!target) return;
-
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('upload_preset', CLOUDINARY.preset);
-
-            Swal.fire({ title: 'Subiendo...', text: 'Espera un momento', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
-
-            fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/upload`, {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                Swal.close();
-                if (data.secure_url) {
-                    target.value = data.secure_url;
-                    Swal.fire({ icon: 'success', title: 'Subido exitosamente', timer: 1000, showConfirmButton: false });
-                } else {
-                    Swal.fire('Error', 'No se pudo subir el archivo', 'error');
-                }
-            })
-            .catch(err => {
-                Swal.close();
-                Swal.fire('Error', err.message, 'error');
-            });
-        }
-
-        // ===== RENDER ALL =====
-        function renderAll() {
-            renderPosts();
-            renderExplorerView();
-            renderMarketplace();
-        }
-
-        // ===== UTILIDADES =====
-        function escapeHtml(str) { return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
-        function capitalizeFirst(str) { if (!str) return ''; return str.charAt(0).toUpperCase() + str.slice(1); }
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
-
-        function updateAllDatalists() {
-            const global = new Set();
-            routesData.forEach(r => {
-                (r.stops || []).forEach(p => global.add(p));
-                (r.returnStops || []).forEach(p => global.add(p));
-                (r.poisUrban || []).forEach(p => global.add(p));
-                (r.poisForeign || []).forEach(p => global.add(p));
-                if (r.streets) r.streets.split(',').map(s => s.trim()).filter(Boolean).forEach(st => global.add(st));
-            });
-            const dl = document.getElementById('globalPointsDatalist');
-            if (dl) dl.innerHTML = Array.from(global).sort().map(i => `<option value="${escapeHtml(i)}"></option>`).join('');
-        }
-
-        // ===== NAVEGACIÓN =====
-        function switchTab(tabId) {
-            const contents = document.getElementsByClassName('tab-content');
-            for (let c of contents) c.classList.add('hidden');
-            document.getElementById(`view-${tabId}`).classList.remove('hidden');
-
-            const topTabs = document.getElementsByClassName('top-tab');
-            for (let t of topTabs) t.className = "top-tab py-3 rounded-xl text-slate-400 hover:text-white flex items-center justify-center gap-2";
-            document.getElementById(`top-tab-${tabId}`).className = "top-tab py-3 rounded-xl flex items-center justify-center gap-2 bg-cyan-600 text-white";
-
-            const navBtns = document.getElementsByClassName('bottom-nav-btn');
-            for (let n of navBtns) n.classList.remove('tab-active');
-            document.getElementById(`nav-${tabId}`).classList.add('tab-active');
-
-            if (tabId === 'inicio') renderPosts();
-            if (tabId === 'marketplace') renderMarketplace();
-            if (tabId === 'rutas') renderExplorerView();
-        }
-
-        // ===== ADMIN =====
-        function toggleAdminSession() {
-            if (isAdminLoggedIn) { isAdminLoggedIn = false; updateAdminUI(); }
-            else {
-                Swal.fire({
-                    title: 'Acceso Admin',
-                    html: `<input type="password" id="swal-pass" class="swal2-input" placeholder="Clave: admin123">`,
-                    showCancelButton: true, confirmButtonText: 'Entrar',
-                    preConfirm: () => { const p = document.getElementById('swal-pass').value; return p === 'admin123' ? true : Swal.showValidationMessage('Clave incorrecta'); }
-                }).then((res) => { if (res.isConfirmed) { isAdminLoggedIn = true; updateAdminUI(); } });
-            }
-        }
-        function updateAdminUI() {
-            document.getElementById('adminBtnText').innerText = isAdminLoggedIn ? 'Salir Admin' : 'Admin';
-            document.getElementById('btnCreatePost').classList.toggle('hidden', !isAdminLoggedIn);
-            document.getElementById('btnCreateListing').classList.toggle('hidden', !isAdminLoggedIn);
-            renderAll();
-        }
-
-        // ===== PUBLICACIONES (POSTS) =====
-        function renderPosts() {
-            const container = document.getElementById('postsContainer');
-            if (!container) return;
-            if (postsData.length === 0) {
-                container.innerHTML = `<div class="bg-slate-900 p-8 rounded-2xl text-center text-slate-500 text-sm">No hay publicaciones aún.</div>`;
+        function syncToFirebase() {
+            if (!navigator.onLine) {
+                Swal.fire('Sin conexión', 'Los datos se guardarán localmente y se sincronizarán al recuperar conexión.', 'info');
                 return;
             }
-            // Detectar URL destacada
-            const params = new URLSearchParams(window.location.search);
-            const highlightPostId = params.get('post');
-            
-            let sorted = [...postsData].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-            // Si hay post destacado, ponerlo al inicio
-            if (highlightPostId) {
-                const idx = sorted.findIndex(p => p.id === highlightPostId);
-                if (idx > -1) {
-                    const [highlighted] = sorted.splice(idx, 1);
-                    sorted = [highlighted, ...sorted];
-                }
-            }
-            container.innerHTML = sorted.map(p => renderPostCard(p, p.id === highlightPostId)).join('');
+            routesRef.set(routesData).catch(() => {});
+            postsRef.set(postsData).catch(() => {});
+            marketRef.set(marketData).catch(() => {});
+            Swal.fire({ icon: 'success', title: 'Sincronizado', timer: 1000, showConfirmButton: false });
         }
 
-        function renderPostCard(post, highlighted = false) {
-            const likes = post.likes || 0;
-            const liked = post.likedBy ? post.likedBy.includes('user') : false;
-            const comments = post.comments || [];
-            const mediaHtml = renderMedia(post.mediaUrl || post.imageUrl);
-            return `
-                <div class="post-card fade-in ${highlighted ? 'post-highlight' : ''}" data-post-id="${post.id}">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400"><i class="fa-solid fa-user text-lg"></i></div>
-                            <div><span class="font-bold text-sm text-white">Admin TGZ</span><p class="text-[10px] text-slate-500">${new Date(post.timestamp || Date.now()).toLocaleString()}</p></div>
-                        </div>
-                        ${isAdminLoggedIn ? `<button onclick="deletePost('${post.id}')" class="p-2 bg-slate-800 hover:bg-slate-700 text-rose-400 rounded-xl text-sm"><i class="fa-solid fa-trash"></i></button>` : ''}
+        function updateNetworkState(isOnline, text) {
+            const dot = document.getElementById('netStatusDot');
+            const txt = document.getElementById('netStatusText');
+            dot.className = `w-3 h-3 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-amber-400'}`;
+            txt.innerText = text || (isOnline ? 'EN LÍNEA' : 'MODO OFFLINE');
+        }
+
+        // ============================================================
+        // ADMIN
+        // ============================================================
+        function toggleAdminSession() {
+            if (isAdminLoggedIn) {
+                isAdminLoggedIn = false;
+                updateAdminUI();
+                return;
+            }
+            Swal.fire({
+                title: 'Acceso Administrador',
+                html: `<input type="password" id="swal-pass" class="swal2-input" placeholder="Clave: admin123">`,
+                showCancelButton: true,
+                confirmButtonText: 'Entrar',
+                preConfirm: () => {
+                    const p = document.getElementById('swal-pass').value;
+                    return p === 'admin123' ? true : Swal.showValidationMessage('Clave incorrecta');
+                }
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    isAdminLoggedIn = true;
+                    updateAdminUI();
+                }
+            });
+        }
+
+        function updateAdminUI() {
+            document.getElementById('adminBtnText').innerText = isAdminLoggedIn ? 'Salir Admin' : 'Admin';
+            document.getElementById('btnAddPost').classList.toggle('hidden', !isAdminLoggedIn);
+            document.getElementById('btnAddMarket').classList.toggle('hidden', !isAdminLoggedIn);
+            renderFeed();
+            renderRoutes();
+            renderMarket();
+        }
+
+        // ============================================================
+        // NAVEGACIÓN
+        // ============================================================
+        function switchTab(tabId) {
+            // Ocultar todas
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+
+            // Pestañas superiores
+            document.querySelectorAll('.top-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(`top-tab-${tabId}`).classList.add('active');
+
+            // Navegación inferior
+            document.querySelectorAll('.bottom-nav-btn').forEach(el => el.classList.remove('tab-active'));
+            document.getElementById(`nav-${tabId}`).classList.add('tab-active');
+
+            // Renderizar según pestaña
+            if (tabId === 'feed') renderFeed();
+            if (tabId === 'routes') renderRoutes();
+            if (tabId === 'market') renderMarket();
+        }
+
+        // ============================================================
+        // URL PARAMS
+        // ============================================================
+        function handleUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const postId = params.get('post');
+            const routeId = params.get('ruta');
+            const marketId = params.get('market');
+
+            if (postId) {
+                switchTab('feed');
+                setTimeout(() => highlightPost(postId), 300);
+            } else if (routeId) {
+                switchTab('routes');
+                setTimeout(() => highlightRoute(routeId), 300);
+            } else if (marketId) {
+                switchTab('market');
+                setTimeout(() => highlightMarket(marketId), 300);
+            }
+        }
+
+        function highlightPost(id) {
+            const el = document.querySelector(`[data-post-id="${id}"]`);
+            if (el) {
+                el.classList.add('highlighted');
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function highlightRoute(id) {
+            const el = document.querySelector(`[data-route-id="${id}"]`);
+            if (el) {
+                el.classList.add('highlighted');
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => openRouteModal(id), 500);
+            }
+        }
+
+        function highlightMarket(id) {
+            const el = document.querySelector(`[data-market-id="${id}"]`);
+            if (el) {
+                el.classList.add('highlighted');
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // ============================================================
+        // COMPARTIR
+        // ============================================================
+        function sharePost(postId) {
+            const url = `${window.location.origin}${window.location.pathname}?post=${postId}`;
+            shareContent(url, '📌 ¡Mira esta publicación en Colectivos TGZ!');
+        }
+
+        function shareRoute(routeId) {
+            const url = `${window.location.origin}${window.location.pathname}?ruta=${routeId}`;
+            shareContent(url, '🚌 ¡Mira esta ruta en Colectivos TGZ!');
+        }
+
+        function shareMarket(marketId) {
+            const url = `${window.location.origin}${window.location.pathname}?market=${marketId}`;
+            shareContent(url, '🛒 ¡Mira este producto en Colectivos TGZ!');
+        }
+
+        function shareContent(url, message) {
+            if (navigator.share) {
+                navigator.share({ title: 'Colectivos TGZ', text: message, url: url }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(url).then(() => {
+                    Swal.fire({ icon: 'success', title: 'Enlace copiado', text: 'Comparte el enlace con tus contactos.', timer: 2000, showConfirmButton: false });
+                }).catch(() => {
+                    // WhatsApp fallback
+                    window.open(`https://wa.me/?text=${encodeURIComponent(message + ' ' + url)}`, '_blank');
+                });
+            }
+        }
+
+        // ============================================================
+        // PUBLICACIONES (FEED)
+        // ============================================================
+        function renderFeed() {
+            const container = document.getElementById('feedContainer');
+            if (!container) return;
+
+            if (postsData.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-slate-500 py-12">
+                        <i class="fa-solid fa-newspaper text-4xl mb-3 text-slate-700"></i>
+                        <p class="text-base">No hay publicaciones aún.</p>
+                        ${isAdminLoggedIn ? '<p class="text-sm text-cyan-400 mt-2">Crea una nueva publicación usando el botón "Publicar"</p>' : ''}
                     </div>
-                    <div class="text-base text-slate-200 whitespace-pre-wrap mt-2">${escapeHtml(post.content)}</div>
-                    ${mediaHtml}
-                    <div class="flex items-center gap-4 pt-2 border-t border-slate-800 mt-2">
-                        <button onclick="toggleLike('${post.id}')" class="like-btn flex items-center gap-1 text-sm ${liked ? 'liked' : 'text-slate-400'} hover:text-rose-400 transition">
-                            <i class="fa-solid fa-heart"></i> <span>${likes}</span>
+                `;
+                return;
+            }
+
+            container.innerHTML = postsData.map(post => `
+                <div class="post-card fade-in-up" data-post-id="${post.id}">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div>
+                                <span class="font-bold text-sm text-white">Administrador</span>
+                                <span class="text-xs text-slate-400 block">${new Date(post.timestamp || Date.now()).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        ${isAdminLoggedIn ? `
+                            <div class="flex gap-1">
+                                <button onclick="editPost('${post.id}')" class="p-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg text-sm">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button onclick="deletePost('${post.id}')" class="p-2 bg-slate-800 hover:bg-slate-700 text-rose-400 rounded-lg text-sm">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <p class="text-white text-base leading-relaxed whitespace-pre-wrap">${escapeHtml(post.content)}</p>
+
+                    ${post.mediaUrl ? `
+                        ${post.mediaUrl.match(/\.(mp4|webm|ogg)$/i) ? 
+                            `<video src="${post.mediaUrl}" controls class="post-media mt-3" onerror="this.style.display='none'"></video>` :
+                            `<img src="${post.mediaUrl}" alt="Publicación" class="post-media mt-3" onerror="this.style.display='none'">`
+                        }
+                    ` : ''}
+
+                    <div class="flex items-center gap-4 mt-4 pt-3 border-t border-slate-800">
+                        <button onclick="toggleLike('${post.id}')" class="flex items-center gap-1.5 text-sm font-bold ${(post.likedBy || []).includes(userId) ? 'text-rose-500' : 'text-slate-400'} hover:text-rose-400 transition">
+                            <i class="fa-solid fa-heart"></i> ${post.likes || 0}
                         </button>
-                        <button onclick="openComments('${post.id}')" class="flex items-center gap-1 text-sm text-slate-400 hover:text-cyan-400 transition">
-                            <i class="fa-regular fa-comment"></i> <span>${comments.length}</span>
+                        <button onclick="openComments('${post.id}')" class="flex items-center gap-1.5 text-sm font-bold text-slate-400 hover:text-cyan-400 transition">
+                            <i class="fa-regular fa-comment"></i> ${(post.comments || []).length}
                         </button>
-                        <button onclick="sharePost('${post.id}')" class="flex items-center gap-1 text-sm text-slate-400 hover:text-cyan-400 transition">
+                        <button onclick="sharePost('${post.id}')" class="flex items-center gap-1.5 text-sm font-bold text-slate-400 hover:text-emerald-400 transition ml-auto">
                             <i class="fa-solid fa-share-nodes"></i> Compartir
                         </button>
                     </div>
                 </div>
-            `;
-        }
-
-        function renderMedia(url) {
-            if (!url) return '';
-            const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('video');
-            if (isVideo) {
-                return `<div class="media-container mt-2"><video controls src="${url}" class="w-full max-h-[500px] object-contain" onerror="this.style.display='none'"></video></div>`;
-            }
-            return `<div class="media-container mt-2"><img src="${url}" alt="Imagen" class="w-full max-h-[500px] object-contain" onerror="this.style.display='none'"></div>`;
-        }
-
-        function openCreatePost() {
-            document.getElementById('editPostId').value = '';
-            document.getElementById('postContent').value = '';
-            document.getElementById('postMediaUrl').value = '';
-            document.getElementById('postModalTitle').textContent = 'Nueva Publicación';
-            openModal('postModal');
-        }
-
-        function handlePostSubmit(e) {
-            e.preventDefault();
-            const content = document.getElementById('postContent').value.trim();
-            if (!content) { Swal.fire('Atención', 'Escribe algo para publicar', 'warning'); return; }
-            const editId = document.getElementById('editPostId').value;
-            const mediaUrl = document.getElementById('postMediaUrl').value.trim();
-
-            if (editId) {
-                const idx = postsData.findIndex(p => p.id === editId);
-                if (idx !== -1) { postsData[idx].content = content; postsData[idx].mediaUrl = mediaUrl; }
-            } else {
-                postsData.push({ id: generateId(), content, mediaUrl, timestamp: Date.now(), likes: 0, likedBy: [], comments: [] });
-            }
-            saveAllData();
-            syncDataWithFirebase();
-            closeModal('postModal');
-            renderPosts();
-            Swal.fire({ icon: 'success', title: 'Publicado', timer: 800, showConfirmButton: false });
-        }
-
-        function deletePost(id) {
-            Swal.fire({ title: '¿Eliminar?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48', confirmButtonText: 'Sí' })
-                .then(res => { if (res.isConfirmed) { postsData = postsData.filter(p => p.id !== id); saveAllData(); syncDataWithFirebase(); renderPosts(); } });
+            `).join('');
         }
 
         function toggleLike(postId) {
             const post = postsData.find(p => p.id === postId);
             if (!post) return;
             if (!post.likedBy) post.likedBy = [];
-            const idx = post.likedBy.indexOf('user');
-            if (idx === -1) { post.likedBy.push('user'); post.likes = (post.likes || 0) + 1; }
-            else { post.likedBy.splice(idx, 1); post.likes = (post.likes || 0) - 1; }
-            saveAllData();
-            syncDataWithFirebase();
-            renderPosts();
+            if (!post.likes) post.likes = 0;
+
+            const idx = post.likedBy.indexOf(userId);
+            if (idx === -1) {
+                post.likedBy.push(userId);
+                post.likes += 1;
+            } else {
+                post.likedBy.splice(idx, 1);
+                post.likes -= 1;
+            }
+            saveLocalData();
+            syncToFirebase();
+            renderFeed();
         }
 
         function openComments(postId) {
-            currentPostId = postId;
-            document.getElementById('commentPostId').value = postId;
+            currentCommentsPostId = postId;
+            document.getElementById('commentsPanel').classList.add('open');
             renderComments(postId);
-            document.getElementById('commentsOverlay').classList.add('open');
         }
 
-        function closeComments() {
-            document.getElementById('commentsOverlay').classList.remove('open');
+        function toggleCommentsPanel() {
+            document.getElementById('commentsPanel').classList.toggle('open');
         }
 
         function renderComments(postId) {
             const post = postsData.find(p => p.id === postId);
-            const container = document.getElementById('commentsList');
-            if (!post || !post.comments || post.comments.length === 0) {
-                container.innerHTML = `<div class="text-center text-slate-500 text-sm py-4">No hay comentarios.</div>`;
-                return;
-            }
-            container.innerHTML = post.comments.map((c, i) => `
-                <div class="comment-item bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-start">
-                    <div>
-                        <span class="font-bold text-xs text-cyan-400">Usuario</span>
-                        <p class="text-sm text-slate-200">${escapeHtml(c)}</p>
+            if (!post) return;
+            const list = document.getElementById('commentsList');
+            if (!post.comments) post.comments = [];
+
+            list.innerHTML = post.comments.map((c, idx) => `
+                <div class="bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-cyan-400 text-sm">${escapeHtml(c.userName || 'Anónimo')}</span>
+                        <span class="text-xs text-slate-400">${new Date(c.timestamp || Date.now()).toLocaleDateString()}</span>
                     </div>
-                    <div class="flex gap-1">
-                        <button onclick="editComment('${postId}', ${i})" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-lg text-xs"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteComment('${postId}', ${i})" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-rose-400 rounded-lg text-xs"><i class="fa-solid fa-trash"></i></button>
-                    </div>
+                    <p class="text-white text-sm mt-1">${escapeHtml(c.text)}</p>
+                    ${c.userId === userId || isAdminLoggedIn ? `
+                        <div class="flex gap-2 mt-2">
+                            <button onclick="editComment('${postId}', ${idx})" class="text-xs text-cyan-400 hover:text-cyan-300 font-bold">Editar</button>
+                            <button onclick="deleteComment('${postId}', ${idx})" class="text-xs text-rose-400 hover:text-rose-300 font-bold">Eliminar</button>
+                        </div>
+                    ` : ''}
                 </div>
-            `).join('');
+            `).join('') || '<p class="text-slate-400 text-sm">No hay comentarios aún. Sé el primero.</p>';
         }
 
-        function addComment(e) {
-            e.preventDefault();
-            const postId = document.getElementById('commentPostId').value;
-            const text = document.getElementById('commentInput').value.trim();
-            if (!text) return;
-            const post = postsData.find(p => p.id === postId);
+        function addComment() {
+            const input = document.getElementById('commentInput');
+            const text = input.value.trim();
+            if (!text || !currentCommentsPostId) return;
+
+            const post = postsData.find(p => p.id === currentCommentsPostId);
             if (!post) return;
             if (!post.comments) post.comments = [];
-            post.comments.push(text);
-            document.getElementById('commentInput').value = '';
-            saveAllData();
-            syncDataWithFirebase();
-            renderComments(postId);
-            renderPosts();
+
+            post.comments.push({
+                userId: userId,
+                userName: userName,
+                text: text,
+                timestamp: Date.now()
+            });
+
+            input.value = '';
+            saveLocalData();
+            syncToFirebase();
+            renderComments(currentCommentsPostId);
+            renderFeed();
         }
 
-        function deleteComment(postId, index) {
+        function editComment(postId, idx) {
             const post = postsData.find(p => p.id === postId);
-            if (!post) return;
-            post.comments.splice(index, 1);
-            saveAllData();
-            syncDataWithFirebase();
-            renderComments(postId);
-            renderPosts();
-        }
+            if (!post || !post.comments || !post.comments[idx]) return;
+            const comment = post.comments[idx];
 
-        function editComment(postId, index) {
-            const post = postsData.find(p => p.id === postId);
-            if (!post) return;
             Swal.fire({
                 title: 'Editar comentario',
                 input: 'text',
-                inputValue: post.comments[index],
+                inputValue: comment.text,
                 showCancelButton: true,
-                confirmButtonText: 'Guardar'
-            }).then(res => {
+                confirmButtonText: 'Guardar',
+                inputValidator: (val) => !val && 'El comentario no puede estar vacío'
+            }).then((res) => {
                 if (res.isConfirmed && res.value) {
-                    post.comments[index] = res.value;
-                    saveAllData();
-                    syncDataWithFirebase();
+                    comment.text = res.value;
+                    saveLocalData();
+                    syncToFirebase();
                     renderComments(postId);
-                    renderPosts();
+                    renderFeed();
                 }
             });
         }
 
-        function sharePost(postId) {
-            const url = window.location.origin + window.location.pathname + '?post=' + postId;
-            if (navigator.share) { navigator.share({ title: 'Publicación TGZ', text: 'Mira esta publicación', url }).catch(() => {}); }
-            else {
-                // Compartir vía WhatsApp
-                const text = encodeURIComponent(`Mira esta publicación en Colectivos TGZ: ${url}`);
-                window.open(`https://wa.me/?text=${text}`, '_blank');
-                // También Facebook
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
-            }
-        }
-
-        // ===== RUTAS =====
-        function onSearchChange() { 
-            renderExplorerView(); 
-            // También actualizar trasbordos si ambos campos tienen valor
-            const origin = document.getElementById('plannerOrigin').value.trim();
-            const dest = document.getElementById('plannerDestination').value.trim();
-            if (origin && dest) {
-                calculateMultiRoute();
-            }
-        }
-
-        function setViewMode(mode) {
-            currentViewMode = mode;
-            const chips = document.getElementsByClassName('mode-chip');
-            for (let c of chips) c.className = "mode-chip bg-slate-800 text-slate-400 px-4 py-2 rounded-xl font-bold text-sm";
-            const current = document.getElementById(`btnView${mode.charAt(0) + mode.slice(1).toLowerCase()}`);
-            if (current) current.className = "mode-chip bg-cyan-600 text-white px-4 py-2 rounded-xl font-bold text-sm";
-            renderExplorerView();
-        }
-
-        function renderExplorerView() {
-            const container = document.getElementById('explorerResultsContainer');
-            if (!container) return;
-            const term = (document.getElementById('plannerOrigin').value || '').toLowerCase().trim();
-
-            let filtered = routesData.filter(r => {
-                if (currentCategory !== 'ALL' && r.category !== currentCategory) return false;
-                if (!term) return true;
-                const matchName = (r.name || '').toLowerCase().includes(term);
-                const matchStops = (r.stops || []).some(s => s.toLowerCase().includes(term));
-                const matchReturns = (r.returnStops || []).some(s => s.toLowerCase().includes(term));
-                const matchPoisU = (r.poisUrban || []).some(s => s.toLowerCase().includes(term));
-                const matchPoisF = (r.poisForeign || []).some(s => s.toLowerCase().includes(term));
-                const matchStreets = (r.streets || '').toLowerCase().includes(term);
-                return matchName || matchStops || matchReturns || matchPoisU || matchPoisF || matchStreets;
+        function deleteComment(postId, idx) {
+            Swal.fire({
+                title: '¿Eliminar comentario?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                confirmButtonText: 'Eliminar'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    const post = postsData.find(p => p.id === postId);
+                    if (post && post.comments) {
+                        post.comments.splice(idx, 1);
+                        saveLocalData();
+                        syncToFirebase();
+                        renderComments(postId);
+                        renderFeed();
+                    }
+                }
             });
+        }
 
-            // Si hay origen y destino, ocultar rutas y mostrar solo trasbordos
-            const origin = document.getElementById('plannerOrigin').value.trim();
-            const dest = document.getElementById('plannerDestination').value.trim();
-            if (origin && dest) {
-                container.innerHTML = '';
+        function openPostWizard() {
+            if (!isAdminLoggedIn) {
+                Swal.fire('Acceso restringido', 'Solo administradores pueden crear publicaciones.', 'info');
+                return;
+            }
+            document.getElementById('postForm').reset();
+            openModal('postWizardModal');
+        }
+
+        function handlePostSubmit(e) {
+            e.preventDefault();
+            const content = document.getElementById('postContent').value.trim();
+            const mediaUrl = document.getElementById('postMediaUrl').value.trim();
+
+            if (!content) {
+                Swal.fire('Error', 'El contenido es obligatorio.', 'error');
                 return;
             }
 
-            if (currentViewMode === 'ROUTES') {
+            const post = {
+                id: 'post_' + Date.now(),
+                content: content,
+                mediaUrl: mediaUrl || '',
+                timestamp: Date.now(),
+                likes: 0,
+                likedBy: [],
+                comments: []
+            };
+
+            postsData.unshift(post);
+            saveLocalData();
+            syncToFirebase();
+            closeModal('postWizardModal');
+            renderFeed();
+            Swal.fire({ icon: 'success', title: 'Publicación creada', timer: 1000, showConfirmButton: false });
+        }
+
+        function editPost(postId) {
+            const post = postsData.find(p => p.id === postId);
+            if (!post) return;
+            document.getElementById('postContent').value = post.content;
+            document.getElementById('postMediaUrl').value = post.mediaUrl || '';
+            document.getElementById('postForm').onsubmit = (e) => {
+                e.preventDefault();
+                post.content = document.getElementById('postContent').value.trim();
+                post.mediaUrl = document.getElementById('postMediaUrl').value.trim();
+                saveLocalData();
+                syncToFirebase();
+                closeModal('postWizardModal');
+                renderFeed();
+                Swal.fire({ icon: 'success', title: 'Actualizada', timer: 1000, showConfirmButton: false });
+                document.getElementById('postForm').onsubmit = handlePostSubmit;
+            };
+            openModal('postWizardModal');
+        }
+
+        function deletePost(postId) {
+            Swal.fire({
+                title: '¿Eliminar publicación?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                confirmButtonText: 'Eliminar'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    postsData = postsData.filter(p => p.id !== postId);
+                    saveLocalData();
+                    syncToFirebase();
+                    renderFeed();
+                }
+            });
+        }
+
+        function uploadPostMedia(input) {
+            const file = input.files[0];
+            if (!file) return;
+            uploadToCloudinary(file, (url) => {
+                document.getElementById('postMediaUrl').value = url;
+            });
+        }
+
+        // ============================================================
+        // RUTAS Y TRASBORDOS
+        // ============================================================
+        function renderRoutes() {
+            const container = document.getElementById('routesResultsContainer');
+            const connContainer = document.getElementById('connectionsContainer');
+            if (!container) return;
+
+            const origin = document.getElementById('routeOrigin').value.trim().toLowerCase();
+            const destination = document.getElementById('routeDestination').value.trim().toLowerCase();
+
+            // Si ambos campos tienen valor, mostrar conexiones
+            if (origin && destination) {
+                container.innerHTML = '';
+                connContainer.classList.remove('hidden');
+                calculateConnections();
+                return;
+            }
+            connContainer.classList.add('hidden');
+
+            let filtered = [...routesData];
+
+            if (currentRouteView === 'ROUTES') {
                 if (filtered.length === 0) {
-                    container.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 text-sm">No se encontraron rutas.</div>`;
+                    container.innerHTML = `<div class="col-span-full text-center text-slate-500 py-8 text-sm">No hay rutas registradas.</div>`;
                     return;
                 }
-                container.innerHTML = filtered.map(r => renderSquareRouteCard(r)).join('');
+                container.innerHTML = filtered.map(r => `
+                    <div class="bg-slate-900/60 backdrop-blur-sm border border-slate-800 hover:border-cyan-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all aspect-square relative shadow-lg" data-route-id="${r.id}" onclick="openRouteModal('${r.id}')">
+                        ${isAdminLoggedIn ? `
+                            <div class="absolute top-2 right-2 flex gap-1 z-10" onclick="event.stopPropagation()">
+                                <button onclick="editRoute('${r.id}')" class="p-2 bg-slate-800 text-cyan-400 rounded-lg text-sm"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="deleteRoute('${r.id}')" class="p-2 bg-slate-800 text-rose-400 rounded-lg text-sm"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        ` : ''}
+                        <div class="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 hover:scale-110 hover:bg-cyan-500 hover:text-black transition-all flex items-center justify-center text-cyan-400 text-2xl mb-3">
+                            <i class="fa-solid fa-bus"></i>
+                        </div>
+                        <h3 class="font-black text-sm text-white hover:text-cyan-300 transition-colors line-clamp-2 uppercase">${escapeHtml(r.name)}</h3>
+                        <span class="mt-2 text-[10px] font-bold px-2 py-0.5 rounded border ${r.category === 'URBANA' ? 'bg-cyan-950 text-cyan-400 border-cyan-800' : 'bg-purple-950 text-purple-400 border-purple-800'}">
+                            ${r.category}
+                        </span>
+                    </div>
+                `).join('');
             } else {
-                renderItemizedPointsView(container, filtered, currentViewMode, term);
+                renderItemizedView(container, filtered, currentRouteView);
             }
         }
 
-        function renderSquareRouteCard(r) {
-            return `
-                <div onclick="openRouteModal('${r.id}')" class="group bg-slate-900 hover:bg-cyan-950/30 border border-slate-800 hover:border-cyan-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all aspect-square relative shadow-lg">
-                    ${isAdminLoggedIn ? `
-                        <div class="absolute top-2 right-2 flex gap-1 z-10" onclick="event.stopPropagation()">
-                            <button onclick="editRoute('${r.id}')" class="p-2 bg-slate-800 text-cyan-400 rounded-xl hover:bg-slate-700 text-xs"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="deleteRoute('${r.id}')" class="p-2 bg-slate-800 text-rose-400 rounded-xl hover:bg-slate-700 text-xs"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    ` : ''}
-                    <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-black transition-all flex items-center justify-center text-cyan-400 text-2xl mb-2"><i class="fa-solid fa-bus"></i></div>
-                    <h3 class="font-black text-sm text-white group-hover:text-cyan-300 transition-colors line-clamp-2 uppercase">${escapeHtml(r.name)}</h3>
-                    <span class="mt-2 text-[10px] font-bold px-3 py-1 rounded border ${r.category === 'URBANA' ? 'bg-cyan-950 text-cyan-400 border-cyan-800' : 'bg-purple-950 text-purple-400 border-purple-800'}">${r.category}</span>
-                    <button onclick="event.stopPropagation();shareRouteById('${r.id}')" class="mt-2 text-[10px] bg-slate-800 hover:bg-slate-700 text-cyan-400 px-3 py-1.5 rounded-xl"><i class="fa-solid fa-share-nodes"></i> Compartir</button>
-                </div>
-            `;
-        }
-
-        function renderItemizedPointsView(container, routes, mode, term) {
+        function renderItemizedView(container, routes, mode) {
             const mapPoints = new Map();
             routes.forEach(r => {
                 let list = [];
                 if (mode === 'STOPS') list = r.stops || [];
                 if (mode === 'RETURNS') list = r.returnStops || [];
                 if (mode === 'POIS') list = [...(r.poisUrban || []), ...(r.poisForeign || [])];
-                list.forEach(pt => { if (term && !pt.toLowerCase().includes(term)) return; if (!mapPoints.has(pt)) mapPoints.set(pt, []); mapPoints.get(pt).push(r.name); });
+                list.forEach(pt => {
+                    if (!mapPoints.has(pt)) mapPoints.set(pt, []);
+                    mapPoints.get(pt).push(r);
+                });
             });
+
             if (mapPoints.size === 0) {
-                container.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 text-sm">No se encontraron puntos.</div>`;
+                container.innerHTML = `<div class="col-span-full text-center text-slate-500 py-8 text-sm">No hay puntos en esta categoría.</div>`;
                 return;
             }
+
             let html = '';
             mapPoints.forEach((routesArr, ptName) => {
                 html += `
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3 col-span-full sm:col-span-1">
-                        <div><span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider block">${mode}</span><h4 class="font-bold text-sm text-white mt-0.5">${escapeHtml(ptName)}</h4>
-                        <p class="text-xs text-slate-400 mt-1">Conecta con (${routesArr.length}) ruta(s):</p>
-                        <div class="flex flex-wrap gap-1 mt-1">${routesArr.map(rn => `<span class="bg-slate-950 border border-slate-800 text-cyan-300 text-[11px] px-2 py-0.5 rounded">${escapeHtml(rn)}</span>`).join('')}</div></div>
-                        <button onclick="selectPoint('${escapeHtml(ptName)}')" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-2 rounded-xl text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-location-dot"></i> Seleccionar</button>
+                    <div class="bg-slate-900/60 backdrop-blur-sm border border-slate-800 rounded-2xl p-4 flex flex-col space-y-2 col-span-full sm:col-span-1">
+                        <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">${mode}</span>
+                        <h4 class="font-bold text-sm text-white">${escapeHtml(ptName)}</h4>
+                        <div class="flex flex-wrap gap-1 mt-1">
+                            ${routesArr.map(r => `
+                                <span class="bg-slate-800 border border-slate-700 text-cyan-300 text-xs px-2 py-1 rounded-lg cursor-pointer hover:bg-cyan-500 hover:text-black transition" 
+                                      onclick="event.stopPropagation(); openRouteModal('${r.id}')">
+                                    ${escapeHtml(r.name)}
+                                </span>
+                            `).join('')}
+                        </div>
+                        <button onclick="fillRouteSearch('${escapeHtml(ptName)}')" class="w-full bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-2 rounded-xl text-sm flex items-center justify-center gap-1 mt-1">
+                            <i class="fa-solid fa-magnifying-glass"></i> Buscar rutas por este punto
+                        </button>
                     </div>
                 `;
             });
             container.innerHTML = html;
         }
 
-        function selectPoint(pointName) {
-            document.getElementById('plannerOrigin').value = pointName;
-            onSearchChange();
-            // Si hay destino, calcular
-            const dest = document.getElementById('plannerDestination').value.trim();
-            if (dest) calculateMultiRoute();
+        function fillRouteSearch(point) {
+            document.getElementById('routeOrigin').value = point;
+            onRouteSearchChange();
         }
 
-        function openRouteModal(routeId) {
-            const route = routesData.find(r => r.id === routeId);
-            if (!route) return;
-            document.getElementById('modalRouteTitle').innerText = route.name;
-            document.getElementById('modalRouteCategory').innerText = route.category;
-            
-            const iframe = document.getElementById('modalMapIframe');
-            if (isOnline && route.mapUrl) {
-                iframe.src = route.mapUrl;
-                iframe.style.display = 'block';
-                document.getElementById('offlineMapPlaceholder').classList.add('hidden');
-            } else {
-                iframe.src = 'about:blank';
-                iframe.style.display = 'none';
-                document.getElementById('offlineMapPlaceholder').classList.remove('hidden');
-            }
-            
-            document.getElementById('modalRouteInfoGrid').innerHTML = `
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800"><span class="text-cyan-400 font-bold block mb-1">Paradas</span><p class="text-slate-300 text-xs">${(route.stops || []).join(', ') || 'Sin info'}</p></div>
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800"><span class="text-emerald-400 font-bold block mb-1">Retornos</span><p class="text-slate-300 text-xs">${(route.returnStops || []).join(', ') || 'Sin info'}</p></div>
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800"><span class="text-amber-400 font-bold block mb-1">POIs</span><p class="text-slate-300 text-xs">${[...(route.poisUrban || []), ...(route.poisForeign || [])].join(', ') || 'Sin info'}</p></div>
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800"><span class="text-purple-400 font-bold block mb-1">Calles</span><p class="text-slate-300 text-xs font-mono">${route.streets || 'Sin info'}</p></div>
-            `;
-            openModal('routeDetailModal');
+        function setRouteView(mode) {
+            currentRouteView = mode;
+            document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active'));
+            const btn = document.getElementById(`rv-${mode.toLowerCase()}`);
+            if (btn) btn.classList.add('active');
+            renderRoutes();
         }
 
-        function shareRoute() {
-            const title = document.getElementById('modalRouteTitle').innerText;
-            const url = window.location.origin + window.location.pathname + '?ruta=' + encodeURIComponent(title);
-            if (navigator.share) { navigator.share({ title: 'Ruta TGZ', text: title, url }).catch(() => {}); }
-            else {
-                const text = encodeURIComponent(`Ruta ${title} en Colectivos TGZ: ${url}`);
-                window.open(`https://wa.me/?text=${text}`, '_blank');
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
-            }
+        function onRouteSearchChange() {
+            renderRoutes();
         }
 
-        function shareRouteById(routeId) {
-            const route = routesData.find(r => r.id === routeId);
-            if (!route) return;
-            const url = window.location.origin + window.location.pathname + '?ruta=' + encodeURIComponent(route.name);
-            if (navigator.share) { navigator.share({ title: 'Ruta TGZ', text: route.name, url }).catch(() => {}); }
-            else {
-                const text = encodeURIComponent(`Ruta ${route.name} en Colectivos TGZ: ${url}`);
-                window.open(`https://wa.me/?text=${text}`, '_blank');
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
-            }
-        }
+        function calculateConnections() {
+            const origin = document.getElementById('routeOrigin').value.trim().toLowerCase();
+            const destination = document.getElementById('routeDestination').value.trim().toLowerCase();
+            const container = document.getElementById('connectionsContainer');
 
-        // ===== TRASBORDOS =====
-        function calculateMultiRoute() {
-            const origin = (document.getElementById('plannerOrigin').value || '').trim().toLowerCase();
-            const destination = (document.getElementById('plannerDestination').value || '').trim().toLowerCase();
-            const container = document.getElementById('plannerResults');
-            const explorerContainer = document.getElementById('explorerResultsContainer');
-            
             if (!origin || !destination) {
-                container.innerHTML = '';
-                renderExplorerView();
+                container.classList.add('hidden');
                 return;
             }
 
-            // Ocultar explorador cuando hay origen y destino
-            explorerContainer.innerHTML = '';
+            container.classList.remove('hidden');
 
-            const getAllRoutePoints = (r) => {
-                return [...(r.stops || []), ...(r.returnStops || []), ...(r.poisUrban || []), ...(r.poisForeign || []),
-                    ...(r.streets ? r.streets.split(',').map(s => s.trim()) : [])].map(p => p.toLowerCase());
+            const getAllPoints = (r) => {
+                return [
+                    ...(r.stops || []),
+                    ...(r.returnStops || []),
+                    ...(r.poisUrban || []),
+                    ...(r.poisForeign || []),
+                    ...(r.streets ? r.streets.split(',').map(s => s.trim()) : [])
+                ].map(p => p.toLowerCase());
             };
 
-            const directRoutes = routesData.filter(r => {
-                const pts = getAllRoutePoints(r);
+            const direct = routesData.filter(r => {
+                const pts = getAllPoints(r);
                 return pts.some(p => p.includes(origin)) && pts.some(p => p.includes(destination));
             });
 
             let html = '';
-            if (directRoutes.length > 0) {
+
+            if (direct.length > 0) {
                 html += `
                     <div class="bg-emerald-950/40 border border-emerald-500/30 p-4 rounded-2xl space-y-3">
-                        <span class="text-sm font-bold text-emerald-400 uppercase flex items-center gap-2"><i class="fa-solid fa-bolt"></i> Directo (${directRoutes.length})</span>
-                        ${directRoutes.map(r => `
-                            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex flex-wrap justify-between items-center gap-2">
+                        <span class="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                            <i class="fa-solid fa-bolt"></i> Conexión Directa (${direct.length})
+                        </span>
+                        ${direct.map(r => `
+                            <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-2">
                                 <span class="font-bold text-sm text-white">${escapeHtml(r.name)}</span>
-                                <span class="text-[10px] bg-slate-950 px-2 py-0.5 rounded text-cyan-400 border border-slate-800">${r.category}</span>
-                                <div class="flex gap-2">
-                                    <button onclick="openRouteModal('${r.id}')" class="text-xs bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-3 py-1.5 rounded-xl flex items-center gap-1"><i class="fa-solid fa-map-location-dot"></i> Ver</button>
-                                    <button onclick="shareRouteById('${r.id}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold px-3 py-1.5 rounded-xl"><i class="fa-solid fa-share-nodes"></i></button>
-                                </div>
+                                <span class="text-xs bg-slate-800 px-2 py-0.5 rounded text-cyan-400">${r.category}</span>
+                                <button onclick="openRouteModal('${r.id}')" class="btn-lg bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-sm" style="min-height:40px; padding:8px 16px;">
+                                    <i class="fa-solid fa-map-location-dot"></i> Ver Mapa
+                                </button>
                             </div>
                         `).join('')}
                     </div>
                 `;
             } else {
-                const transferOptions = [];
+                // Buscar trasbordos
+                const transfers = [];
                 routesData.forEach(r1 => {
-                    const pts1 = getAllRoutePoints(r1);
+                    const pts1 = getAllPoints(r1);
                     if (pts1.some(p => p.includes(origin))) {
                         routesData.forEach(r2 => {
                             if (r1.id !== r2.id) {
-                                const pts2 = getAllRoutePoints(r2);
+                                const pts2 = getAllPoints(r2);
                                 if (pts2.some(p => p.includes(destination))) {
-                                    const commonPoints = pts1.filter(p => pts2.includes(p));
-                                    if (commonPoints.length > 0) transferOptions.push({ route1: r1, route2: r2, transferPoint: commonPoints[0] });
+                                    const common = pts1.filter(p => pts2.includes(p));
+                                    if (common.length > 0) {
+                                        transfers.push({ r1, r2, point: common[0] });
+                                    }
                                 }
                             }
                         });
                     }
                 });
-                if (transferOptions.length > 0) {
+
+                if (transfers.length > 0) {
                     html += `
                         <div class="bg-cyan-950/40 border border-cyan-500/30 p-4 rounded-2xl space-y-3">
-                            <span class="text-sm font-bold text-cyan-400 uppercase flex items-center gap-2"><i class="fa-solid fa-arrows-split-up-and-left"></i> Trasbordo (${transferOptions.length})</span>
-                            ${transferOptions.slice(0, 6).map(opt => `
+                            <span class="text-sm font-bold text-cyan-400 flex items-center gap-2">
+                                <i class="fa-solid fa-arrows-split-up-and-left"></i> Trasbordos (${transfers.length})
+                            </span>
+                            ${transfers.slice(0, 10).map(t => `
                                 <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-2">
-                                    <div class="flex flex-wrap items-center justify-between gap-2">
-                                        <div class="flex items-center gap-2 text-sm">
-                                            <span class="bg-slate-950 text-cyan-400 px-2 py-0.5 rounded font-bold">${escapeHtml(opt.route1.name)}</span>
-                                            <i class="fa-solid fa-arrow-right text-slate-500"></i>
-                                            <span class="bg-slate-950 text-emerald-400 px-2 py-0.5 rounded font-bold">${escapeHtml(opt.route2.name)}</span>
-                                        </div>
-                                        <div class="flex gap-1">
-                                            <button onclick="openRouteModal('${opt.route1.id}')" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 px-2 py-1 rounded-xl text-xs font-bold"><i class="fa-solid fa-map"></i> R1</button>
-                                            <button onclick="openRouteModal('${opt.route2.id}')" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 px-2 py-1 rounded-xl text-xs font-bold"><i class="fa-solid fa-map"></i> R2</button>
-                                        </div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="font-bold text-sm text-white">${escapeHtml(t.r1.name)}</span>
+                                        <i class="fa-solid fa-arrow-right text-slate-500 text-xs"></i>
+                                        <span class="font-bold text-sm text-white">${escapeHtml(t.r2.name)}</span>
                                     </div>
-                                    <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-xs text-slate-300"><strong class="text-amber-400">Trasbordo:</strong> ${capitalizeFirst(opt.transferPoint)}</div>
+                                    <div class="text-xs text-amber-400 font-bold">Trasbordo en: ${escapeHtml(t.point)}</div>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button onclick="openRouteModal('${t.r1.id}')" class="btn-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl text-xs" style="min-height:36px; padding:6px 14px;">Ruta 1</button>
+                                        <button onclick="openRouteModal('${t.r2.id}')" class="btn-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-xl text-xs" style="min-height:36px; padding:6px 14px;">Ruta 2</button>
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
                     `;
                 } else {
-                    html = `<div class="bg-slate-900 p-6 rounded-2xl text-center text-slate-400 text-sm">No se encontraron combinaciones.</div>`;
+                    html = `
+                        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 text-center text-slate-400 text-sm">
+                            No se encontraron conexiones directas ni trasbordos para esos puntos.
+                        </div>
+                    `;
                 }
             }
+
             container.innerHTML = html;
         }
 
-        // ===== ADMIN RUTAS (WIZARD) =====
-        function openAdminWizard() {
-            document.getElementById('wizardForm').reset();
-            document.getElementById('editRouteId').value = '';
+        // ============================================================
+        // MODAL DE RUTA COMPLETA
+        // ============================================================
+        let currentRouteId = null;
+
+        function openRouteModal(routeId) {
+            const route = routesData.find(r => r.id === routeId);
+            if (!route) return;
+            currentRouteId = routeId;
+
+            document.getElementById('modalRouteTitle').innerText = route.name;
+            document.getElementById('modalRouteCategory').innerText = route.category;
+
+            const iframe = document.getElementById('modalMapIframe');
+            iframe.src = route.mapUrl || 'about:blank';
+
+            const infoGrid = document.getElementById('modalRouteInfoGrid');
+            infoGrid.innerHTML = `
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <span class="text-cyan-400 font-bold block mb-1 text-sm">Paradas</span>
+                    <p class="text-slate-300 text-sm">${(route.stops || []).join(', ') || 'Sin información'}</p>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <span class="text-emerald-400 font-bold block mb-1 text-sm">Retornos</span>
+                    <p class="text-slate-300 text-sm">${(route.returnStops || []).join(', ') || 'Sin información'}</p>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <span class="text-amber-400 font-bold block mb-1 text-sm">POIs</span>
+                    <p class="text-slate-300 text-sm">${[...(route.poisUrban || []), ...(route.poisForeign || [])].join(', ') || 'Sin información'}</p>
+                </div>
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                    <span class="text-purple-400 font-bold block mb-1 text-sm">Categoría</span>
+                    <p class="text-slate-300 text-sm font-bold">${route.category}</p>
+                </div>
+            `;
+
+            document.getElementById('modalRouteStreets').innerHTML = `
+                <span class="text-purple-400 font-bold block mb-1 text-sm"><i class="fa-solid fa-road"></i> Calles y Tramos</span>
+                <p class="text-slate-300 text-sm font-mono">${route.streets || 'Sin información'}</p>
+            `;
+
+            // Mostrar rutas que coinciden con calles
+            const matchesContainer = document.getElementById('modalRouteMatches');
+            if (route.streets) {
+                const streetList = route.streets.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+                const matchingRoutes = routesData.filter(r => r.id !== routeId && 
+                    streetList.some(st => 
+                        (r.stops || []).some(s => s.toLowerCase().includes(st)) ||
+                        (r.returnStops || []).some(s => s.toLowerCase().includes(st)) ||
+                        (r.poisUrban || []).some(s => s.toLowerCase().includes(st)) ||
+                        (r.poisForeign || []).some(s => s.toLowerCase().includes(st))
+                    )
+                );
+
+                if (matchingRoutes.length > 0) {
+                    matchesContainer.innerHTML = `
+                        <span class="text-emerald-400 font-bold block mb-2 text-sm"><i class="fa-solid fa-link"></i> Rutas que coinciden con estas calles</span>
+                        <div class="flex flex-wrap gap-2">
+                            ${matchingRoutes.map(r => `
+                                <button onclick="openRouteModal('${r.id}')" class="bg-slate-800 hover:bg-slate-700 text-cyan-300 px-3 py-1.5 rounded-xl text-sm font-bold">
+                                    ${escapeHtml(r.name)}
+                                </button>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    matchesContainer.innerHTML = '';
+                }
+            } else {
+                matchesContainer.innerHTML = '';
+            }
+
+            openModal('routeDetailModal');
+        }
+
+        function shareRoute() {
+            if (currentRouteId) {
+                shareRoute(currentRouteId);
+            }
+        }
+
+        // ============================================================
+        // MARKETPLACE
+        // ============================================================
+        function renderMarket() {
+            const container = document.getElementById('marketContainer');
+            if (!container) return;
+
+            let filtered = [...marketData];
+
+            if (currentMarketCategory !== 'ALL') {
+                filtered = filtered.filter(item => item.category === currentMarketCategory);
+            }
+
+            // Filtros de precio
+            const minPrice = parseFloat(document.getElementById('priceMin').value);
+            const maxPrice = parseFloat(document.getElementById('priceMax').value);
+            if (!isNaN(minPrice)) filtered = filtered.filter(item => parseFloat(item.price) >= minPrice);
+            if (!isNaN(maxPrice)) filtered = filtered.filter(item => parseFloat(item.price) <= maxPrice);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center text-slate-500 py-12">
+                        <i class="fa-solid fa-store text-4xl mb-3 text-slate-700"></i>
+                        <p class="text-base">No hay productos disponibles.</p>
+                        ${isAdminLoggedIn ? '<p class="text-sm text-emerald-400 mt-2">Crea un producto usando el botón "Vender"</p>' : ''}
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => `
+                <div class="market-card fade-in-up" data-market-id="${item.id}">
+                    ${item.mediaUrl ? `
+                        ${item.mediaUrl.match(/\.(mp4|webm|ogg)$/i) ? 
+                            `<video src="${item.mediaUrl}" controls class="w-full h-48 object-cover" onerror="this.style.display='none'"></video>` :
+                            `<img src="${item.mediaUrl}" alt="${escapeHtml(item.title)}" class="w-full h-48 object-cover" onerror="this.style.display='none'">`
+                        }
+                    ` : `
+                        <div class="w-full h-48 bg-slate-800 flex items-center justify-center text-slate-600 text-4xl">
+                            <i class="fa-solid fa-image"></i>
+                        </div>
+                    `}
+                    <div class="p-4 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-950/50 text-emerald-400 border border-emerald-800">${item.category}</span>
+                            <span class="text-sm font-black text-emerald-400">$${escapeHtml(item.price)}</span>
+                        </div>
+                        <h3 class="font-bold text-base text-white line-clamp-1">${escapeHtml(item.title)}</h3>
+                        <p class="text-sm text-slate-400 line-clamp-2">${escapeHtml(item.description)}</p>
+                        <div class="flex items-center gap-2 pt-2 border-t border-slate-800">
+                            <button onclick="contactWhatsapp('${item.whatsapp}', '${escapeHtml(item.title)}')" class="btn-lg bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm flex-1" style="min-height:44px; padding:8px 12px;">
+                                <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                            </button>
+                            <button onclick="shareMarket('${item.id}')" class="btn-lg bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl text-sm" style="min-height:44px; padding:8px 12px;">
+                                <i class="fa-solid fa-share-nodes"></i>
+                            </button>
+                            ${isAdminLoggedIn ? `
+                                <button onclick="deleteMarket('${item.id}')" class="btn-lg bg-slate-800 hover:bg-slate-700 text-rose-400 rounded-xl text-sm" style="min-height:44px; padding:8px 12px;">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterMarket(category) {
+            currentMarketCategory = category;
+            document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active'));
+            const btn = document.getElementById(`mk-${category.toLowerCase()}`);
+            if (btn) btn.classList.add('active');
+            renderMarket();
+        }
+
+        function filterMarketPrices() {
+            renderMarket();
+        }
+
+        function contactWhatsapp(phone, title) {
+            if (!phone) return;
+            const clean = phone.replace(/\s/g, '');
+            window.open(`https://wa.me/${clean}?text=${encodeURIComponent(`Hola, me interesa el producto: ${title}`)}`, '_blank');
+        }
+
+        function openMarketWizard() {
+            if (!isAdminLoggedIn) {
+                Swal.fire('Acceso restringido', 'Solo administradores pueden publicar productos.', 'info');
+                return;
+            }
+            document.getElementById('marketForm').reset();
+            openModal('marketWizardModal');
+        }
+
+        function handleMarketSubmit(e) {
+            e.preventDefault();
+            const title = document.getElementById('marketTitle').value.trim();
+            const category = document.getElementById('marketCategory').value;
+            const price = document.getElementById('marketPrice').value.trim();
+            const whatsapp = document.getElementById('marketWhatsapp').value.trim();
+            const description = document.getElementById('marketDescription').value.trim();
+            const mediaUrl = document.getElementById('marketMediaUrl').value.trim();
+
+            if (!title || !price || !whatsapp || !description) {
+                Swal.fire('Error', 'Todos los campos son obligatorios.', 'error');
+                return;
+            }
+
+            const item = {
+                id: 'market_' + Date.now(),
+                title,
+                category,
+                price,
+                whatsapp,
+                description,
+                mediaUrl: mediaUrl || '',
+                timestamp: Date.now()
+            };
+
+            marketData.unshift(item);
+            saveLocalData();
+            syncToFirebase();
+            closeModal('marketWizardModal');
+            renderMarket();
+            Swal.fire({ icon: 'success', title: 'Producto publicado', timer: 1000, showConfirmButton: false });
+        }
+
+        function deleteMarket(id) {
+            Swal.fire({
+                title: '¿Eliminar producto?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                confirmButtonText: 'Eliminar'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    marketData = marketData.filter(m => m.id !== id);
+                    saveLocalData();
+                    syncToFirebase();
+                    renderMarket();
+                }
+            });
+        }
+
+        function uploadMarketMedia(input) {
+            const file = input.files[0];
+            if (!file) return;
+            uploadToCloudinary(file, (url) => {
+                document.getElementById('marketMediaUrl').value = url;
+            });
+        }
+
+        // ============================================================
+        // CLOUDINARY UPLOAD
+        // ============================================================
+        function uploadToCloudinary(file, callback) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', 'sinfirmaupload');
+
+            fetch('https://api.cloudinary.com/v1_1/davovja1g/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.secure_url) {
+                    callback(data.secure_url);
+                    Swal.fire({ icon: 'success', title: 'Archivo subido', timer: 1000, showConfirmButton: false });
+                } else {
+                    Swal.fire('Error', 'No se pudo subir el archivo.', 'error');
+                }
+            })
+            .catch(() => {
+                Swal.fire('Error', 'Error al subir a Cloudinary.', 'error');
+            });
+        }
+
+        // ============================================================
+        // RUTAS CRUD (Admin)
+        // ============================================================
+        function editRoute(routeId) {
+            if (!isAdminLoggedIn) {
+                Swal.fire('Acceso restringido', 'Solo administradores pueden editar rutas.', 'info');
+                return;
+            }
+            const route = routesData.find(r => r.id === routeId);
+            if (!route) return;
+
+            // Usar el wizard existente
+            document.getElementById('editRouteId').value = route.id;
+            document.getElementById('routeName').value = route.name || '';
+            document.getElementById('routeCategory').value = route.category || 'URBANA';
+            document.getElementById('routeMapUrl').value = route.mapUrl || '';
+            document.getElementById('routeImageUrl').value = route.imageUrl || '';
+            document.getElementById('routeStops').value = (route.stops || []).join(', ');
+            document.getElementById('routeReturnStops').value = (route.returnStops || []).join(', ');
+            document.getElementById('routePoisUrban').value = (route.poisUrban || []).join(', ');
+            document.getElementById('routePoisForeign').value = (route.poisForeign || []).join(', ');
+            document.getElementById('routeStreets').value = route.streets || '';
+
+            // Mostrar el wizard de rutas
+            const wizard = document.getElementById('adminWizardModal');
+            if (wizard) wizard.classList.remove('hidden');
             currentWizardStep = 1;
             updateWizardStepUI();
-            openModal('adminWizardModal');
+        }
+
+        function deleteRoute(id) {
+            if (!isAdminLoggedIn) return;
+            Swal.fire({
+                title: '¿Eliminar ruta?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                confirmButtonText: 'Eliminar'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    routesData = routesData.filter(r => r.id !== id);
+                    saveLocalData();
+                    syncToFirebase();
+                    renderRoutes();
+                    updateDatalists();
+                }
+            });
+        }
+
+        // ============================================================
+        // DATALISTS
+        // ============================================================
+        function updateDatalists() {
+            const global = new Set();
+            routesData.forEach(r => {
+                (r.stops || []).forEach(p => global.add(p));
+                (r.returnStops || []).forEach(p => global.add(p));
+                (r.poisUrban || []).forEach(p => global.add(p));
+                (r.poisForeign || []).forEach(p => global.add(p));
+                if (r.streets) {
+                    r.streets.split(',').map(s => s.trim()).filter(Boolean).forEach(st => global.add(st));
+                }
+            });
+
+            const dl = document.getElementById('globalPointsDatalist');
+            if (dl) dl.innerHTML = Array.from(global).sort().map(i => `<option value="${escapeHtml(i)}"></option>`).join('');
+        }
+
+        // ============================================================
+        // WIZARD DE RUTAS (Reutilizado del index original)
+        // ============================================================
+        let currentWizardStep = 1;
+
+        function updateWizardStepUI() {
+            for (let i = 1; i <= 4; i++) {
+                const step = document.getElementById(`wizard-step-${i}`);
+                if (step) step.classList.toggle('hidden', i !== currentWizardStep);
+                const chip = document.getElementById(`step-indicator-${i}`);
+                if (chip) {
+                    if (i <= currentWizardStep) {
+                        chip.className = "step-chip text-cyan-400 flex items-center gap-1.5";
+                        const span = chip.querySelector('span');
+                        if (span) span.className = "w-5 h-5 rounded-full bg-cyan-600 text-white flex items-center justify-center text-[10px]";
+                    } else {
+                        chip.className = "step-chip text-slate-500 flex items-center gap-1.5";
+                        const span = chip.querySelector('span');
+                        if (span) span.className = "w-5 h-5 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-[10px]";
+                    }
+                }
+            }
+
+            const btnPrev = document.getElementById('btnWizardPrev');
+            const btnNext = document.getElementById('btnWizardNext');
+            const btnSubmit = document.getElementById('btnWizardSubmit');
+
+            if (btnPrev) {
+                btnPrev.disabled = currentWizardStep === 1;
+                btnPrev.classList.toggle('opacity-50', currentWizardStep === 1);
+                btnPrev.classList.toggle('cursor-not-allowed', currentWizardStep === 1);
+            }
+
+            if (btnNext && btnSubmit) {
+                if (currentWizardStep === 4) {
+                    btnNext.classList.add('hidden');
+                    btnSubmit.classList.remove('hidden');
+                } else {
+                    btnNext.classList.remove('hidden');
+                    btnSubmit.classList.add('hidden');
+                }
+            }
         }
 
         function navigateWizard(delta) {
@@ -1088,27 +1764,23 @@
             updateWizardStepUI();
         }
 
-        function updateWizardStepUI() {
-            for (let i = 1; i <= 4; i++) {
-                document.getElementById(`wizard-step-${i}`).classList.toggle('hidden', i !== currentWizardStep);
-                const chip = document.getElementById(`step-indicator-${i}`);
-                if (i <= currentWizardStep) { chip.className = "step-chip text-cyan-400 flex items-center gap-1.5"; chip.querySelector('span').className = "w-6 h-6 rounded-full bg-cyan-600 text-white flex items-center justify-center text-xs"; }
-                else { chip.className = "step-chip text-slate-500 flex items-center gap-1.5"; chip.querySelector('span').className = "w-6 h-6 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-xs"; }
-            }
-            const btnPrev = document.getElementById('btnWizardPrev');
-            const btnNext = document.getElementById('btnWizardNext');
-            const btnSubmit = document.getElementById('btnWizardSubmit');
-            btnPrev.disabled = currentWizardStep === 1;
-            btnPrev.classList.toggle('opacity-50', currentWizardStep === 1);
-            btnPrev.classList.toggle('cursor-not-allowed', currentWizardStep === 1);
-            if (currentWizardStep === 4) { btnNext.classList.add('hidden'); btnSubmit.classList.remove('hidden'); }
-            else { btnNext.classList.remove('hidden'); btnSubmit.classList.add('hidden'); }
-        }
-
         function handleRouteSubmit(e) {
             e.preventDefault();
             const editId = document.getElementById('editRouteId').value;
-            const parseAndClean = (str) => { return (str || '').split(',').map(s => s.trim()).filter(Boolean); };
+
+            const parseAndClean = (str) => {
+                const items = (str || '').split(',').map(s => s.trim()).filter(Boolean);
+                const unique = [];
+                const seen = new Set();
+                items.forEach(i => {
+                    if (!seen.has(i.toLowerCase())) {
+                        seen.add(i.toLowerCase());
+                        unique.push(i);
+                    }
+                });
+                return unique;
+            };
+
             const routeObj = {
                 id: editId || 'route_' + Date.now(),
                 name: document.getElementById('routeName').value.trim(),
@@ -1121,192 +1793,73 @@
                 poisForeign: parseAndClean(document.getElementById('routePoisForeign').value),
                 streets: document.getElementById('routeStreets').value.trim()
             };
-            if (editId) { const idx = routesData.findIndex(r => r.id === editId); if (idx !== -1) routesData[idx] = routeObj; }
-            else { routesData.push(routeObj); }
-            saveAllData();
-            syncDataWithFirebase();
-            closeModal('adminWizardModal');
-            renderAll();
-            Swal.fire({ icon: 'success', title: 'Ruta Guardada', timer: 1000, showConfirmButton: false });
-        }
 
-        function editRoute(id) {
-            const r = routesData.find(x => x.id === id);
-            if (!r) return;
-            document.getElementById('editRouteId').value = r.id;
-            document.getElementById('routeName').value = r.name || '';
-            document.getElementById('routeCategory').value = r.category || 'URBANA';
-            document.getElementById('routeMapUrl').value = r.mapUrl || '';
-            document.getElementById('routeImageUrl').value = r.imageUrl || '';
-            document.getElementById('routeStops').value = (r.stops || []).join(', ');
-            document.getElementById('routeReturnStops').value = (r.returnStops || []).join(', ');
-            document.getElementById('routePoisUrban').value = (r.poisUrban || []).join(', ');
-            document.getElementById('routePoisForeign').value = (r.poisForeign || []).join(', ');
-            document.getElementById('routeStreets').value = r.streets || '';
-            currentWizardStep = 1;
-            updateWizardStepUI();
-            openModal('adminWizardModal');
-        }
-
-        function deleteRoute(id) {
-            Swal.fire({ title: '¿Eliminar Ruta?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48', confirmButtonText: 'Sí' })
-                .then(res => { if (res.isConfirmed) { routesData = routesData.filter(r => r.id !== id); saveAllData(); syncDataWithFirebase(); renderAll(); } });
-        }
-
-        // ===== MARKETPLACE =====
-        function renderMarketplace() {
-            const container = document.getElementById('marketplaceContainer');
-            if (!container) return;
-            const search = (document.getElementById('marketSearch')?.value || '').toLowerCase().trim();
-            let filtered = listingsData;
-            if (search) filtered = filtered.filter(l => (l.title || '').toLowerCase().includes(search) || (l.description || '').toLowerCase().includes(search));
-            
-            // Detectar URL destacada
-            const params = new URLSearchParams(window.location.search);
-            const highlightListingId = params.get('market');
-            if (highlightListingId) {
-                const idx = filtered.findIndex(l => l.id === highlightListingId);
-                if (idx > -1) {
-                    const [highlighted] = filtered.splice(idx, 1);
-                    filtered = [highlighted, ...filtered];
-                }
-            }
-
-            if (filtered.length === 0) {
-                container.innerHTML = `<div class="col-span-full bg-slate-900 p-8 rounded-2xl text-center text-slate-500 text-sm">No hay publicaciones en Marketplace.</div>`;
-                return;
-            }
-            container.innerHTML = filtered.map(l => `
-                <div class="marketplace-card ${l.id === highlightListingId ? 'post-highlight' : ''}">
-                    ${l.mediaUrl ? renderMedia(l.mediaUrl) : `<div class="w-full h-48 bg-slate-800 flex items-center justify-center text-slate-600"><i class="fa-solid fa-image text-4xl"></i></div>`}
-                    <div class="p-4 flex-1 flex flex-col">
-                        <h3 class="font-bold text-sm text-white">${escapeHtml(l.title)}</h3>
-                        <span class="text-[10px] bg-slate-800 text-cyan-400 px-2 py-0.5 rounded self-start mt-1">${l.category || 'Otro'}</span>
-                        <p class="text-lg font-bold text-emerald-400 mt-2">${escapeHtml(l.price || 'Precio no especificado')}</p>
-                        <p class="text-xs text-slate-400 mt-1 flex-1 line-clamp-3">${escapeHtml(l.description || '')}</p>
-                        <div class="mt-3 flex items-center gap-2">
-                            <a href="https://wa.me/52${escapeHtml(l.whatsapp)}?text=Hola,%20me%20interesa%20tu%20publicación:%20${encodeURIComponent(l.title)}" target="_blank" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
-                            <button onclick="shareListing('${l.id}')" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-xl text-sm"><i class="fa-solid fa-share-nodes"></i></button>
-                            ${isAdminLoggedIn ? `<button onclick="deleteListing('${l.id}')" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-rose-400 rounded-xl text-sm"><i class="fa-solid fa-trash"></i></button>` : ''}
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function openCreateListing() {
-            document.getElementById('editListingId').value = '';
-            document.getElementById('listingTitle').value = '';
-            document.getElementById('listingCategory').value = 'AUTO';
-            document.getElementById('listingPrice').value = '';
-            document.getElementById('listingWhatsApp').value = '';
-            document.getElementById('listingDescription').value = '';
-            document.getElementById('listingMediaUrl').value = '';
-            openModal('marketplaceModal');
-        }
-
-        function handleMarketplaceSubmit(e) {
-            e.preventDefault();
-            const title = document.getElementById('listingTitle').value.trim();
-            const whatsapp = document.getElementById('listingWhatsApp').value.trim();
-            if (!title || !whatsapp) { Swal.fire('Atención', 'Título y WhatsApp son requeridos', 'warning'); return; }
-            const editId = document.getElementById('editListingId').value;
-            const data = {
-                id: editId || generateId(),
-                title,
-                category: document.getElementById('listingCategory').value,
-                price: document.getElementById('listingPrice').value.trim(),
-                whatsapp,
-                description: document.getElementById('listingDescription').value.trim(),
-                mediaUrl: document.getElementById('listingMediaUrl').value.trim(),
-                timestamp: Date.now()
-            };
             if (editId) {
-                const idx = listingsData.findIndex(l => l.id === editId);
-                if (idx !== -1) listingsData[idx] = data;
-            } else { listingsData.push(data); }
-            saveAllData();
-            syncDataWithFirebase();
-            closeModal('marketplaceModal');
-            renderMarketplace();
-            Swal.fire({ icon: 'success', title: 'Publicado en Marketplace', timer: 1000, showConfirmButton: false });
+                const idx = routesData.findIndex(r => r.id === editId);
+                if (idx !== -1) routesData[idx] = routeObj;
+            } else {
+                routesData.push(routeObj);
+            }
+
+            saveLocalData();
+            syncToFirebase();
+            closeModal('adminWizardModal');
+            document.getElementById('wizardForm').reset();
+            document.getElementById('editRouteId').value = '';
+            renderRoutes();
+            updateDatalists();
+            Swal.fire({ icon: 'success', title: 'Ruta guardada', timer: 1000, showConfirmButton: false });
         }
 
-        function deleteListing(id) {
-            Swal.fire({ title: '¿Eliminar?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#e11d48', confirmButtonText: 'Sí' })
-                .then(res => { if (res.isConfirmed) { listingsData = listingsData.filter(l => l.id !== id); saveAllData(); syncDataWithFirebase(); renderMarketplace(); } });
+        // ============================================================
+        // UTILIDADES
+        // ============================================================
+        function openModal(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('hidden');
         }
 
-        function shareListing(listingId) {
-            const listing = listingsData.find(l => l.id === listingId);
-            if (!listing) return;
-            const url = window.location.origin + window.location.pathname + '?market=' + listingId;
-            if (navigator.share) { navigator.share({ title: listing.title, text: listing.description, url }).catch(() => {}); }
-            else {
-                const text = encodeURIComponent(`${listing.title} - ${listing.price}: ${url}`);
-                window.open(`https://wa.me/?text=${text}`, '_blank');
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
-            }
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
         }
 
-        // ===== DETECCIÓN DE URL =====
-        function handleUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            const postId = params.get('post');
-            const ruta = params.get('ruta');
-            const market = params.get('market');
-
-            if (postId) {
-                switchTab('inicio');
-                setTimeout(() => {
-                    const post = postsData.find(p => p.id === postId);
-                    if (post) {
-                        document.getElementById('postsContainer').scrollIntoView({ behavior: 'smooth' });
-                        Swal.fire({ title: 'Publicación destacada', text: post.content?.substring(0, 100) + '...', icon: 'info', timer: 3000 });
-                    }
-                }, 500);
-            }
-            if (ruta) {
-                switchTab('rutas');
-                setTimeout(() => {
-                    document.getElementById('plannerOrigin').value = ruta;
-                    renderExplorerView();
-                }, 500);
-            }
-            if (market) {
-                switchTab('marketplace');
-                setTimeout(() => {
-                    const listing = listingsData.find(l => l.id === market);
-                    if (listing) {
-                        document.getElementById('marketSearch').value = listing.title || '';
-                        renderMarketplace();
-                        Swal.fire({ title: 'Producto destacado', text: listing.title, icon: 'info', timer: 3000 });
-                    }
-                }, 500);
-            }
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
         }
 
-        // ===== INICIALIZACIÓN =====
-        document.addEventListener('DOMContentLoaded', () => {
-            loadAllData();
-            initFirebaseSync();
-            switchTab('inicio');
-            handleUrlParams();
-            window.addEventListener('popstate', handleUrlParams);
-            // Detectar cambios de conexión
-            window.addEventListener('online', () => { updateNetworkState(true, 'EN LÍNEA'); renderAll(); });
-            window.addEventListener('offline', () => { updateNetworkState(false, 'MODO OFFLINE'); renderAll(); });
+        // ============================================================
+        // PWA
+        // ============================================================
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const btn = document.getElementById('btnInstallPwa');
+            if (btn) btn.classList.remove('hidden');
         });
 
-        // Exponer funciones globales
-        window.shareRoute = shareRoute;
-        window.shareRouteById = shareRouteById;
-        window.sharePost = sharePost;
-        window.shareListing = shareListing;
-        window.openRouteModal = openRouteModal;
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => {
+                    document.getElementById('btnInstallPwa').classList.add('hidden');
+                    deferredPrompt = null;
+                });
+            }
+        }
 
-        console.log('🚍 Colectivos TGZ Pro - Sistema Integral v3.0');
-        console.log('📦 Datos:', { routes: routesData.length, posts: postsData.length, listings: listingsData.length });
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+
+        // ============================================================
+        // DETECCIÓN DE URL AL CARGAR
+        // ============================================================
+        window.addEventListener('popstate', handleUrlParams);
     </script>
+
 </body>
 </html>
