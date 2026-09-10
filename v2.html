@@ -64,7 +64,7 @@
     #map-container { flex: 1; position: relative; min-height: 0; }
     #map { height: 100%; width: 100%; }
 
-    /* Controles flotantes */
+    /* Controles flotantes - AHORA SOLO UN BUSCADOR */
     .map-controls {
       position: absolute;
       top: 10px;
@@ -74,6 +74,7 @@
       display: flex;
       gap: 8px;
       pointer-events: none;
+      align-items: center;
     }
 
     .map-controls > * { pointer-events: auto; }
@@ -102,13 +103,35 @@
       cursor: pointer;
       box-shadow: var(--shadow);
       font-size: 20px;
-      transition: transform 0.2s;
+      transition: transform 0.2s, background 0.2s;
       flex-shrink: 0;
+      position: relative;
     }
 
     .btn-circle:active { transform: scale(0.95); }
-    .btn-add { background: var(--primary); color: white; }
+    .btn-add { background: var(--success); color: white; }
+    .btn-add:hover { background: #15803d; }
     .btn-menu { background: white; color: var(--primary); }
+
+    /* Tooltip para botón admin */
+    .btn-add::after {
+      content: 'Registrar Nueva Ruta';
+      position: absolute;
+      bottom: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text);
+      color: white;
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .btn-add:hover::after { opacity: 1; }
 
     /* Toolbar de herramientas activas */
     .edit-toolbar {
@@ -146,7 +169,7 @@
     .tool-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
     .tool-btn.danger { background: #fee2e2; color: var(--danger); border-color: #fecaca; }
 
-    /* Bottom Panel colapsable */
+    /* Bottom Panel colapsable - MEJORADO */
     .bottom-panel {
       position: absolute;
       bottom: 0;
@@ -164,6 +187,7 @@
     }
 
     .bottom-panel.open { transform: translateY(0); }
+    .bottom-panel.collapsed { transform: translateY(calc(100% - 48px)); }
 
     .panel-handle-area {
       padding: 6px 0 8px;
@@ -171,6 +195,7 @@
       display: flex;
       justify-content: center;
       flex-shrink: 0;
+      position: relative;
     }
 
     .panel-handle-area:active { cursor: grabbing; }
@@ -181,6 +206,19 @@
       background: var(--border);
       border-radius: 2px;
     }
+
+    /* Indicador visual de estado */
+    .panel-toggle-indicator {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: var(--text-muted);
+      transition: transform 0.3s;
+    }
+
+    .bottom-panel.open .panel-toggle-indicator { transform: translateY(-50%) rotate(180deg); }
 
     .panel-tabs {
       display: flex;
@@ -216,6 +254,30 @@
     }
 
     .panel-content.active { display: block; }
+
+    /* Controles de visibilidad de rutas */
+    .routes-visibility-controls {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .visibility-btn {
+      padding: 5px 10px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: white;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .visibility-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
 
     /* Bottom Sheet Modal (Nueva Ruta) - ARRASTRABLE */
     .sheet-overlay {
@@ -791,6 +853,7 @@
     <div id="map-container">
       <div id="map"></div>
 
+      <!-- UN SOLO BUSCADOR -->
       <div class="map-controls">
         <div class="search-box">
           <input type="text" id="search-input" placeholder="Buscar rutas, calles, negocios...">
@@ -800,7 +863,7 @@
             </svg>
           </button>
         </div>
-        <button class="btn-circle btn-add" id="btn-add-route" aria-label="Agregar ruta">+</button>
+        <button class="btn-circle btn-add" id="btn-add-route" aria-label="Registrar Nueva Ruta">+</button>
       </div>
 
       <div class="edit-toolbar" id="edit-toolbar">
@@ -813,10 +876,11 @@
       </div>
     </div>
 
-    <!-- Panel inferior general -->
+    <!-- Panel inferior general - MEJORADO -->
     <div class="bottom-panel" id="bottom-panel">
       <div class="panel-handle-area" id="panel-toggle">
         <div class="panel-handle"></div>
+        <div class="panel-toggle-indicator">▼</div>
       </div>
       <div class="panel-tabs">
         <div class="panel-tab active" data-tab="routes">🚌 Rutas</div>
@@ -825,6 +889,12 @@
         <div class="panel-tab" data-tab="stats">📊 Info</div>
       </div>
       <div class="panel-content active" id="tab-routes">
+        <!-- Controles de visibilidad -->
+        <div class="routes-visibility-controls">
+          <button class="visibility-btn active" data-visibility="all">Mostrar todas</button>
+          <button class="visibility-btn" data-visibility="selected">Solo seleccionada</button>
+          <button class="visibility-btn" data-visibility="none">Ocultar todas</button>
+        </div>
         <div class="loading"><div class="spinner"></div><span>Cargando...</span></div>
       </div>
       <div class="panel-content" id="tab-trip">
@@ -1114,7 +1184,9 @@
       searchPoints: [],
       searchRadius: 500,
       searchMarkers: [],
-      searchRouteLayers: []
+      searchRouteLayers: [],
+      routesVisibility: 'none', // Por defecto no mostrar trazos
+      selectedRouteId: null
     };
 
     // ==================== HELPERS ====================
@@ -1227,7 +1299,6 @@
     async function detectStreetsAlongRoute(points, onProgress) {
       if (!points || points.length < 2) return [];
 
-      // Muestrear puntos a lo largo de la ruta (máximo 12 puntos)
       const sampleCount = Math.min(12, points.length);
       const step = Math.max(1, Math.floor(points.length / sampleCount));
       const samples = [];
@@ -1270,7 +1341,6 @@
             }
           }
         } catch (e) { /* ignore */ }
-        // Respetar rate limit Nominatim
         await new Promise(r => setTimeout(r, 1100));
       }
 
@@ -1436,7 +1506,6 @@
     function handleMapClick(e) {
       const { lat, lng } = e.latlng;
 
-      // Modo edición de ruta
       if (state.isEditing) {
         if (state.activeTool === 'draw') {
           addTrackedPoint({ lat, lng, tipo: 'manual' });
@@ -1446,7 +1515,6 @@
         return;
       }
 
-      // Modo búsqueda de viaje
       const tripTab = $('#tab-trip');
       if (tripTab && tripTab.classList.contains('active') && state.searchPoints.length < 3) {
         addSearchPoint(lat, lng);
@@ -1474,8 +1542,17 @@
                (r.streets?.some(st => st.nombre?.toLowerCase().includes(s)));
       });
 
+      // Guardar HTML de controles de visibilidad
+      const visibilityControls = `
+        <div class="routes-visibility-controls">
+          <button class="visibility-btn ${state.routesVisibility === 'all' ? 'active' : ''}" data-visibility="all">Mostrar todas</button>
+          <button class="visibility-btn ${state.routesVisibility === 'selected' ? 'active' : ''}" data-visibility="selected">Solo seleccionada</button>
+          <button class="visibility-btn ${state.routesVisibility === 'none' ? 'active' : ''}" data-visibility="none">Ocultar todas</button>
+        </div>
+      `;
+
       if (filtered.length === 0) {
-        container.innerHTML = `
+        container.innerHTML = visibilityControls + `
           <div class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
@@ -1483,11 +1560,12 @@
             <p>${state.filterText ? 'No se encontraron rutas' : 'No hay rutas registradas'}</p>
             <p class="small">Toca + para agregar una nueva ruta</p>
           </div>`;
+        setupVisibilityControls();
         return;
       }
 
-      container.innerHTML = filtered.map(route => `
-        <div class="route-card ${state.currentRoute?.id === route.id ? 'selected' : ''}" data-id="${route.id}">
+      container.innerHTML = visibilityControls + filtered.map(route => `
+        <div class="route-card ${state.selectedRouteId === route.id ? 'selected' : ''}" data-id="${route.id}">
           <div class="route-card-header">
             <h3>${escapeHtml(route.nombre || 'Sin nombre')}</h3>
             <span class="route-badge badge-${route.tipo || 'ida'}">${route.tipo || 'ida'}</span>
@@ -1507,7 +1585,22 @@
         </div>
       `).join('');
 
-      container.querySelectorAll('.route-card').forEach(card => {
+      setupVisibilityControls();
+      setupRouteCards();
+    }
+
+    function setupVisibilityControls() {
+      $$('.visibility-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.routesVisibility = btn.dataset.visibility;
+          renderRoutesList();
+          renderRoutesOnMap();
+        });
+      });
+    }
+
+    function setupRouteCards() {
+      $$('.route-card').forEach(card => {
         card.addEventListener('click', (e) => {
           if (e.target.closest('button')) return;
           selectRoute(card.dataset.id);
@@ -1523,8 +1616,14 @@
       });
       state.routeLayers = {};
 
+      // Si la visibilidad es 'none', no dibujar nada
+      if (state.routesVisibility === 'none') return;
+
       state.routes.forEach(route => {
         if (!route.puntos || route.puntos.length < 2) return;
+
+        // Si es 'selected' y no es la ruta seleccionada, omitir
+        if (state.routesVisibility === 'selected' && state.selectedRouteId !== route.id) return;
 
         const coords = route.puntos.map(p => [p.lat, p.lng]);
         const color = route.color || '#1e40af';
@@ -1542,7 +1641,6 @@
         markers.push(L.marker(coords[0], { icon: startIcon }).bindPopup(`<b>${escapeHtml(route.nombre)}</b><br>Inicio`).addTo(state.map));
         markers.push(L.marker(coords[coords.length - 1], { icon: startIcon }).bindPopup(`<b>${escapeHtml(route.nombre)}</b><br>Fin`).addTo(state.map));
 
-        // POIs de la ruta
         if (route.pois?.length) {
           route.pois.forEach(poi => {
             const m = L.marker([poi.lat, poi.lng], {
@@ -1564,6 +1662,13 @@
       const route = state.routes.find(r => r.id === id);
       if (!route) return;
       state.currentRoute = route;
+      state.selectedRouteId = id;
+      
+      // Si la visibilidad es 'selected', asegurar que se muestre
+      if (state.routesVisibility === 'selected') {
+        renderRoutesOnMap();
+      }
+      
       renderRoutesList();
 
       Object.entries(state.routeLayers).forEach(([rid, layer]) => {
@@ -1596,12 +1701,11 @@
 
       init() {
         this.el = $('#route-sheet');
-        this.overlay = null; // Sin overlay para que el mapa sea accesible
+        this.overlay = null;
 
         const header = $('#sheet-drag-handle');
         const collapseBtn = $('#sheet-collapse');
 
-        // Arrastre desde el header
         header.addEventListener('touchstart', (e) => this.onDragStart(e.touches[0].clientY), { passive: true });
         header.addEventListener('touchmove', (e) => this.onDragMove(e.touches[0].clientY), { passive: false });
         header.addEventListener('touchend', () => this.onDragEnd());
@@ -1619,7 +1723,6 @@
           document.addEventListener('mouseup', onUp);
         });
 
-        // Botón colapsar/expandir
         collapseBtn.addEventListener('click', () => {
           this.el.classList.toggle('collapsed');
         });
@@ -1637,11 +1740,9 @@
         const delta = y - this.startY;
 
         if (delta > 0) {
-          // Arrastrando hacia abajo
           const newHeight = Math.max(48, this.baseHeight - delta);
           this.el.style.height = newHeight + 'px';
         } else {
-          // Arrastrando hacia arriba
           const newHeight = Math.min(window.innerHeight * 0.9, this.baseHeight + Math.abs(delta));
           this.el.style.height = newHeight + 'px';
         }
@@ -1653,7 +1754,6 @@
         this.el.classList.remove('dragging');
 
         const h = this.el.offsetHeight;
-        // Snap: colapsado (< 100px) o expandido
         if (h < 100) {
           this.el.style.height = '48px';
           this.el.classList.add('collapsed');
@@ -1731,7 +1831,6 @@
     }
 
     function renderEditingTrack() {
-      // Limpiar capa anterior
       if (state.editingLayer) {
         state.map.removeLayer(state.editingLayer);
         state.editingLayer = null;
@@ -1749,7 +1848,6 @@
         dashArray: state.isTracking ? '8, 8' : null
       }).addTo(state.map);
 
-      // Marcadores para puntos manuales
       state.trackedPoints.forEach((p, i) => {
         if (p.tipo === 'manual') {
           const marker = L.circleMarker([p.lat, p.lng], {
@@ -1854,7 +1952,6 @@
       renderPoisEditList();
       renderPoiMarker(poi);
 
-      // Enriquecer con Nominatim
       reverseGeocode(lat, lng).then(result => {
         if (result && result.displayName) {
           poi.descripcion = result.displayName;
@@ -1944,7 +2041,7 @@
       showToast(`Detenido: ${state.trackedPoints.length} puntos`);
     }
 
-    // ==================== BÚSQUEDA DE VIAJE (A→B→C) ====================
+    // ==================== BÚSQUEDA DE VIAJE (A→B→C) CON RADIO VISUAL ====================
     function renderTripSearch() {
       const container = $('#trip-search-content');
 
@@ -1980,6 +2077,8 @@
       $('#search-radius').addEventListener('input', (e) => {
         state.searchRadius = parseInt(e.target.value);
         $('#radius-value').textContent = `${state.searchRadius}m`;
+        // Actualizar círculos visuales
+        updateSearchCircles();
       });
 
       $('#btn-add-search-point').addEventListener('click', () => {
@@ -1997,21 +2096,45 @@
       $('#btn-search-trip').addEventListener('click', performTripSearch);
     }
 
+    function updateSearchCircles() {
+      // Actualizar el radio de los círculos visuales
+      state.searchMarkers.forEach((marker, index) => {
+        if (marker._circle) {
+          marker._circle.setRadius(state.searchRadius);
+        }
+      });
+    }
+
     function addSearchPoint(lat, lng) {
       if (state.searchPoints.length >= 3) {
         showToast('Máximo 3 puntos (A, B, C)');
         return;
       }
-      const letter = String.fromCharCode(65 + state.searchPoints.length); // A, B, C
+      const letter = String.fromCharCode(65 + state.searchPoints.length);
       const colors = { A: '#16a34a', B: '#dc2626', C: '#f59e0b' };
       const color = colors[letter] || '#1e40af';
 
       const point = { lat, lng, letter, color };
       state.searchPoints.push(point);
 
+      // Crear marcador
       const marker = L.marker([lat, lng], {
         icon: createLetterIcon(letter, color)
       }).addTo(state.map);
+
+      // Crear círculo visual para el radio
+      const circle = L.circle([lat, lng], {
+        radius: state.searchRadius,
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.1,
+        weight: 2,
+        dashArray: '5, 5'
+      }).addTo(state.map);
+
+      // Asociar círculo al marcador
+      marker._circle = circle;
+
       state.searchMarkers.push(marker);
 
       renderSearchPointsList();
@@ -2040,17 +2163,27 @@
     }
 
     window.removeSearchPoint = function(index) {
-      state.searchPoints.splice(index, 1);
-      if (state.searchMarkers[index]) {
-        state.map.removeLayer(state.searchMarkers[index]);
-        state.searchMarkers.splice(index, 1);
+      const point = state.searchPoints[index];
+      const marker = state.searchMarkers[index];
+      
+      // Eliminar círculo y marcador
+      if (marker) {
+        if (marker._circle) state.map.removeLayer(marker._circle);
+        state.map.removeLayer(marker);
       }
+      
+      state.searchPoints.splice(index, 1);
+      state.searchMarkers.splice(index, 1);
+      
       // Re-etiquetar
       state.searchMarkers.forEach((m, i) => {
         const letter = String.fromCharCode(65 + i);
         const colors = { A: '#16a34a', B: '#dc2626', C: '#f59e0b' };
         const color = colors[letter] || '#1e40af';
         m.setIcon(createLetterIcon(letter, color));
+        if (m._circle) {
+          m._circle.setStyle({ color: color, fillColor: color });
+        }
       });
       state.searchPoints.forEach((p, i) => {
         p.letter = String.fromCharCode(65 + i);
@@ -2062,7 +2195,10 @@
 
     function clearSearchPoints() {
       state.searchPoints = [];
-      state.searchMarkers.forEach(m => state.map.removeLayer(m));
+      state.searchMarkers.forEach(m => {
+        if (m._circle) state.map.removeLayer(m._circle);
+        state.map.removeLayer(m);
+      });
       state.searchMarkers = [];
       state.searchRouteLayers.forEach(l => state.map.removeLayer(l));
       state.searchRouteLayers = [];
@@ -2077,7 +2213,6 @@
         return;
       }
 
-      // Limpiar capas de rutas anteriores
       state.searchRouteLayers.forEach(l => state.map.removeLayer(l));
       state.searchRouteLayers = [];
 
@@ -2085,26 +2220,22 @@
       const resultsEl = $('#search-results');
       resultsEl.innerHTML = '<div class="loading"><div class="spinner"></div><span>Buscando rutas...</span></div>';
 
-      // Encontrar rutas cercanas a cada punto
       const routesPerPoint = state.searchPoints.map(p => ({
         point: p,
         routes: findRoutesNearPoint(p, radius)
       }));
 
-      // Rutas que pasan por TODOS los puntos
       const routesThroughAll = state.routes.filter(route => {
         if (!route.puntos || route.puntos.length < 2) return false;
         return routesPerPoint.every(rp => rp.routes.some(r => r.id === route.id));
       });
 
-      // Rutas que pasan por al menos 2 puntos (transbordos)
       const routesThrough2 = state.routes.filter(route => {
         if (!route.puntos || route.puntos.length < 2) return false;
         const count = routesPerPoint.filter(rp => rp.routes.some(r => r.id === route.id)).length;
         return count >= 2;
       });
 
-      // Rutas por punto individual
       const singleRoutes = routesPerPoint.map(rp => ({
         point: rp.point,
         routes: rp.routes.filter(r => !routesThrough2.includes(r))
@@ -2249,6 +2380,7 @@
         if (idx >= 0) state.routes[idx] = route;
         else state.routes.push(route);
 
+        state.selectedRouteId = routeId;
         renderRoutesList();
         renderRoutesOnMap();
         closeSheet();
@@ -2463,7 +2595,6 @@
         state.activeTool = 'poi';
         $$('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === 'poi'));
         showToast('Toca el mapa para agregar un punto');
-        // Colapsar sheet para ver el mapa
         sheet.el.classList.add('collapsed');
       });
 
@@ -2481,9 +2612,11 @@
         }
       });
 
-      // Panel inferior
+      // Panel inferior - TOGGLE MEJORADO
       $('#panel-toggle').addEventListener('click', () => {
-        $('#bottom-panel').classList.toggle('open');
+        const panel = $('#bottom-panel');
+        panel.classList.toggle('open');
+        panel.classList.toggle('collapsed');
       });
 
       // Tabs
@@ -2557,7 +2690,9 @@
           delete state.routeLayers[id];
         }
 
+        if (state.selectedRouteId === id) state.selectedRouteId = null;
         renderRoutesList();
+        renderRoutesOnMap();
         showToast('Ruta eliminada');
       } catch (e) {
         showToast('Error al eliminar');
@@ -2656,6 +2791,7 @@
           l.markers?.forEach(m => state.map.removeLayer(m));
         });
         state.routeLayers = {};
+        state.selectedRouteId = null;
         renderRoutesList();
         renderRoutesOnMap();
         renderStats();
@@ -2704,7 +2840,9 @@
 
       // Abrir panel por defecto
       setTimeout(() => {
-        $('#bottom-panel').classList.add('open');
+        const panel = $('#bottom-panel');
+        panel.classList.add('open');
+        panel.classList.remove('collapsed');
       }, 100);
     }
 
