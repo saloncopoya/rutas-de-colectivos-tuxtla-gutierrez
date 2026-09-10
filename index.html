@@ -30,9 +30,6 @@
     </script>
 
     <style>
-        * { box-sizing: border-box; }
-        html { font-size: 17px; }
-        
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #020617; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 8px; }
@@ -51,10 +48,11 @@
         html:not(.dark) .bg-slate-950\/80 { background-color: #f1f5f9 !important; }
 
         .tab-active { color: #06b6d4 !important; border-bottom: 3px solid #06b6d4; }
+        .map-wrapper { transition: transform 0.2s ease-in-out; transform-origin: center center; }
 
         /* Botones grandes para adultos mayores */
-        .btn-lg { padding: 16px 28px; font-size: 1.1rem; border-radius: 16px; min-height: 56px; }
-        .btn-md { padding: 12px 20px; font-size: 1rem; border-radius: 14px; min-height: 48px; }
+        .btn-lg { padding: 14px 24px; font-size: 1.1rem; border-radius: 16px; }
+        .btn-md { padding: 12px 20px; font-size: 1rem; border-radius: 14px; }
 
         input, select, textarea { font-size: 16px !important; }
 
@@ -62,13 +60,7 @@
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .post-card {
-            background: linear-gradient(145deg, #0f172a, #1e293b);
-            border: 1px solid #1e293b;
-            border-radius: 20px;
-            padding: 20px;
-            transition: all 0.2s;
-        }
+        .post-card { transition: all 0.2s; background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid #1e293b; border-radius: 20px; padding: 20px; }
         .post-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
 
         .like-btn { transition: all 0.15s; }
@@ -76,13 +68,7 @@
         .like-btn.liked i { animation: heartPop 0.3s ease; }
         @keyframes heartPop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
 
-        .marketplace-card {
-            background: linear-gradient(145deg, #0f172a, #1e293b);
-            border: 1px solid #1e293b;
-            border-radius: 20px;
-            overflow: hidden;
-            transition: all 0.2s;
-        }
+        .marketplace-card { transition: all 0.2s; background: linear-gradient(145deg, #0f172a, #1e293b); border: 1px solid #1e293b; border-radius: 20px; overflow: hidden; }
         .marketplace-card:hover { transform: scale(1.02); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
 
         /* Comentarios flotantes estilo TikTok */
@@ -91,7 +77,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            max-height: 75vh;
+            max-height: 70vh;
             background: #0f172a;
             border-radius: 24px 24px 0 0;
             padding: 20px;
@@ -112,6 +98,7 @@
         @keyframes glowPulse { 0%, 100% { box-shadow: 0 0 30px rgba(6, 182, 212, 0.3); } 50% { box-shadow: 0 0 60px rgba(6, 182, 212, 0.6); } }
 
         .media-container {
+            position: relative;
             overflow: hidden;
             border-radius: 16px;
             background: #0f172a;
@@ -122,34 +109,24 @@
             object-fit: contain;
             border-radius: 16px;
         }
-
-        /* Barra superior fija */
-        #statusBanner { position: sticky; top: 0; z-index: 30; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(10px); }
-        header { position: sticky; top: 0; z-index: 20; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); }
-
-        html:not(.dark) #statusBanner { background: rgba(255, 255, 255, 0.95); }
-        html:not(.dark) header { background: rgba(255, 255, 255, 0.95); }
-
-        /* Indicador offline para mapas */
-        .offline-indicator {
+        .media-container .media-placeholder {
+            width: 100%;
+            height: 200px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: #1e293b;
-            color: #64748b;
-            border-radius: 12px;
-            padding: 20px;
-            min-height: 200px;
+            color: #475569;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col">
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black">
 
     <!-- BARRA SUPERIOR -->
-    <div id="statusBanner" class="border-b border-slate-800 text-xs py-2 px-3 flex flex-wrap justify-between items-center text-slate-400 gap-1">
+    <div id="statusBanner" class="bg-slate-900 border-b border-slate-800 text-xs py-2 px-3 flex flex-wrap justify-between items-center text-slate-400 z-30 gap-1">
         <span id="connectionState" class="flex items-center gap-2 text-[11px] font-mono">
             <span id="netStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-            <span id="netStatusText">CARGANDO...</span>
+            <span id="netStatusText">MODO OFFLINE (CACHÉ LOCAL)</span>
         </span>
         <div class="flex items-center gap-2 flex-wrap">
             <button id="btnInstallPwa" onclick="installPWA()" class="hidden p-2 px-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold border border-cyan-500 flex items-center gap-1 shadow-lg animate-pulse">
@@ -165,7 +142,7 @@
     </div>
 
     <!-- ENCABEZADO -->
-    <header class="border-b border-slate-800 px-4 py-3">
+    <header class="bg-slate-900/90 border-b border-slate-800 px-4 py-3 sticky top-0 z-20 backdrop-blur">
         <div class="max-w-7xl mx-auto flex items-center justify-between gap-2">
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0">
@@ -179,7 +156,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <button id="btnCreatePost" onclick="openCreatePost()" class="hidden bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2">
+                <button id="btnCreatePost" onclick="openCreatePost()" class="hidden bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
                     <i class="fa-solid fa-pen-to-square"></i> <span class="hidden sm:inline">Publicar</span>
                 </button>
                 <button onclick="syncDataWithFirebase()" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 p-2.5 rounded-xl text-sm border border-slate-700" title="Sincronizar">
@@ -212,7 +189,7 @@
             <div class="space-y-4" id="postsContainer"></div>
         </section>
 
-        <!-- VISTA RUTAS -->
+        <!-- VISTA RUTAS: Buscador + Trasbordos + Filtros + Resultados -->
         <section id="view-rutas" class="tab-content hidden space-y-4">
             <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-4">
                 <!-- Filtros -->
@@ -224,15 +201,15 @@
                     <button onclick="setViewMode('RETURNS')" id="btnViewReturns" class="mode-chip bg-slate-800 text-slate-400 px-4 py-2 rounded-xl font-bold text-sm">Retornos</button>
                 </div>
 
-                <!-- Buscador dual -->
+                <!-- Buscador dual: Estoy en / Quiero ir a -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-cyan-400 mb-1"><i class="fa-solid fa-location-dot"></i> Estoy en:</label>
-                        <input list="globalPointsDatalist" id="plannerOrigin" oninput="onSearchChange()" placeholder="Calle, parada o punto..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
+                        <label class="block text-xs font-bold text-cyan-400 mb-1"><i class="fa-solid fa-location-dot"></i> Estoy en / Buscar:</label>
+                        <input list="globalPointsDatalist" id="plannerOrigin" oninput="onSearchChange()" placeholder="Ej. Ruta 1, Calle, Hospital..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-rose-400 mb-1"><i class="fa-solid fa-flag-checkered"></i> Quiero ir a:</label>
-                        <input list="globalPointsDatalist" id="plannerDestination" oninput="onSearchChange()" placeholder="Destino..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
+                        <input list="globalPointsDatalist" id="plannerDestination" placeholder="Destino..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
                     </div>
                 </div>
 
@@ -241,7 +218,7 @@
                 </button>
             </div>
 
-            <!-- Resultados de búsqueda -->
+            <!-- Resultados de búsqueda / explorador -->
             <div id="explorerResultsContainer" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
 
             <!-- Resultados de trasbordos -->
@@ -253,7 +230,7 @@
             <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <h2 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-store text-cyan-400"></i> Marketplace</h2>
-                    <button id="btnCreateListing" onclick="openCreateListing()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2">
+                    <button id="btnCreateListing" onclick="openCreateListing()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
                         <i class="fa-solid fa-plus"></i> Publicar Venta
                     </button>
                 </div>
@@ -285,7 +262,7 @@
     <!-- DATALIST GLOBAL -->
     <datalist id="globalPointsDatalist"></datalist>
 
-    <!-- MODAL POST -->
+    <!-- MODAL POST / PUBLICACIÓN -->
     <div id="postModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-2 hidden">
         <div class="bg-slate-900 w-full max-w-2xl max-h-[90vh] rounded-2xl border border-slate-800 flex flex-col overflow-hidden">
             <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex justify-between items-center shrink-0">
@@ -300,7 +277,7 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-300 mb-1">Imagen o Video (URL)</label>
                             <input type="text" id="postMediaUrl" placeholder="https://..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
-                            <button type="button" onclick="uploadToCloudinary('postMediaUrl')" class="mt-2 bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold">Subir a Cloudinary</button>
+                            <button type="button" onclick="uploadToCloudinary('postMediaUrl')" class="mt-2 bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-bold">Subir a Cloudinary</button>
                             <input type="file" id="cloudinaryFileInput" accept="image/*,video/*" class="hidden" onchange="uploadToCloudinaryFile(this)">
                         </div>
                         <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3.5 rounded-2xl text-base flex items-center justify-center gap-2">
@@ -335,7 +312,7 @@
                         <input type="text" id="listingWhatsApp" required placeholder="Número WhatsApp (ej. 9611234567)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
                         <textarea id="listingDescription" rows="3" placeholder="Descripción completa..." class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500"></textarea>
                         <input type="text" id="listingMediaUrl" placeholder="URL de imagen/video (opcional)" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3.5 text-base text-white placeholder-slate-500 outline-none focus:border-cyan-500">
-                        <button type="button" onclick="uploadToCloudinary('listingMediaUrl')" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold">Subir a Cloudinary</button>
+                        <button type="button" onclick="uploadToCloudinary('listingMediaUrl')" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-bold">Subir a Cloudinary</button>
                         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-2xl text-base flex items-center justify-center gap-2">
                             <i class="fa-solid fa-check"></i> Publicar en Marketplace
                         </button>
@@ -345,7 +322,7 @@
         </div>
     </div>
 
-    <!-- MODAL RUTA DETALLE -->
+    <!-- MODAL RUTA DETALLE (con mapa) -->
     <div id="routeDetailModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-2 hidden">
         <div class="bg-slate-900 w-full max-w-4xl h-[90vh] rounded-2xl border border-slate-800 flex flex-col overflow-hidden shadow-2xl">
             <div class="px-4 py-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
@@ -428,7 +405,7 @@
         </form>
     </div>
 
-    <!-- COMENTARIOS FLOTANTES -->
+    <!-- COMENTARIOS FLOTANTES ESTILO TIKTOK -->
     <div id="commentsOverlay" class="comments-overlay">
         <div class="handle"></div>
         <div class="flex justify-between items-center mb-4">
@@ -446,9 +423,7 @@
     </div>
 
     <script>
-        // ============================================================
-        // CONFIGURACIÓN
-        // ============================================================
+        // ===== CONFIGURACIÓN =====
         const firebaseConfig = {
             apiKey: "AIzaSyASox7mRak5V0py29htEVWCVeipGpA0yfs",
             authDomain: "galloslivebadge.firebaseapp.com",
@@ -461,6 +436,8 @@
 
         const CLOUDINARY = {
             cloudName: 'davovja1g',
+            apiKey: '688569119694815',
+            secret: 'jQJ12BpcfQVcgyYKir6hGYt-QcY',
             preset: 'sinfirmaupload'
         };
 
@@ -470,254 +447,29 @@
         const postsRef = db.ref('publicaciones');
         const marketplaceRef = db.ref('marketplace');
 
-        // ============================================================
-        // INDEXEDDB - ALMACENAMIENTO OFFLINE ROBUSTO
-        // ============================================================
-        const DB_NAME = 'ColectivosTGZDB';
-        const DB_VERSION = 1;
-
-        function openDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    if (!db.objectStoreNames.contains('routes')) {
-                        db.createObjectStore('routes', { keyPath: 'id' });
-                    }
-                    if (!db.objectStoreNames.contains('posts')) {
-                        db.createObjectStore('posts', { keyPath: 'id' });
-                    }
-                    if (!db.objectStoreNames.contains('listings')) {
-                        db.createObjectStore('listings', { keyPath: 'id' });
-                    }
-                };
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        async function saveToDB(storeName, data) {
-            try {
-                const db = await openDB();
-                const tx = db.transaction(storeName, 'readwrite');
-                const store = tx.objectStore(storeName);
-                if (Array.isArray(data)) {
-                    data.forEach(item => store.put(item));
-                } else {
-                    store.put(data);
-                }
-                await new Promise((resolve, reject) => {
-                    tx.oncomplete = resolve;
-                    tx.onerror = reject;
-                });
-            } catch (e) { console.warn('DB save error:', e); }
-        }
-
-        async function loadFromDB(storeName) {
-            try {
-                const db = await openDB();
-                const tx = db.transaction(storeName, 'readonly');
-                const store = tx.objectStore(storeName);
-                return new Promise((resolve, reject) => {
-                    const request = store.getAll();
-                    request.onsuccess = () => resolve(request.result || []);
-                    request.onerror = () => reject(request.error);
-                });
-            } catch (e) {
-                console.warn('DB load error:', e);
-                return [];
-            }
-        }
-
-        // ============================================================
-        // ESTADO GLOBAL
-        // ============================================================
+        // ===== ESTADO GLOBAL =====
         let routesData = [];
         let postsData = [];
         let listingsData = [];
+        let currentCategory = 'ALL';
         let currentViewMode = 'ROUTES';
         let isAdminLoggedIn = false;
         let deferredPrompt = null;
         let currentWizardStep = 1;
         let currentPostId = null;
         let isOnline = navigator.onLine;
-        let dbReady = false;
 
-        // ============================================================
-        // INICIALIZACIÓN CON INDEXEDDB
-        // ============================================================
-        async function initApp() {
-            try {
-                // Cargar desde IndexedDB primero
-                const [routes, posts, listings] = await Promise.all([
-                    loadFromDB('routes'),
-                    loadFromDB('posts'),
-                    loadFromDB('listings')
-                ]);
-                
-                if (routes.length) routesData = routes;
-                if (posts.length) postsData = posts;
-                if (listings.length) listingsData = listings;
+        // ===== PWA =====
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('btnInstallPwa').classList.remove('hidden'); });
+        function installPWA() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { document.getElementById('btnInstallPwa').classList.add('hidden'); }); } }
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); }); }
 
-                // Si no hay datos en DB, intentar localStorage como fallback
-                if (!routes.length) {
-                    const saved = localStorage.getItem('tgz_routes_pro_cache');
-                    if (saved) { try { routesData = JSON.parse(saved); } catch(e) {} }
-                }
-                if (!posts.length) {
-                    const saved = localStorage.getItem('tgz_posts_cache');
-                    if (saved) { try { postsData = JSON.parse(saved); } catch(e) {} }
-                }
-                if (!listings.length) {
-                    const saved = localStorage.getItem('tgz_listings_cache');
-                    if (saved) { try { listingsData = JSON.parse(saved); } catch(e) {} }
-                }
-
-                dbReady = true;
-                updateAllDatalists();
-                renderAll();
-                initFirebaseSync();
-                handleUrlParams();
-
-                // Guardar en DB después de cargar
-                saveToDB('routes', routesData);
-                saveToDB('posts', postsData);
-                saveToDB('listings', listingsData);
-
-                updateNetworkState(isOnline, isOnline ? 'EN LÍNEA' : 'MODO OFFLINE');
-            } catch (e) {
-                console.error('Error initializing app:', e);
-                // Fallback a localStorage
-                const savedRoutes = localStorage.getItem('tgz_routes_pro_cache');
-                if (savedRoutes) { try { routesData = JSON.parse(savedRoutes); } catch(e) { routesData = []; } }
-                const savedPosts = localStorage.getItem('tgz_posts_cache');
-                if (savedPosts) { try { postsData = JSON.parse(savedPosts); } catch(e) { postsData = []; } }
-                const savedListings = localStorage.getItem('tgz_listings_cache');
-                if (savedListings) { try { listingsData = JSON.parse(savedListings); } catch(e) { listingsData = []; } }
-                renderAll();
-            }
-        }
-
-        // ============================================================
-        // GUARDAR DATOS (IndexedDB + localStorage fallback)
-        // ============================================================
-        async function saveAllData() {
-            // Guardar en localStorage para compatibilidad
-            localStorage.setItem('tgz_routes_pro_cache', JSON.stringify(routesData));
-            localStorage.setItem('tgz_posts_cache', JSON.stringify(postsData));
-            localStorage.setItem('tgz_listings_cache', JSON.stringify(listingsData));
-            
-            // Guardar en IndexedDB
-            try {
-                await saveToDB('routes', routesData);
-                await saveToDB('posts', postsData);
-                await saveToDB('listings', listingsData);
-            } catch (e) { /* ignore */ }
-            
-            updateAllDatalists();
-        }
-
-        // ============================================================
-        // SINCRONIZACIÓN FIREBASE (sin popups)
-        // ============================================================
-        function initFirebaseSync() {
-            routesRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    routesData = Array.isArray(data) ? data : Object.values(data);
-                    saveAllData();
-                    renderAll();
-                    updateNetworkState(true, 'EN LÍNEA');
-                }
-            }, () => { updateNetworkState(false, 'MODO OFFLINE'); });
-
-            postsRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    postsData = Array.isArray(data) ? data : Object.values(data);
-                    saveAllData();
-                    renderAll();
-                }
-            });
-
-            marketplaceRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    listingsData = Array.isArray(data) ? data : Object.values(data);
-                    saveAllData();
-                    renderAll();
-                }
-            });
-        }
-
-        function syncDataWithFirebase() {
-            if (navigator.onLine) {
-                routesRef.set(routesData);
-                postsRef.set(postsData);
-                marketplaceRef.set(listingsData);
-                // Sin popup
-            }
-        }
-
-        function updateNetworkState(online, text) {
-            isOnline = online;
-            const dot = document.getElementById('netStatusDot');
-            const txt = document.getElementById('netStatusText');
-            dot.className = `w-2.5 h-2.5 rounded-full ${online ? 'bg-emerald-400' : 'bg-amber-400'}`;
-            txt.innerText = text || (online ? 'EN LÍNEA' : 'MODO OFFLINE');
-            
-            // Ocultar mapas offline
-            document.querySelectorAll('iframe[src*="google.com/maps"]').forEach(el => {
-                if (!online) {
-                    el.style.display = 'none';
-                    const placeholder = el.parentElement?.querySelector('#offlineMapPlaceholder');
-                    if (placeholder) placeholder.classList.remove('hidden');
-                } else {
-                    el.style.display = 'block';
-                    const placeholder = el.parentElement?.querySelector('#offlineMapPlaceholder');
-                    if (placeholder) placeholder.classList.add('hidden');
-                }
-            });
-        }
-
-        // ============================================================
-        // PWA
-        // ============================================================
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('btnInstallPwa').classList.remove('hidden');
-        });
-
-        function installPWA() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then(() => {
-                    document.getElementById('btnInstallPwa').classList.add('hidden');
-                });
-            }
-        }
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(() => {});
-            });
-        }
-
-        // ============================================================
-        // TEMA
-        // ============================================================
+        // ===== TEMA =====
         function initTheme() {
             const saved = localStorage.getItem('tgz_theme') || 'dark';
-            if (saved === 'dark') {
-                document.documentElement.classList.add('dark');
-                document.getElementById('themeIcon').className = 'fa-solid fa-moon';
-            } else {
-                document.documentElement.classList.remove('dark');
-                document.getElementById('themeIcon').className = 'fa-solid fa-sun';
-            }
+            if (saved === 'dark') { document.documentElement.classList.add('dark'); document.getElementById('themeIcon').className = 'fa-solid fa-moon'; }
+            else { document.documentElement.classList.remove('dark'); document.getElementById('themeIcon').className = 'fa-solid fa-sun'; }
         }
-
         function toggleTheme() {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('tgz_theme', isDark ? 'dark' : 'light');
@@ -725,35 +477,59 @@
         }
         initTheme();
 
-        // ============================================================
-        // UTILIDADES
-        // ============================================================
-        function escapeHtml(str) { return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
-        function capitalizeFirst(str) { if (!str) return ''; return str.charAt(0).toUpperCase() + str.slice(1); }
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
-
-        function updateAllDatalists() {
-            const global = new Set();
-            routesData.forEach(r => {
-                (r.stops || []).forEach(p => global.add(p));
-                (r.returnStops || []).forEach(p => global.add(p));
-                (r.poisUrban || []).forEach(p => global.add(p));
-                (r.poisForeign || []).forEach(p => global.add(p));
-                if (r.streets) r.streets.split(',').map(s => s.trim()).filter(Boolean).forEach(st => global.add(st));
-            });
-            const dl = document.getElementById('globalPointsDatalist');
-            if (dl) dl.innerHTML = Array.from(global).sort().map(i => `<option value="${escapeHtml(i)}"></option>`).join('');
+        // ===== CARGA DE DATOS =====
+        function loadAllData() {
+            const savedRoutes = localStorage.getItem('tgz_routes_pro_cache');
+            if (savedRoutes) { try { routesData = JSON.parse(savedRoutes); } catch(e) { routesData = []; } } else { routesData = []; }
+            const savedPosts = localStorage.getItem('tgz_posts_cache');
+            if (savedPosts) { try { postsData = JSON.parse(savedPosts); } catch(e) { postsData = []; } } else { postsData = []; }
+            const savedListings = localStorage.getItem('tgz_listings_cache');
+            if (savedListings) { try { listingsData = JSON.parse(savedListings); } catch(e) { listingsData = []; } } else { listingsData = []; }
+            updateAllDatalists();
+            renderAll();
         }
 
-        // ============================================================
-        // CLOUDINARY UPLOAD
-        // ============================================================
+        function saveAllData() {
+            localStorage.setItem('tgz_routes_pro_cache', JSON.stringify(routesData));
+            localStorage.setItem('tgz_posts_cache', JSON.stringify(postsData));
+            localStorage.setItem('tgz_listings_cache', JSON.stringify(listingsData));
+            updateAllDatalists();
+        }
+
+        // ===== SINCRONIZACIÓN FIREBASE =====
+        function initFirebaseSync() {
+            routesRef.on('value', (snapshot) => { const data = snapshot.val(); if (data) { routesData = Array.isArray(data) ? data : Object.values(data); saveAllData(); renderAll(); updateNetworkState(true, 'EN LÍNEA'); } }, () => updateNetworkState(false, 'MODO OFFLINE'));
+            postsRef.on('value', (snapshot) => { const data = snapshot.val(); if (data) { postsData = Array.isArray(data) ? data : Object.values(data); saveAllData(); renderAll(); } });
+            marketplaceRef.on('value', (snapshot) => { const data = snapshot.val(); if (data) { listingsData = Array.isArray(data) ? data : Object.values(data); saveAllData(); renderAll(); } });
+        }
+
+        function syncDataWithFirebase() {
+            if (navigator.onLine) {
+                Promise.all([routesRef.set(routesData), postsRef.set(postsData), marketplaceRef.set(listingsData)])
+                    .then(() => { /* sin popup */ })
+                    .catch(err => Swal.fire('Error', err.message, 'error'));
+            }
+        }
+
+        function updateNetworkState(isOnlineVal, text) {
+            isOnline = isOnlineVal;
+            const dot = document.getElementById('netStatusDot');
+            const txt = document.getElementById('netStatusText');
+            if (isOnlineVal) { dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400"; txt.innerText = text || "EN LÍNEA"; }
+            else { dot.className = "w-2.5 h-2.5 rounded-full bg-amber-400"; txt.innerText = text || "MODO OFFLINE"; }
+            // Ocultar iframes de mapa si offline
+            document.querySelectorAll('iframe[src*="google.com/maps"]').forEach(el => {
+                el.style.display = isOnlineVal ? 'block' : 'none';
+                const placeholder = el.parentElement.querySelector('#offlineMapPlaceholder');
+                if (placeholder) { placeholder.classList.toggle('hidden', isOnlineVal); }
+            });
+        }
+
+        // ===== CLOUDINARY UPLOAD =====
         function uploadToCloudinary(targetInputId) {
             const input = document.getElementById('cloudinaryFileInput');
-            input._target = targetInputId;
             input.click();
+            input._target = targetInputId;
         }
 
         function uploadToCloudinaryFile(fileInput) {
@@ -778,7 +554,7 @@
                 Swal.close();
                 if (data.secure_url) {
                     target.value = data.secure_url;
-                    Swal.fire({ icon: 'success', title: 'Subido', timer: 1000, showConfirmButton: false });
+                    Swal.fire({ icon: 'success', title: 'Subido exitosamente', timer: 1000, showConfirmButton: false });
                 } else {
                     Swal.fire('Error', 'No se pudo subir el archivo', 'error');
                 }
@@ -789,28 +565,45 @@
             });
         }
 
-        // ============================================================
-        // RENDER ALL
-        // ============================================================
+        // ===== RENDER ALL =====
         function renderAll() {
             renderPosts();
             renderExplorerView();
             renderMarketplace();
         }
 
-        // ============================================================
-        // NAVEGACIÓN
-        // ============================================================
+        // ===== UTILIDADES =====
+        function escapeHtml(str) { return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+        function capitalizeFirst(str) { if (!str) return ''; return str.charAt(0).toUpperCase() + str.slice(1); }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
+
+        function updateAllDatalists() {
+            const global = new Set();
+            routesData.forEach(r => {
+                (r.stops || []).forEach(p => global.add(p));
+                (r.returnStops || []).forEach(p => global.add(p));
+                (r.poisUrban || []).forEach(p => global.add(p));
+                (r.poisForeign || []).forEach(p => global.add(p));
+                if (r.streets) r.streets.split(',').map(s => s.trim()).filter(Boolean).forEach(st => global.add(st));
+            });
+            const dl = document.getElementById('globalPointsDatalist');
+            if (dl) dl.innerHTML = Array.from(global).sort().map(i => `<option value="${escapeHtml(i)}"></option>`).join('');
+        }
+
+        // ===== NAVEGACIÓN =====
         function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const contents = document.getElementsByClassName('tab-content');
+            for (let c of contents) c.classList.add('hidden');
             document.getElementById(`view-${tabId}`).classList.remove('hidden');
 
-            document.querySelectorAll('.top-tab').forEach(el => {
-                el.className = "top-tab py-3 rounded-xl text-slate-400 hover:text-white flex items-center justify-center gap-2";
-            });
+            const topTabs = document.getElementsByClassName('top-tab');
+            for (let t of topTabs) t.className = "top-tab py-3 rounded-xl text-slate-400 hover:text-white flex items-center justify-center gap-2";
             document.getElementById(`top-tab-${tabId}`).className = "top-tab py-3 rounded-xl flex items-center justify-center gap-2 bg-cyan-600 text-white";
 
-            document.querySelectorAll('.bottom-nav-btn').forEach(el => el.classList.remove('tab-active'));
+            const navBtns = document.getElementsByClassName('bottom-nav-btn');
+            for (let n of navBtns) n.classList.remove('tab-active');
             document.getElementById(`nav-${tabId}`).classList.add('tab-active');
 
             if (tabId === 'inicio') renderPosts();
@@ -818,32 +611,18 @@
             if (tabId === 'rutas') renderExplorerView();
         }
 
-        // ============================================================
-        // ADMIN
-        // ============================================================
+        // ===== ADMIN =====
         function toggleAdminSession() {
-            if (isAdminLoggedIn) {
-                isAdminLoggedIn = false;
-                updateAdminUI();
-            } else {
+            if (isAdminLoggedIn) { isAdminLoggedIn = false; updateAdminUI(); }
+            else {
                 Swal.fire({
                     title: 'Acceso Admin',
                     html: `<input type="password" id="swal-pass" class="swal2-input" placeholder="Clave: admin123">`,
-                    showCancelButton: true,
-                    confirmButtonText: 'Entrar',
-                    preConfirm: () => {
-                        const p = document.getElementById('swal-pass').value;
-                        return p === 'admin123' ? true : Swal.showValidationMessage('Clave incorrecta');
-                    }
-                }).then((res) => {
-                    if (res.isConfirmed) {
-                        isAdminLoggedIn = true;
-                        updateAdminUI();
-                    }
-                });
+                    showCancelButton: true, confirmButtonText: 'Entrar',
+                    preConfirm: () => { const p = document.getElementById('swal-pass').value; return p === 'admin123' ? true : Swal.showValidationMessage('Clave incorrecta'); }
+                }).then((res) => { if (res.isConfirmed) { isAdminLoggedIn = true; updateAdminUI(); } });
             }
         }
-
         function updateAdminUI() {
             document.getElementById('adminBtnText').innerText = isAdminLoggedIn ? 'Salir Admin' : 'Admin';
             document.getElementById('btnCreatePost').classList.toggle('hidden', !isAdminLoggedIn);
@@ -851,17 +630,20 @@
             renderAll();
         }
 
-        // ============================================================
-        // PUBLICACIONES
-        // ============================================================
+        // ===== PUBLICACIONES (POSTS) =====
         function renderPosts() {
             const container = document.getElementById('postsContainer');
             if (!container) return;
-            
+            if (postsData.length === 0) {
+                container.innerHTML = `<div class="bg-slate-900 p-8 rounded-2xl text-center text-slate-500 text-sm">No hay publicaciones aún.</div>`;
+                return;
+            }
+            // Detectar URL destacada
             const params = new URLSearchParams(window.location.search);
             const highlightPostId = params.get('post');
             
             let sorted = [...postsData].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+            // Si hay post destacado, ponerlo al inicio
             if (highlightPostId) {
                 const idx = sorted.findIndex(p => p.id === highlightPostId);
                 if (idx > -1) {
@@ -869,12 +651,6 @@
                     sorted = [highlighted, ...sorted];
                 }
             }
-
-            if (sorted.length === 0) {
-                container.innerHTML = `<div class="bg-slate-900 p-8 rounded-2xl text-center text-slate-500 text-sm">No hay publicaciones aún.</div>`;
-                return;
-            }
-
             container.innerHTML = sorted.map(p => renderPostCard(p, p.id === highlightPostId)).join('');
         }
 
@@ -1043,20 +819,20 @@
 
         function sharePost(postId) {
             const url = window.location.origin + window.location.pathname + '?post=' + postId;
-            if (navigator.share) {
-                navigator.share({ title: 'Publicación TGZ', text: 'Mira esta publicación', url }).catch(() => {});
-            } else {
+            if (navigator.share) { navigator.share({ title: 'Publicación TGZ', text: 'Mira esta publicación', url }).catch(() => {}); }
+            else {
+                // Compartir vía WhatsApp
                 const text = encodeURIComponent(`Mira esta publicación en Colectivos TGZ: ${url}`);
                 window.open(`https://wa.me/?text=${text}`, '_blank');
+                // También Facebook
                 window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
             }
         }
 
-        // ============================================================
-        // RUTAS
-        // ============================================================
-        function onSearchChange() {
-            renderExplorerView();
+        // ===== RUTAS =====
+        function onSearchChange() { 
+            renderExplorerView(); 
+            // También actualizar trasbordos si ambos campos tienen valor
             const origin = document.getElementById('plannerOrigin').value.trim();
             const dest = document.getElementById('plannerDestination').value.trim();
             if (origin && dest) {
@@ -1066,9 +842,8 @@
 
         function setViewMode(mode) {
             currentViewMode = mode;
-            document.querySelectorAll('.mode-chip').forEach(el => {
-                el.className = "mode-chip bg-slate-800 text-slate-400 px-4 py-2 rounded-xl font-bold text-sm";
-            });
+            const chips = document.getElementsByClassName('mode-chip');
+            for (let c of chips) c.className = "mode-chip bg-slate-800 text-slate-400 px-4 py-2 rounded-xl font-bold text-sm";
             const current = document.getElementById(`btnView${mode.charAt(0) + mode.slice(1).toLowerCase()}`);
             if (current) current.className = "mode-chip bg-cyan-600 text-white px-4 py-2 rounded-xl font-bold text-sm";
             renderExplorerView();
@@ -1080,6 +855,7 @@
             const term = (document.getElementById('plannerOrigin').value || '').toLowerCase().trim();
 
             let filtered = routesData.filter(r => {
+                if (currentCategory !== 'ALL' && r.category !== currentCategory) return false;
                 if (!term) return true;
                 const matchName = (r.name || '').toLowerCase().includes(term);
                 const matchStops = (r.stops || []).some(s => s.toLowerCase().includes(term));
@@ -1090,6 +866,7 @@
                 return matchName || matchStops || matchReturns || matchPoisU || matchPoisF || matchStreets;
             });
 
+            // Si hay origen y destino, ocultar rutas y mostrar solo trasbordos
             const origin = document.getElementById('plannerOrigin').value.trim();
             const dest = document.getElementById('plannerDestination').value.trim();
             if (origin && dest) {
@@ -1132,11 +909,7 @@
                 if (mode === 'STOPS') list = r.stops || [];
                 if (mode === 'RETURNS') list = r.returnStops || [];
                 if (mode === 'POIS') list = [...(r.poisUrban || []), ...(r.poisForeign || [])];
-                list.forEach(pt => {
-                    if (term && !pt.toLowerCase().includes(term)) return;
-                    if (!mapPoints.has(pt)) mapPoints.set(pt, []);
-                    mapPoints.get(pt).push(r.name);
-                });
+                list.forEach(pt => { if (term && !pt.toLowerCase().includes(term)) return; if (!mapPoints.has(pt)) mapPoints.set(pt, []); mapPoints.get(pt).push(r.name); });
             });
             if (mapPoints.size === 0) {
                 container.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 text-sm">No se encontraron puntos.</div>`;
@@ -1159,6 +932,7 @@
         function selectPoint(pointName) {
             document.getElementById('plannerOrigin').value = pointName;
             onSearchChange();
+            // Si hay destino, calcular
             const dest = document.getElementById('plannerDestination').value.trim();
             if (dest) calculateMultiRoute();
         }
@@ -1192,9 +966,8 @@
         function shareRoute() {
             const title = document.getElementById('modalRouteTitle').innerText;
             const url = window.location.origin + window.location.pathname + '?ruta=' + encodeURIComponent(title);
-            if (navigator.share) {
-                navigator.share({ title: 'Ruta TGZ', text: title, url }).catch(() => {});
-            } else {
+            if (navigator.share) { navigator.share({ title: 'Ruta TGZ', text: title, url }).catch(() => {}); }
+            else {
                 const text = encodeURIComponent(`Ruta ${title} en Colectivos TGZ: ${url}`);
                 window.open(`https://wa.me/?text=${text}`, '_blank');
                 window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
@@ -1205,18 +978,15 @@
             const route = routesData.find(r => r.id === routeId);
             if (!route) return;
             const url = window.location.origin + window.location.pathname + '?ruta=' + encodeURIComponent(route.name);
-            if (navigator.share) {
-                navigator.share({ title: 'Ruta TGZ', text: route.name, url }).catch(() => {});
-            } else {
+            if (navigator.share) { navigator.share({ title: 'Ruta TGZ', text: route.name, url }).catch(() => {}); }
+            else {
                 const text = encodeURIComponent(`Ruta ${route.name} en Colectivos TGZ: ${url}`);
                 window.open(`https://wa.me/?text=${text}`, '_blank');
                 window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
             }
         }
 
-        // ============================================================
-        // TRASBORDOS
-        // ============================================================
+        // ===== TRASBORDOS =====
         function calculateMultiRoute() {
             const origin = (document.getElementById('plannerOrigin').value || '').trim().toLowerCase();
             const destination = (document.getElementById('plannerDestination').value || '').trim().toLowerCase();
@@ -1229,15 +999,16 @@
                 return;
             }
 
+            // Ocultar explorador cuando hay origen y destino
             explorerContainer.innerHTML = '';
 
-            const getAllPoints = (r) => {
+            const getAllRoutePoints = (r) => {
                 return [...(r.stops || []), ...(r.returnStops || []), ...(r.poisUrban || []), ...(r.poisForeign || []),
                     ...(r.streets ? r.streets.split(',').map(s => s.trim()) : [])].map(p => p.toLowerCase());
             };
 
             const directRoutes = routesData.filter(r => {
-                const pts = getAllPoints(r);
+                const pts = getAllRoutePoints(r);
                 return pts.some(p => p.includes(origin)) && pts.some(p => p.includes(destination));
             });
 
@@ -1261,11 +1032,11 @@
             } else {
                 const transferOptions = [];
                 routesData.forEach(r1 => {
-                    const pts1 = getAllPoints(r1);
+                    const pts1 = getAllRoutePoints(r1);
                     if (pts1.some(p => p.includes(origin))) {
                         routesData.forEach(r2 => {
                             if (r1.id !== r2.id) {
-                                const pts2 = getAllPoints(r2);
+                                const pts2 = getAllRoutePoints(r2);
                                 if (pts2.some(p => p.includes(destination))) {
                                     const commonPoints = pts1.filter(p => pts2.includes(p));
                                     if (commonPoints.length > 0) transferOptions.push({ route1: r1, route2: r2, transferPoint: commonPoints[0] });
@@ -1303,9 +1074,7 @@
             container.innerHTML = html;
         }
 
-        // ============================================================
-        // ADMIN RUTAS (WIZARD)
-        // ============================================================
+        // ===== ADMIN RUTAS (WIZARD) =====
         function openAdminWizard() {
             document.getElementById('wizardForm').reset();
             document.getElementById('editRouteId').value = '';
@@ -1323,19 +1092,15 @@
             for (let i = 1; i <= 4; i++) {
                 document.getElementById(`wizard-step-${i}`).classList.toggle('hidden', i !== currentWizardStep);
                 const chip = document.getElementById(`step-indicator-${i}`);
-                if (i <= currentWizardStep) {
-                    chip.className = "step-chip text-cyan-400 flex items-center gap-1.5";
-                    chip.querySelector('span').className = "w-6 h-6 rounded-full bg-cyan-600 text-white flex items-center justify-center text-xs";
-                } else {
-                    chip.className = "step-chip text-slate-500 flex items-center gap-1.5";
-                    chip.querySelector('span').className = "w-6 h-6 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-xs";
-                }
+                if (i <= currentWizardStep) { chip.className = "step-chip text-cyan-400 flex items-center gap-1.5"; chip.querySelector('span').className = "w-6 h-6 rounded-full bg-cyan-600 text-white flex items-center justify-center text-xs"; }
+                else { chip.className = "step-chip text-slate-500 flex items-center gap-1.5"; chip.querySelector('span').className = "w-6 h-6 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-xs"; }
             }
             const btnPrev = document.getElementById('btnWizardPrev');
             const btnNext = document.getElementById('btnWizardNext');
             const btnSubmit = document.getElementById('btnWizardSubmit');
             btnPrev.disabled = currentWizardStep === 1;
             btnPrev.classList.toggle('opacity-50', currentWizardStep === 1);
+            btnPrev.classList.toggle('cursor-not-allowed', currentWizardStep === 1);
             if (currentWizardStep === 4) { btnNext.classList.add('hidden'); btnSubmit.classList.remove('hidden'); }
             else { btnNext.classList.remove('hidden'); btnSubmit.classList.add('hidden'); }
         }
@@ -1343,7 +1108,7 @@
         function handleRouteSubmit(e) {
             e.preventDefault();
             const editId = document.getElementById('editRouteId').value;
-            const parseAndClean = (str) => (str || '').split(',').map(s => s.trim()).filter(Boolean);
+            const parseAndClean = (str) => { return (str || '').split(',').map(s => s.trim()).filter(Boolean); };
             const routeObj = {
                 id: editId || 'route_' + Date.now(),
                 name: document.getElementById('routeName').value.trim(),
@@ -1356,12 +1121,8 @@
                 poisForeign: parseAndClean(document.getElementById('routePoisForeign').value),
                 streets: document.getElementById('routeStreets').value.trim()
             };
-            if (editId) {
-                const idx = routesData.findIndex(r => r.id === editId);
-                if (idx !== -1) routesData[idx] = routeObj;
-            } else {
-                routesData.push(routeObj);
-            }
+            if (editId) { const idx = routesData.findIndex(r => r.id === editId); if (idx !== -1) routesData[idx] = routeObj; }
+            else { routesData.push(routeObj); }
             saveAllData();
             syncDataWithFirebase();
             closeModal('adminWizardModal');
@@ -1392,9 +1153,7 @@
                 .then(res => { if (res.isConfirmed) { routesData = routesData.filter(r => r.id !== id); saveAllData(); syncDataWithFirebase(); renderAll(); } });
         }
 
-        // ============================================================
-        // MARKETPLACE
-        // ============================================================
+        // ===== MARKETPLACE =====
         function renderMarketplace() {
             const container = document.getElementById('marketplaceContainer');
             if (!container) return;
@@ -1402,6 +1161,7 @@
             let filtered = listingsData;
             if (search) filtered = filtered.filter(l => (l.title || '').toLowerCase().includes(search) || (l.description || '').toLowerCase().includes(search));
             
+            // Detectar URL destacada
             const params = new URLSearchParams(window.location.search);
             const highlightListingId = params.get('market');
             if (highlightListingId) {
@@ -1481,18 +1241,15 @@
             const listing = listingsData.find(l => l.id === listingId);
             if (!listing) return;
             const url = window.location.origin + window.location.pathname + '?market=' + listingId;
-            if (navigator.share) {
-                navigator.share({ title: listing.title, text: listing.description, url }).catch(() => {});
-            } else {
+            if (navigator.share) { navigator.share({ title: listing.title, text: listing.description, url }).catch(() => {}); }
+            else {
                 const text = encodeURIComponent(`${listing.title} - ${listing.price}: ${url}`);
                 window.open(`https://wa.me/?text=${text}`, '_blank');
                 window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
             }
         }
 
-        // ============================================================
-        // DETECCIÓN DE URL
-        // ============================================================
+        // ===== DETECCIÓN DE URL =====
         function handleUrlParams() {
             const params = new URLSearchParams(window.location.search);
             const postId = params.get('post');
@@ -1505,6 +1262,7 @@
                     const post = postsData.find(p => p.id === postId);
                     if (post) {
                         document.getElementById('postsContainer').scrollIntoView({ behavior: 'smooth' });
+                        Swal.fire({ title: 'Publicación destacada', text: post.content?.substring(0, 100) + '...', icon: 'info', timer: 3000 });
                     }
                 }, 500);
             }
@@ -1522,31 +1280,22 @@
                     if (listing) {
                         document.getElementById('marketSearch').value = listing.title || '';
                         renderMarketplace();
+                        Swal.fire({ title: 'Producto destacado', text: listing.title, icon: 'info', timer: 3000 });
                     }
                 }, 500);
             }
         }
 
-        // ============================================================
-        // EVENTOS DE CONEXIÓN
-        // ============================================================
-        window.addEventListener('online', () => {
-            updateNetworkState(true, 'EN LÍNEA');
-            syncDataWithFirebase();
-            renderAll();
-        });
-        window.addEventListener('offline', () => {
-            updateNetworkState(false, 'MODO OFFLINE');
-            renderAll();
-        });
-
-        // ============================================================
-        // INICIO
-        // ============================================================
+        // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', () => {
-            initApp();
+            loadAllData();
+            initFirebaseSync();
             switchTab('inicio');
+            handleUrlParams();
             window.addEventListener('popstate', handleUrlParams);
+            // Detectar cambios de conexión
+            window.addEventListener('online', () => { updateNetworkState(true, 'EN LÍNEA'); renderAll(); });
+            window.addEventListener('offline', () => { updateNetworkState(false, 'MODO OFFLINE'); renderAll(); });
         });
 
         // Exponer funciones globales
@@ -1555,9 +1304,9 @@
         window.sharePost = sharePost;
         window.shareListing = shareListing;
         window.openRouteModal = openRouteModal;
-        window.switchTab = switchTab;
 
-        console.log('🚍 Colectivos TGZ Pro - v4.0 (IndexedDB)');
+        console.log('🚍 Colectivos TGZ Pro - Sistema Integral v3.0');
+        console.log('📦 Datos:', { routes: routesData.length, posts: postsData.length, listings: listingsData.length });
     </script>
 </body>
 </html>
